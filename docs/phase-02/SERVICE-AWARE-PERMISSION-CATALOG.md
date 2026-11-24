@@ -42,7 +42,7 @@ An organization must also have the relevant service enabled. For example, `Hotel
 - `Contextual: Hotels/Tours/Visas`: minimum customer contact fields may be returned only from a record already authorized under one of these services. This is not customer-directory access.
 - `Platform only`: permission belongs to the platform family and cannot be granted to an organization.
 
-eSIM is intentionally absent from organization-side operational permissions until provider responsibilities for package ownership, order processing, activation and support are defined. The mobile customer eSIM purchase flow and platform eSIM catalogue do not prove a provider dashboard workflow.
+eSIM is excluded from organization-side operational permissions by owner decision Q-53 (2026-11-24). Traway owns catalogue/packages, pricing/margin, orders, activation orchestration, failure handling, customer support, refund decisions and usage inquiries. No provider eSIM permissions, resource scopes, queues or dashboard modules. External supplier/API remains a platform-controlled technical integration.
 
 ### 1.3 Scope requirement values
 
@@ -192,9 +192,9 @@ The previous role matrices for company and hotel remain useful for the currently
 
 ---
 
-## 5. eSIM provider workflow — deliberately not seeded
+## 5. eSIM — platform-only by owner decision Q-53
 
-Customer-side eSIM purchase, activation QR issuance and platform eSIM catalogue management are documented. The current UI evidence does not establish which partner-side actor owns package catalogue data, order fulfillment, activation failures, refunds, usage inquiries or provider API credentials.
+Traway alone owns the complete eSIM business workflow. Customer-side eSIM purchase, activation QR issuance and platform eSIM catalogue management remain platform/customer workflows. Any supplier/API is a technical integration controlled by Traway; it is not a service-provider organization.
 
 Until those responsibilities are defined:
 - no organization-side `esim_*` permission keys are approved;
@@ -202,7 +202,7 @@ Until those responsibilities are defined:
 - platform eSIM catalogue permissions remain platform-only;
 - provider-side eSIM operations remain unavailable by default.
 
-This is a blocking catalog-design question for any launch that expects providers to operate eSIM orders.
+Provider-side eSIM operations are out of scope for this release by owner decision; external supplier selection and credentials remain a platform integration decision in Gate 0B.
 
 ---
 
@@ -254,3 +254,13 @@ Do not treat `allowed_org_types` as service enablement. Do not use `flights` in 
 - Protected organization owners can access all resources only inside services enabled for their organization; this is not platform-wide access.
 - eSIM is entirely platform-operated under Q-53 and must not appear in organization-side permission applicability, service scopes, resource scopes or provider dashboard modules.
 - Provider portal direction is one unified dashboard with service-specific modules, queues and reports; exact UI mapping remains a documentation task.
+
+
+### 8. Owner-approved backend boundaries — Q-53–Q-56 (2026-11-24)
+
+- **Q-53:** eSIM is platform-only. No organization-side eSIM permission applicability, membership service scope, resource scope, provider queue or provider API tenant.
+- **Q-54:** organization service enablement is Traway-controlled. An organization requests; Platform Admin approves/rejects; only enabled status permits provider operations. Traway can suspend/disable one service independently. This capability is stored separately from employee membership service scopes.
+- **Q-55:** the unified provider dashboard is a frontend direction. Backend must expose independently authorized service APIs; it must not rely on hidden navigation or UI checks.
+- **Q-56:** hierarchical scope: organization-enabled service → employee membership service scope → resource/property/assignment scope when meaningful. Owner reach is bounded by enabled services. Empty required scope denies.
+
+The proposed `applicable_services` permission metadata, `organization_services` lifecycle model, resource scope options and enforcement contract are specified in [`AUTHORIZATION-DATA-MODEL-DESIGN.md`](./AUTHORIZATION-DATA-MODEL-DESIGN.md) §10. No implementation is implied by this catalog update.
