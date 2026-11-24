@@ -41,7 +41,7 @@ The canonical booking states currently documented are `pending_payment`, `confir
 | Existing booking state | View | Check-in | Check-out | Provider cancellation | Refund action | Other edits |
 |---|---:|---:|---:|---|---|---|
 | `pending_payment` | Allow | Deny | Deny | Deny | Deny | Deny |
-| `confirmed` | Allow | Allow only during valid check-in window and with `bookings.checkin` | Deny until check-in/eligible stay completion | **Not yet approved**; must follow rate policy and explicit cancellation authority | **Not yet approved**; no direct refund execution | Deny |
+| `confirmed` | Allow | Allow only during valid check-in window and with `bookings.checkin` | Deny until check-in/eligible stay completion | **Allow** with the dedicated `bookings.cancel` permission, only when the persisted hotel rate policy permits cancellation and the booking is in an eligible state | **Not yet approved**; no direct refund execution | Deny |
 | `completed` | Allow | Deny | Allow only if the recorded stay workflow permits a delayed checkout correction and `bookings.checkout` is held; otherwise deny | Deny | **Not yet approved**; platform refund workflow only unless separately authorized | Deny |
 | `cancelled` | Allow | Deny | Deny | Deny | View existing refund status only | Deny |
 | `refunded` | Allow | Deny | Deny | Deny | View only | Deny |
@@ -84,12 +84,14 @@ The current catalog's `bookings.cancel` and `bookings.refund` are too broad to s
 
 Proposed safe default:
 - A provider may view cancellation/refund status on an existing record.
-- A provider may submit a cancellation/refund request only after the owner explicitly approves that action for the service, record state and applicable policy.
+- **Owner decision (2026-11-24):** a hotel provider may cancel an existing confirmed booking directly when it holds `bookings.cancel` and the persisted rate policy says cancellation is eligible. The action must be recorded as a cancellation transition; it is not a generic booking update.
+- For Tours, provider cancellation remains unapproved until the tour-specific policy and transition rules are confirmed.
+- A provider may submit a refund request only after the owner explicitly approves that action for the service, record state and applicable policy.
 - A provider must not execute a payment refund or mark a booking refunded.
 - Payment capture/refund confirmation and final financial state remain controlled by the platform/payment workflow.
 - A cancellation is allowed only when the persisted service policy says it is eligible; the client cannot supply or override eligibility.
 
-This preserves BR-077–BR-079 and the platform refund approval workflow in DEC-10 without inventing a new cancellation policy.
+A provider-side hotel cancellation does not grant permission to execute a payment refund, alter the refund amount, or mark the booking as `refunded`. Refund calculation and execution remain in the platform/payment workflow under BR-077–BR-079 and DEC-10.
 
 ## 7. Required implementation contract
 
@@ -117,10 +119,9 @@ The server derives service, organization, record state and creation timestamp fr
 
 ## 9. Owner decisions still required
 
-The product direction Q-57 is approved; this action matrix is not yet fully approved.
+The product direction Q-57 is approved. The owner has additionally approved direct hotel-booking cancellation under the conditions in §3. This action matrix remains partially pending for other service actions.
 
-The owner must decide:
-- whether hotel providers may initiate cancellation on a confirmed booking when the rate policy allows it, or must submit a cancellation request to Traway;
+The owner must still decide:
 - whether hotel providers may initiate a refund request, and whether that is limited to cancellations/platform-approved cases;
 - whether tour providers may mark attendance/completion, and which booking states permit that transition;
 - whether tour providers may initiate cancellation/refund requests, subject to the policy disclosed at purchase;
