@@ -2,9 +2,9 @@
 
 **Project:** Traway
 **Phase:** 2 of 7 — Functional & Business Analysis
-**Status:** Complete — awaiting approval (`APPROVE PHASE 3`)
+**Status:** Decisions DEC-11 – DEC-19 applied — awaiting approval (`APPROVE PHASE 3`)
 **Companion:** [`AUTHORIZATION-ARCHITECTURE.md`](./AUTHORIZATION-ARCHITECTURE.md)
-**Date:** 2026-11-23
+**Date:** 2026-11-23 · **Reconciled:** 2026-11-24
 
 ---
 
@@ -17,16 +17,17 @@
 | ○ | No access |
 | **S** | Conditional on service scope (membership must include the service) |
 | **A** | Assigned records only |
-| **D** | Decision-backed capability with no drawn screen (DEC-03 / DEC-06 / authorization requirement) |
+| `D` | Decision-backed capability with no drawn screen (DEC-03, DEC-06, DEC-11 – DEC-19) |
 
 Two families are kept separate throughout:
 
 * **Platform permissions** (`platform.*`) apply across tenants and are held only by platform-role members.
-* **Organization permissions** (all other keys) apply inside one company or hotel and are held only by members of that organization.
+* **Organization permissions** (all other keys) apply inside one company, hotel or service-provider organization and are held only by members of that organization.
+* **Owner templates** (`company_owner`, `hotel_owner`, `service_provider_owner`) are protected and are not custom roles.
 
 ---
 
-## 2. Role summary (17 roles)
+## 2. Role summary (19 roles)
 
 | ID | Role | Family | Organization type | Scope archetype |
 |---|---|---|---|---|
@@ -38,23 +39,25 @@ Two families are kept separate throughout:
 | R-06 | Platform support | Platform | Platform | Platform-global (read/assist) |
 | R-07 | Company owner | Organization | Company | Organization-wide, all services |
 | R-08 | Bookings employee | Organization | Company | Organization-wide bookings |
-| R-09 | Visa employee | Organization | Company | Service-scoped: visas |
+| R-09 | Visa offerings manager | Organization | Company | Service-scoped: visas; view only on requests |
 | R-10 | Accountant | Organization | Company | Organization-wide (read finance) |
 | R-11 | Content manager | Organization | Company | Service-scoped: tours |
-| R-12 | Hotel owner | Organization | Hotel | Organization-wide |
-| R-13 | Reception | Organization | Hotel | Operational, arrivals |
-| R-14 | Hotel bookings manager | Organization | Hotel | Bookings + rooms/rates |
-| R-15 | Hotel accountant | Organization | Hotel | Read financial |
+| R-12 | Hotel owner | Organization | Hotel | Organization-wide, all properties |
+| R-13 | Reception | Organization | Hotel | Property-scoped, arrivals |
+| R-14 | Hotel bookings manager | Organization | Hotel | Property-scoped bookings + rooms/rates |
+| R-15 | Hotel accountant | Organization | Hotel | Property-scoped read financial |
 | R-16 | Restricted employee | Organization | Company | Assigned-only + service scope |
-| R-17 | Service owner | Organization | Company or hotel | Service-scoped management |
+| R-17 | Service owner (custom role) | Organization | Company | Service-scoped management; not an owner template |
+| R-18 | Platform visa officer | Platform | Platform | Platform-global (visa decisions) |
+| R-19 | Service provider owner | Organization | Service provider | Organization-wide |
 
 **Customers (R-01/R-02) do not use this catalog.** Their access is enforced by ownership policies (a traveller may only read rows whose `user_id` is their own) and by public endpoint allow-lists. Assigning RBAC permissions to customers would be both unnecessary and risky.
 
 ---
 
-## 3. Permission catalog (76 keys)
+## 3. Permission catalog (83 keys)
 
-### 3.1 Platform family (31)
+### 3.1 Platform family (36)
 
 | Key | Domain | Sensitivity | Description | Screens | Features |
 |---|---|---|---|---|---|
@@ -71,6 +74,9 @@ Two families are kept separate throughout:
 | `platform.partner_requests.review` | partners | Sensitive | Accept/reject join requests and verify documents | D-03.6 | F-077 |
 | `platform.visa_catalog.view` | catalogue | Normal | View visa countries, types, fees and documents | D-03.9 | F-084 |
 | `platform.visa_catalog.manage` | catalogue | Sensitive | Create/update/deactivate visa offerings and requirements | D-03.9 | F-084 |
+| `platform.visa_requests.view` | visas | Sensitive | View all visa applications and documents | D-03.3, D-04.6 (platform oversight, D) | F-096, F-115 |
+| `platform.visa_requests.review` | visas | Sensitive | Review documents and record the final decision | D-03.3, D-04.6 (D) | F-096, F-115 |
+| `platform.visa_requests.update_status` | visas | Sensitive | Move an application through the DEC-07 statuses | D-03.3, D-04.6 (D) | F-096, F-115 |
 | `platform.esim_catalog.view` | catalogue | Normal | View eSIM packages, costs and margins | D-03.10 | F-085 |
 | `platform.esim_catalog.manage` | catalogue | Sensitive | Create/update packages and availability | D-03.10 | F-085 |
 | `platform.esim_catalog.sync` | catalogue | Sensitive | Trigger provider sync and price comparison | D-03.10 | F-085 |
@@ -83,6 +89,7 @@ Two families are kept separate throughout:
 | `platform.finance.view` | finance | Financial | View payments, commissions, dues and transactions | D-03.14 | F-089 |
 | `platform.finance.settlements.execute` | finance | Financial | Execute or mark settlement transfers | D-03.14 | F-089 |
 | `platform.finance.export` | finance | Financial | Export financial data | D-03.14 | F-089 |
+| `platform.settings.manage` | settings | Access-control | Manage platform settings, global payment rules and commission defaults | — (D) | F-112 |
 | `platform.roles.view` | access | Normal | View platform roles and permissions | D-03.15 | F-090, F-112 |
 | `platform.roles.manage` | access | Access-control | Create, edit and delete platform roles | D-03.15 | F-090, F-112 |
 | `platform.roles.assign` | access | Access-control | Assign platform roles to staff | D-03.15 | F-090, F-112 |
@@ -90,43 +97,45 @@ Two families are kept separate throughout:
 | `platform.coupons.manage` | coupons | Sensitive | Create, edit, deactivate platform coupons | — (D) | F-111 |
 | `platform.organization_access.view` | access | Sensitive | View memberships, roles and grants of any organization | — (D) | F-112 |
 | `platform.organization_access.manage` | access | Access-control | Assign roles and permissions to owners and employees of any organization | — (D) | F-112 |
-| `platform.audit.view` | audit | Access-control | Read the audit log | — (D) | F-112 |
 
-### 3.2 Organization family (45)
+### 3.2 Organization family (47)
+
+Org type values: `All` = company + hotel + service provider; `Company` = company only; `Hotel` = hotel only.
 
 | Key | Domain | Org type | Sensitivity | Description | Screens | Features |
 |---|---|---|---|---|---|---|
-| `org.profile.view` | profile | Both | Normal | View organization profile and settings | D-04.10, D-05.6 | F-100, F-106 |
-| `org.profile.update` | profile | Both | Sensitive | Edit organization profile and settings | D-04.10, D-05.6 | F-100, F-106 |
-| `org.profile.publish` | profile | Hotel | Sensitive | Publish the hotel profile to customers | D-05.6 | F-106 |
-| `org.documents.manage` | profile | Both | Sensitive | Upload/replace legal documents | D-04.10, D-05.6 | F-100, F-106 |
-| `org.notifications.view` | notifications | Both | Normal | View organization notification inbox | D-04.2, D-05.2, D-06.3 | F-092, F-102, F-110 |
-| `employees.view` | access | Both | Normal | View employees and their roles | D-04.7, D-05.5 | F-097, F-105, F-112 |
-| `employees.create` | access | Both | Access-control | Invite an employee | D-04.7, D-05.5 | F-097, F-105, F-112 |
-| `employees.update` | access | Both | Access-control | Edit employee profile, role, service scope | D-04.7, D-05.5 | F-097, F-105, F-112 |
-| `employees.deactivate` | access | Both | Access-control | Suspend or remove an employee | D-04.7, D-05.5 | F-097, F-105, F-112 |
-| `roles.view` | access | Both | Normal | View roles and their permissions | D-04.7, D-04.8, D-05.5 | F-097, F-098, F-105, F-112 |
-| `roles.manage` | access | Both | Access-control | Create/edit/delete custom roles | D-04.8, D-05.5 | F-098, F-105, F-112 |
-| `roles.assign` | access | Both | Access-control | Assign roles to employees | D-04.7, D-05.5 | F-097, F-105, F-112 |
-| `bookings.view` | bookings | Both | Sensitive | View bookings and guest data | D-04.5, D-05.4, D-06.2 | F-095, F-104, F-109 |
-| `bookings.create` | bookings | Both | Sensitive | Create a booking on behalf of a customer | D-04.5, D-05.4 (not drawn) | F-095, F-104 |
-| `bookings.update` | bookings | Both | Sensitive | Modify booking details | D-04.5, D-05.4 | F-095, F-104 |
-| `bookings.cancel` | bookings | Both | Sensitive | Cancel a booking | D-04.5, D-05.4 | F-095, F-104 |
-| `bookings.refund` | bookings | Both | Financial | Initiate an eligible refund | D-04.5, D-05.4 | F-095, F-104 |
+| `org.profile.view` | profile | All | Normal | View organization profile and settings | D-04.10, D-05.6 | F-100, F-106, F-114 |
+| `org.profile.update` | profile | All | Sensitive | Edit organization profile and settings | D-04.10, D-05.6 | F-100, F-106, F-114 |
+| `org.documents.manage` | profile | All | Sensitive | Upload/replace legal documents | D-04.10, D-05.6 | F-100, F-106, F-114 |
+| `org.notifications.view` | notifications | All | Normal | View organization notification inbox | D-04.2, D-05.2, D-06.3 | F-092, F-102, F-110 |
+| `employees.view` | access | All | Normal | View employees and their roles | D-04.7, D-05.5 | F-097, F-105, F-112, F-114 |
+| `employees.create` | access | All | Access-control | Invite an employee | D-04.7, D-05.5 | F-097, F-105, F-112, F-114 |
+| `employees.update` | access | All | Access-control | Edit employee profile, role, service and property scope | D-04.7, D-05.5 | F-097, F-105, F-112, F-114 |
+| `employees.deactivate` | access | All | Access-control | Suspend or remove an employee | D-04.7, D-05.5 | F-097, F-105, F-112, F-114 |
+| `roles.view` | access | All | Normal | View roles and their permissions | D-04.7, D-04.8, D-05.5 | F-097, F-098, F-105, F-112 |
+| `roles.manage` | access | All | Access-control | Create/edit/delete custom roles | D-04.8, D-05.5 | F-098, F-105, F-112 |
+| `roles.assign` | access | All | Access-control | Assign roles to employees | D-04.7, D-05.5 | F-097, F-105, F-112 |
+| `bookings.view` | bookings | All | Sensitive | View bookings and guest data | D-04.5, D-05.4, D-06.2 | F-095, F-104, F-109 |
+| `bookings.create` | bookings | All | Sensitive | Create a booking on behalf of a customer | D-04.5, D-05.4 (not drawn) | F-095, F-104 |
+| `bookings.update` | bookings | All | Sensitive | Modify booking details | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.cancel` | bookings | All | Sensitive | Cancel a booking | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.refund` | bookings | All | Financial | Initiate an eligible refund | D-04.5, D-05.4 | F-095, F-104 |
 | `bookings.checkin` | bookings | Hotel | Normal | Check a guest in | D-05.4 | F-104 |
 | `bookings.checkout` | bookings | Hotel | Normal | Check a guest out | D-05.4 | F-104 |
-| `bookings.export` | bookings | Both | Sensitive | Export booking lists | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.export` | bookings | All | Sensitive | Export booking lists | D-04.5, D-05.4 | F-095, F-104 |
 | `tours.view` | tours | Company | Normal | View tours and programmes | D-04.3 | F-093 |
 | `tours.create` | tours | Company | Sensitive | Create a tour | D-04.4 | F-094 |
 | `tours.update` | tours | Company | Sensitive | Edit a tour | D-04.4 | F-094 |
 | `tours.delete` | tours | Company | Sensitive | Delete/withdraw a tour | D-04.3 | F-093 |
 | `tours.submit` | tours | Company | Sensitive | Submit a tour for platform review | D-04.4 | F-094 |
 | `tours.slots.manage` | tours | Company | Sensitive | Manage departure slots and seat capacity | D-04.4 | F-094 |
-| `visa_requests.view` | visas | Company | Sensitive | View visa applications and documents | D-04.6, D-06.1 | F-096, F-108 |
-| `visa_requests.review` | visas | Company | Sensitive | Accept/reject documents | D-04.6, D-06.1 | F-096, F-108 |
-| `visa_requests.update_status` | visas | Company | Sensitive | Record customer-visible status and decisions | D-04.6, D-06.1 | F-096, F-108 |
+| `visa_requests.view` | visas | Company | Sensitive | View applications attached to the company's own offerings; no decision | D-04.6 (view scope, DEC-16) | F-096, F-108 |
 | `visa_offerings.view` | visas | Company | Normal | View the company's visa offerings | D-03.9 (company scope, D) | F-084 |
 | `visa_offerings.manage` | visas | Company | Sensitive | Create/update own visa offerings and prices | D-03.9 (company scope, D) | F-084 |
+| `properties.view` | properties | Hotel | Normal | View hotel properties of the organization | D-05.1, D-05.6 | F-101, F-106, F-113 |
+| `properties.create` | properties | Hotel | Sensitive | Add a hotel property | D-05.6 (D) | F-113 |
+| `properties.update` | properties | Hotel | Sensitive | Edit property details, address, location and documents | D-05.6 | F-106, F-113 |
+| `properties.publish` | properties | Hotel | Sensitive | Publish or unpublish a hotel property | D-05.6 (D) | F-106, F-113 |
 | `rooms.view` | rooms | Hotel | Normal | View room types and availability | D-05.3 | F-103 |
 | `rooms.manage` | rooms | Hotel | Sensitive | Create/edit/delete room types | D-05.3 | F-103 |
 | `rates.view` | rooms | Hotel | Normal | View the rate calendar | D-05.3 | F-103 |
@@ -135,14 +144,15 @@ Two families are kept separate throughout:
 | `coupons.view` | coupons | Company | Normal | View the company's coupons | — (D) | F-111 |
 | `coupons.create` | coupons | Company | Sensitive | Create company-scoped coupons | — (D) | F-111 |
 | `coupons.manage` | coupons | Company | Sensitive | Edit, limit and deactivate own coupons | — (D) | F-111 |
-| `reports.view` | reports | Both | Sensitive | View operational and financial reports | D-04.9, D-05.7 | F-099, F-107 |
-| `reports.export` | reports | Both | Sensitive | Export reports | D-04.9, D-05.7 | F-099, F-107 |
-| `settlements.view` | settlements | Both | Financial | View settlements and dues | D-04.9, D-03.14 | F-099 |
-| `settlements.manage` | settlements | Both | Financial | Request an on-demand payout | D-04.9 (D) | F-099 |
-| `team_activity.view` | reports | Company | Normal | View the team activity feed | D-04.1 | F-091 |
-| `customers.view` | customers | Both | Sensitive | View customer contact for own bookings | D-04.5, D-05.4 | F-095, F-104 |
+| `reports.view` | reports | All | Sensitive | View operational and financial reports | D-04.9, D-05.7 | F-099, F-107 |
+| `reports.export` | reports | All | Sensitive | Export reports | D-04.9, D-05.7 | F-099, F-107 |
+| `settlements.view` | settlements | All | Financial | View settlements and dues | D-04.9, D-03.14 | F-099 |
+| `settlements.manage` | settlements | All | Financial | Request an on-demand payout under delegation rules | D-04.9 (D) | F-099 |
+| `settlements.accounts.manage` | settlements | All | Financial | Manage payout accounts; owner-only, non-delegable | — (D) | F-099 |
+| `team_activity.view` | reports | Company | Normal | View the team activity feed derived from status histories | D-04.1 | F-091 |
+| `customers.view` | customers | All | Sensitive | View customer contact for own bookings | D-04.5, D-05.4 | F-095, F-104 |
 
-**Catalog totals: 33 platform + 45 organization = 78 permissions.**
+**Catalog totals: 36 platform + 47 organization = 83 permissions.**
 
 ---
 
@@ -150,45 +160,48 @@ Two families are kept separate throughout:
 
 ### 4.1 Platform roles
 
-| Permission | R-03 Super admin | R-04 Finance | R-05 Content | R-06 Support |
-|---|---|---|---|---|
-| `platform.overview.view` | ● | ● | ● | ● |
-| `platform.notifications.view` | ● | ● | ● | ● |
-| `platform.notifications.manage` | ● | ● | ● | ● |
-| `platform.bookings.view` | ● | ◐ (financial columns) | ○ | ● |
-| `platform.bookings.export` | ● | ● | ○ | ○ |
-| `platform.partners.view` | ● | ● | ○ | ● |
-| `platform.partners.create` | ● | ○ | ○ | ○ |
-| `platform.partners.update` | ● | ○ | ○ | ○ |
-| `platform.partners.suspend` | ● | ○ | ○ | ○ |
-| `platform.partner_requests.view` | ● | ○ | ○ | ◐ (read) |
-| `platform.partner_requests.review` | ● | ○ | ○ | ○ |
-| `platform.visa_catalog.view` | ● | ○ | ● | ● |
-| `platform.visa_catalog.manage` | ● | ○ | ● | ○ |
-| `platform.esim_catalog.view` | ● | ● (margins) | ● | ○ |
-| `platform.esim_catalog.manage` | ● | ○ | ● | ○ |
-| `platform.esim_catalog.sync` | ● | ○ | ● | ○ |
-| `platform.customers.view` | ● | ● (payment context) | ○ | ● |
-| `platform.customers.update` | ● | ○ | ○ | ○ |
-| `platform.customers.block` | ● | ○ | ○ | ○ |
-| `platform.customers.export` | ● | ○ | ○ | ◐ (approved cases) |
-| `platform.deletion_requests.view` | ● | ○ | ○ | ● |
-| `platform.deletion_requests.process` | ● | ○ | ○ | ● (audited) |
-| `platform.finance.view` | ● | ● | ○ | ○ |
-| `platform.finance.settlements.execute` | ● | ● | ○ | ○ |
-| `platform.finance.export` | ● | ● | ○ | ○ |
-| `platform.roles.view` | ● | ○ | ○ | ○ |
-| `platform.roles.manage` | ● | ○ | ○ | ○ |
-| `platform.roles.assign` | ● | ○ | ○ | ○ |
-| `platform.coupons.view` | ● | ○ | ● | ○ |
-| `platform.coupons.manage` | ● | ○ | ● | ○ |
-| `platform.organization_access.view` | ● | ○ | ○ | ○ |
-| `platform.organization_access.manage` | ● | ○ | ○ | ○ |
-| `platform.audit.view` | ● | ● | ○ | ○ |
+| Permission | R-03 Super admin | R-04 Finance | R-05 Content | R-06 Support | R-18 Visa officer |
+|---|---|---|---|---|---|
+| `platform.overview.view` | ● | ● | ● | ● | ● |
+| `platform.notifications.view` | ● | ● | ● | ● | ● |
+| `platform.notifications.manage` | ● | ● | ● | ● | ● |
+| `platform.bookings.view` | ● | ● | ○ | ● | ○ |
+| `platform.bookings.export` | ● | ● | ○ | ◐ | ○ |
+| `platform.partners.view` | ● | ● | ○ | ● | ○ |
+| `platform.partners.create` | ● | ○ | ○ | ○ | ○ |
+| `platform.partners.update` | ● | ○ | ○ | ○ | ○ |
+| `platform.partners.suspend` | ● | ○ | ○ | ○ | ○ |
+| `platform.partner_requests.view` | ● | ○ | ○ | ◐ | ○ |
+| `platform.partner_requests.review` | ● | ○ | ○ | ○ | ○ |
+| `platform.visa_catalog.view` | ● | ○ | ● | ● | ● |
+| `platform.visa_catalog.manage` | ● | ○ | ● | ○ | ○ |
+| `platform.visa_requests.view` | ● | ○ | ● | ● | ● |
+| `platform.visa_requests.review` | ● | ○ | ○ | ○ | ● |
+| `platform.visa_requests.update_status` | ● | ○ | ○ | ○ | ● |
+| `platform.esim_catalog.view` | ● | ● | ● | ○ | ○ |
+| `platform.esim_catalog.manage` | ● | ○ | ● | ○ | ○ |
+| `platform.esim_catalog.sync` | ● | ○ | ● | ○ | ○ |
+| `platform.customers.view` | ● | ● | ○ | ● | ● |
+| `platform.customers.update` | ● | ○ | ○ | ○ | ○ |
+| `platform.customers.block` | ● | ○ | ○ | ○ | ○ |
+| `platform.customers.export` | ● | ○ | ○ | ◐ | ○ |
+| `platform.deletion_requests.view` | ● | ○ | ○ | ● | ○ |
+| `platform.deletion_requests.process` | ● | ○ | ○ | ● | ○ |
+| `platform.finance.view` | ● | ● | ○ | ○ | ○ |
+| `platform.finance.settlements.execute` | ● | ● | ○ | ○ | ○ |
+| `platform.finance.export` | ● | ● | ○ | ○ | ○ |
+| `platform.settings.manage` | ● | ○ | ○ | ○ | ○ |
+| `platform.roles.view` | ● | ○ | ○ | ○ | ○ |
+| `platform.roles.manage` | ● | ○ | ○ | ○ | ○ |
+| `platform.roles.assign` | ● | ○ | ○ | ○ | ○ |
+| `platform.coupons.view` | ● | ○ | ● | ○ | ○ |
+| `platform.coupons.manage` | ● | ○ | ● | ○ | ○ |
+| `platform.organization_access.view` | ● | ○ | ○ | ○ | ○ |
+| `platform.organization_access.manage` | ● | ○ | ○ | ○ | ○ |
 
 ### 4.2 Company roles
 
-| Permission | R-07 Owner | R-08 Bookings | R-09 Visa | R-10 Accountant | R-11 Content | R-16 Restricted | R-17 Service owner |
+| Permission | R-07 Owner | R-08 Bookings | R-09 Visa offerings | R-10 Accountant | R-11 Content | R-16 Restricted | R-17 Service owner |
 |---|---|---|---|---|---|---|---|
 | `org.profile.view` | ● | ● | ● | ● | ● | ● | ● |
 | `org.profile.update` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
@@ -202,67 +215,98 @@ Two families are kept separate throughout:
 | `roles.manage` | ● | ○ | ○ | ○ | ○ | ○ | S (≤ own scope) |
 | `roles.assign` | ● | ○ | ○ | ○ | ○ | ○ | S (≤ own scope) |
 | `bookings.view` | ● | ● | ○ | ◐ (financial) | ○ | A | S |
-| `bookings.create` | ● | ● | ○ | ○ | ○ | ○ | S |
+| `bookings.create` | ● | ● | ○ | ○ | ○ | ○ | ○ |
 | `bookings.update` | ● | ● | ○ | ○ | ○ | ○ | S |
 | `bookings.cancel` | ● | ● | ○ | ○ | ○ | ○ | S |
-| `bookings.refund` | ● | ○ | ○ | ○ | ○ | ○ | S (financial) |
+| `bookings.refund` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
 | `bookings.export` | ● | ● | ○ | ◐ | ○ | ○ | S |
-| `customers.view` | ● | ● | ● | ○ | ○ | A | S |
-| `tours.view` | ● | ○ | ○ | ○ | ● | ○ | S |
+| `tours.view` | ● | ● | ○ | ○ | ● | ○ | S |
 | `tours.create` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `tours.update` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `tours.delete` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `tours.submit` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `tours.slots.manage` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `visa_requests.view` | ● | ○ | ● | ○ | ○ | A | S |
-| `visa_requests.review` | ● | ○ | ● | ○ | ○ | A | S |
-| `visa_requests.update_status` | ● | ○ | ● | ○ | ○ | A | S |
-| `visa_offerings.view` | ● | ○ | ● | ○ | ○ | ○ | S |
-| `visa_offerings.manage` | ● | ○ | ○ | ○ | ○ | ○ | S |
-| `coupons.view` | ● | ○ | ○ | ○ | ○ | ○ | S |
-| `coupons.create` | ● | ○ | ○ | ○ | ○ | ○ | S |
-| `coupons.manage` | ● | ○ | ○ | ○ | ○ | ○ | S |
+| `visa_offerings.view` | ● | ○ | ● | ○ | ● | ○ | S |
+| `visa_offerings.manage` | ● | ○ | ● | ○ | ○ | ○ | S |
+| `coupons.view` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
+| `coupons.create` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
+| `coupons.manage` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
 | `reports.view` | ● | ○ | ○ | ● | ○ | ○ | S |
 | `reports.export` | ● | ○ | ○ | ● | ○ | ○ | S |
 | `settlements.view` | ● | ○ | ○ | ● | ○ | ○ | S |
-| `settlements.manage` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
+| `settlements.manage` | ● | ○ | ○ | ○ | ○ | ○ | S |
+| `settlements.accounts.manage` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
 | `team_activity.view` | ● | ○ | ○ | ○ | ○ | ○ | S |
 | `customers.view` | ● | ● | ● | ○ | ○ | A | S |
 
 ### 4.3 Hotel roles
 
-| Permission | R-12 Owner | R-13 Reception | R-14 Bookings mgr | R-15 Accountant | R-17 Service owner (hotel) |
-|---|---|---|---|---|---|
-| `org.profile.view` | ● | ● | ● | ● | ● |
-| `org.profile.update` | ● | ○ | ○ | ○ | ○ |
-| `org.profile.publish` | ● | ○ | ○ | ○ | ○ |
-| `org.documents.manage` | ● | ○ | ○ | ○ | ○ |
-| `org.notifications.view` | ● | ● | ● | ● | ● |
-| `employees.view` | ● | ○ | ○ | ○ | S |
-| `employees.create` | ● | ○ | ○ | ○ | S |
-| `employees.update` | ● | ○ | ○ | ○ | S |
-| `employees.deactivate` | ● | ○ | ○ | ○ | S |
-| `roles.view` | ● | ○ | ○ | ○ | S |
-| `roles.manage` | ● | ○ | ○ | ○ | S (≤ own scope) |
-| `roles.assign` | ● | ○ | ○ | ○ | S (≤ own scope) |
-| `bookings.view` | ● | ● | ● | ◐ | S |
-| `bookings.create` | ● | ○ | ● | ○ | S |
-| `bookings.update` | ● | ● | ● | ○ | S |
-| `bookings.cancel` | ● | ○ | ● | ○ | S |
-| `bookings.refund` | ● | ○ | ● | ○ | S |
-| `bookings.checkin` | ● | ● | ● | ○ | S |
-| `bookings.checkout` | ● | ● | ● | ○ | S |
-| `bookings.export` | ● | ○ | ● | ◐ | S |
-| `rooms.view` | ● | ● | ● | ○ | S |
-| `rooms.manage` | ● | ○ | ● | ○ | S |
-| `rates.view` | ● | ● | ● | ○ | S |
-| `rates.update` | ● | ○ | ● | ○ | S |
-| `rates.stop_sell` | ● | ○ | ● | ○ | S |
-| `reports.view` | ● | ○ | ◐ | ● | S |
-| `reports.export` | ● | ○ | ◐ | ● | S |
-| `settlements.view` | ● | ○ | ○ | ● | S |
-| `settlements.manage` | ● | ○ | ○ | ○ | ○ |
-| `customers.view` | ● | ● | ● | ○ | S |
+| Permission | R-12 Owner | R-13 Reception | R-14 Bookings mgr | R-15 Accountant |
+|---|---|---|---|---|
+| `org.profile.view` | ● | ● | ● | ● |
+| `org.profile.update` | ● | ○ | ○ | ○ |
+| `org.documents.manage` | ● | ○ | ○ | ○ |
+| `org.notifications.view` | ● | ● | ● | ● |
+| `employees.view` | ● | ○ | ○ | ○ |
+| `employees.create` | ● | ○ | ○ | ○ |
+| `employees.update` | ● | ○ | ○ | ○ |
+| `employees.deactivate` | ● | ○ | ○ | ○ |
+| `roles.view` | ● | ○ | ○ | ○ |
+| `roles.manage` | ● | ○ | ○ | ○ |
+| `roles.assign` | ● | ○ | ○ | ○ |
+| `bookings.view` | ● | ● | ● | ◐ |
+| `bookings.create` | ● | ○ | ● | ○ |
+| `bookings.update` | ● | ◐ | ● | ○ |
+| `bookings.cancel` | ● | ○ | ● | ○ |
+| `bookings.refund` | ● | ○ | ○ | ○ |
+| `bookings.checkin` | ● | ● | ● | ○ |
+| `bookings.checkout` | ● | ● | ● | ○ |
+| `bookings.export` | ● | ○ | ● | ● |
+| `properties.view` | ● | ◐ | ● | ● |
+| `properties.create` | ● | ○ | ○ | ○ |
+| `properties.update` | ● | ○ | ○ | ○ |
+| `properties.publish` | ● | ○ | ○ | ○ |
+| `rooms.view` | ● | ● | ● | ○ |
+| `rooms.manage` | ● | ○ | ● | ○ |
+| `rates.view` | ● | ● | ● | ○ |
+| `rates.update` | ● | ○ | ● | ○ |
+| `rates.stop_sell` | ● | ○ | ● | ○ |
+| `reports.view` | ● | ○ | ◐ | ● |
+| `reports.export` | ● | ○ | ● | ● |
+| `settlements.view` | ● | ○ | ○ | ● |
+| `settlements.manage` | ● | ○ | ○ | ○ |
+| `settlements.accounts.manage` | ● | ○ | ○ | ○ |
+| `team_activity.view` | ● | ○ | ○ | ○ |
+| `customers.view` | ● | ● | ● | ○ |
+
+### 4.4 Service provider role
+
+| Permission | R-19 Provider owner |
+|---|---|
+| `org.profile.view` | ● |
+| `org.profile.update` | ● |
+| `org.documents.manage` | ● |
+| `org.notifications.view` | ● |
+| `employees.view` | ● |
+| `employees.create` | ● |
+| `employees.update` | ● |
+| `employees.deactivate` | ● |
+| `roles.view` | ● |
+| `roles.manage` | ● |
+| `roles.assign` | ● |
+| `bookings.view` | ● |
+| `bookings.create` | ● |
+| `bookings.update` | ● |
+| `bookings.cancel` | ● |
+| `bookings.refund` | ● |
+| `bookings.export` | ● |
+| `reports.view` | ● |
+| `reports.export` | ● |
+| `settlements.view` | ● |
+| `settlements.manage` | ● |
+| `settlements.accounts.manage` | ● |
+| `customers.view` | ● |
 
 ### 4.4 Assignment summary
 
@@ -271,18 +315,18 @@ Two families are kept separate throughout:
 | R-03 | 33 | All platform permissions |
 | R-04 | 12 | Financial + read operations + audit |
 | R-05 | 10 | Catalogues, coupons, notifications |
-| R-06 | 9 | Read/assist + deletion processing (plus one partial export) |
+| R-06 | 11 | Read/assist + deletion processing (includes one partial export) |
 | R-07 | 37 | All company-applicable organization permissions |
 | R-08 | 8 | Bookings + customer contact |
 | R-09 | 7 | Visa queue + offerings view |
-| R-10 | 6 | Reports/settlements read + export |
-| R-11 | 9 | Tours + visa offerings view |
+| R-10 | 7 | Reports/settlements read + export |
+| R-11 | 8 | Tours + visa offerings view |
 | R-12 | 30 | All hotel-applicable permissions |
 | R-13 | 9 | Arrivals, check-in/out, room and rate view |
 | R-14 | 18 | Bookings, rooms, rates, reports |
-| R-15 | 6 | Reports/settlements read |
-| R-16 | 6 | Assigned visas, read-only bookings |
-| R-17 | base 14 + service bundle | Employees/roles scoped to service, plus the service's operational keys |
+| R-15 | 7 | Reports/settlements read |
+| R-16 | 7 | Assigned visas, read-only bookings |
+| R-17 | 34 company / 26 hotel | Employees/roles and the operational keys of the service scope |
 
 R-01/R-02 have no catalog keys.
 
@@ -393,7 +437,7 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 | # | Check | Result |
 |---|---|---|
 | 1 | Permission keys defined | 78 (33 platform, 45 organization) |
-| 2 | Keys derived from screens/features | 74 by screen/feature; 4 decision-backed (`platform.coupons.*`, `platform.organization_access.*`, `platform.audit.view`) |
+| 2 | Keys derived from screens/features | 73 by screen/feature; 5 decision-backed (`platform.coupons.*`, `platform.organization_access.*`, `platform.audit.view`) |
 | 3 | Roles using the catalog | 17 (15 RBAC roles; R-01/R-02 ownership-based) |
 | 4 | Platform/organization family mixing | 0 roles |
 | 5 | Every organization permission declares organization-type applicability | 45/45 |
@@ -407,7 +451,7 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 
 ### 9.1 Remaining ambiguity
 
-* **R-17 Service owner** is modelled as an organization-level, service-scoped manager because that is the only interpretation that fits "manage employees and access within their own service scope" alongside company/hotel owners. If the intended meaning is a *platform* service-line owner (for example, the platform's head of visas), the role family and scope change. This is Q-45 and blocks Phase 3.
+* **R-17 Service owner** is modelled as an organization-level, service-scoped manager because that is the only interpretation that fits "manage employees and access within their own service scope" alongside company/hotel owners. **Q-45 is answered by the authorization requirement.** If a platform-level service-line owner is later required, it is an additive platform role family.
 * **`bookings.create`** has no drawn screen. It exists because the operation is required by the permission model and is a standard partner capability; if partner-created bookings are out of scope, the key can be dropped without affecting anything else.
-* **Hotel branch scope** is not modelled. If a hotel organization can own multiple properties, a branch scope level must be added (Q-49).
+* **Hotel branch scope** is not modelled. If a hotel organization can own multiple properties, a branch scope level must be added (Q-49, non-blocking).
 

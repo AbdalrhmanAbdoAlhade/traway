@@ -8,11 +8,41 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Bank / wallet destinations a partner can be paid into. Secrets are
+        // stored encrypted; partners never see platform payment credentials.
+        Schema::create('payout_accounts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+            $table->string('type', 20)->default('bank'); // bank | wallet
+            $table->string('label')->nullable();
+            $table->string('account_name');
+            $table->text('account_number')->nullable(); // encrypted cast
+            $table->string('iban', 34)->nullable();
+            $table->string('bank_name')->nullable();
+            $table->string('swift_code', 11)->nullable();
+            $table->string('country_code', 2)->nullable();
+            $table->char('currency', 3)->default('USD');
+            $table->boolean('is_default')->default(false);
+            // = organization_id while default, else NULL => one default per organization.
+            $table->unsignedBigInteger('default_owner_key')->nullable()->unique();
+            $table->string('status', 20)->default('pending'); // pending | verified | rejected
+            $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('verified_at')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['organization_id', 'status']);
+        });
+
         // DEC-10: on-demand payouts. Whether the gateway supports payouts is still unverified.
         Schema::create('payout_requests', function (Blueprint $table) {
             $table->id();
             $table->string('reference', 40)->unique();
             $table->foreignId('organization_id')->constrained()->restrictOnDelete();
+            // Destination account. NULL only for legacy/manual adjustments.
+            $table->foreignId('payout_account_id')->nullable()
+                ->constrained('payout_accounts')->restrictOnDelete();
             $table->unsignedBigInteger('amount_cents');
             // requested | processing | transferred | failed | rejected  (BR-099)
             $table->string('status', 20)->default('requested');
@@ -51,5 +81,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('partner_ledger_entries');
         Schema::dropIfExists('payout_requests');
+        Schema::dropIfExists('payout_accounts');
     }
 };

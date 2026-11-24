@@ -2,9 +2,11 @@
 
 **Project:** Traway
 **Phase:** 2 of 7 — Functional & Business Analysis
-**Status:** Complete — awaiting approval (`APPROVE PHASE 2`)
-**Inputs:** [`FEATURES-CATALOG.md`](./FEATURES-CATALOG.md), [`BUSINESS-LOGIC.md`](./BUSINESS-LOGIC.md)
-**Date:** 2026-11-23
+**Status:** Decisions applied — awaiting approval (`APPROVE PHASE 3`)
+**Inputs:** [`FEATURES-CATALOG.md`](./FEATURES-CATALOG.md), [`BUSINESS-LOGIC.md`](./BUSINESS-LOGIC.md), [`AUTHORIZATION-ARCHITECTURE.md`](./AUTHORIZATION-ARCHITECTURE.md), [`ROLE-PERMISSION-SCOPE-MATRIX.md`](./ROLE-PERMISSION-SCOPE-MATRIX.md)
+**Date:** 2026-11-23 · **Authorization update:** 2026-11-24
+
+> **Authoritative detail:** the permission keys, scope rules, delegation ceilings and enforcement layers live in [`AUTHORIZATION-ARCHITECTURE.md`](./AUTHORIZATION-ARCHITECTURE.md) and [`ROLE-PERMISSION-SCOPE-MATRIX.md`](./ROLE-PERMISSION-SCOPE-MATRIX.md). This document defines the roles themselves and the role-level matrix.
 
 ---
 
@@ -16,6 +18,8 @@ The design establishes **two independent permission families** that must not be 
 2. **Tenant family** — partner staff. Grants rights only inside one partner tenant (company or hotel). A tenant role is never global.
 
 The restricted employee portal is **not a third family**: it is the company tenant with a narrow role (R-16) and locked modules.
+
+**Roles are data, not code.** Platform admins create platform roles; company and hotel owners create organization roles and customise them per employee through role assignment and bounded direct grants. Creation and delegation are constrained by the grantor's own ceiling (BR-084, BR-122), so "dynamic" never means "unrestricted". The full model is in `AUTHORIZATION-ARCHITECTURE.md`.
 
 The public surface (login, join request) is unauthenticated and therefore not a role. A person submitting a join request has no permissions; they receive an activation link only after approval.
 
@@ -52,6 +56,7 @@ Special actions (publish, confirm, refund, export, suspend, transfer) are writte
 | R-14 | Bookings manager (hotel) | HTL | Tenant (hotel) | Hotel bookings, rooms & rates |
 | R-15 | Hotel accountant | HTL | Tenant (hotel) | Hotel reports (read) |
 | R-16 | Restricted employee | EMP | Tenant (company), narrow role | Assigned visa requests and assigned bookings |
+| R-17 | Service owner | COM / HTL | Tenant (company or hotel) | One or more service lines inside its own tenant |
 
 ---
 
@@ -77,8 +82,8 @@ Special actions (publish, confirm, refund, export, suspend, transfer) are writte
 
 * **Entry:** D-01.1 with account type «إدارة Traway».
 * **Data scope:** all tenants, all customers, all bookings, all money.
-* **Can:** everything in the admin portal, including partner approval and suspension, commission changes, catalogue publishing, customer blocking, role creation, settlement transfer, exports.
-* **Cannot:** impersonate a partner owner silently (no impersonation UI exists); delete financial records (BR-102).
+* **Can:** everything in the admin portal, including partner approval and suspension, commission changes, catalogue publishing, customer blocking, platform role creation, tenant role/permission assignment for owners and employees, settlement transfer, exports.
+* **Cannot:** impersonate a partner owner silently (no impersonation UI exists); delete financial records (BR-102); attach organization permissions to a platform role or vice versa (BR-119).
 * **Key screens:** D-03.1 – D-03.15 (all).
 * **Design note:** the role matrix on D-03.15 shows the super admin as the top of the hierarchy; it is the only role that can create platform roles.
 
@@ -189,6 +194,19 @@ Special actions (publish, confirm, refund, export, suspend, transfer) are writte
 * **Key screens:** D-06.1, D-06.2, D-06.3.
 * **Constraint:** enforcement is server-side (BR-115, BR-116, BR-117); the locked sidebar is cosmetic.
 
+### R-17 — Service owner
+
+* **Entry:** company or hotel portal with a service-owner membership.
+* **Data scope:** one or more service lines inside its own organization — `flights`, `hotels`, `tours`, `visas`, `eSIM` — and only records whose service is inside that scope.
+* **Can:** manage employees and roles **within those services** (invite, assign a role, adjust permissions up to its own ceiling), view and operate the service's records, request payouts where the settlement permission is held.
+* **Cannot:** reach another service line, another tenant, platform operations, or grant any permission/scope broader than its own; cannot edit the owner role or transfer ownership.
+* **Key screens:** D-04.7, D-04.8, D-05.5 (same editors as the owner, narrowed by service scope).
+* **Constraint:** service scope is enforced at policy level in addition to the permission key (BR-121); it can only narrow, never widen.
+
+### 2.1 Dynamic role model in one paragraph
+
+Every role above is a **seeded starting point**, not a closed list. A platform admin may create platform roles; an organization owner may create organization roles and adjust a single employee's permissions directly. All such roles are stored as data and resolved at request time under the four-level scope model (family → organization → service → assignment). The seeded roles remain immutable only where they are structural: `org_owner`, `hotel_owner` and `platform_super_admin`.
+
 ---
 
 ## 3. Permission matrix — mobile
@@ -231,6 +249,7 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 | Customer detail D-03.13 | V/U, block | V (payments) | X | V, RO |
 | Finance D-03.14 | V, T | V, T, export | X | X |
 | Roles D-03.15 | V/C/U/D | X | X | X |
+| Coupons (F-111, DEC-03) | V/C/U/D | X | X | X |
 
 **Platform rules**
 
@@ -238,6 +257,7 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 2. Finance can execute a transfer only in `pending`/`failed` state; `transferred` is terminal (BR-099).
 3. Support can never block an account; only super admin can (Q-28).
 4. Content manager cannot change commission or approve partners.
+5. Platform admins may reach tenant role/permission administration only through `platform.organization_access.manage`, and every such action is audited (RA-13, BR-124).
 
 ---
 
@@ -255,14 +275,16 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 | Custom role D-04.8 | C/U/D | X | X | X | X |
 | Financial reports D-04.9 | V, export | X | X | V, export | X |
 | Company settings D-04.10 | V/U | X | X | X | X |
+| Coupons (F-111, DEC-03) | V/C/U/D | X | X | X | X |
 
 **Company rules**
 
 1. Only the owner can invite staff, edit roles, transfer ownership, delete the tenant (BR-086).
-2. A delegated role cannot grant a permission it does not hold (BR-084).
+2. A delegated role cannot grant a permission it does not hold (BR-084); a service owner (R-17) is limited to the service lines in its scope (BR-121).
 3. The tour editor cannot self-publish; submission always routes to platform review (BR-092).
 4. The accountant is read-only on money and has no access to operations.
-5. The visa employee acts on documents only; the decision to submit to the embassy is not depicted and remains a platform-level unknown (`Q-13`).
+5. The visa employee works documents and status; submission to the external authority happens outside Traway and employees record the outcome (DEC-07, BR-052).
+6. Coupons created by a company owner are restricted to that company; only Platform Admin creates global coupons (DEC-03).
 
 ---
 
@@ -284,6 +306,8 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 2. Reception cannot change prices or stop-sell.
 3. Publishing the profile requires approved legal documents (BR-110, BR-101).
 4. The 5 % pay-now discount is a commercial term, visible to the owner/bookings manager but not editable here (BR-067).
+5. A service owner (R-17) inherits the owner's column narrowed to its service lines; it cannot edit the owner role or transfer ownership (BR-121, BR-123).
+6. Hotel owners do not create coupons under DEC-03; Q-41 revisits this without a schema change.
 
 ---
 
@@ -307,14 +331,19 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 
 | Rule | Statement | Reference |
 |---|---|---|
-| RA-01 | A user has exactly one platform role or one tenant role at a time; roles are not additive across families. | D-03.15 |
-| RA-02 | A tenant must always have at least one active owner; the last owner cannot be removed or demoted. | BR-086 |
-| RA-03 | Deactivating an employee revokes access immediately and retains their audit trail. | D-04.2 «employee deactivated» |
-| RA-04 | An invited employee cannot log in until the invitation is accepted. | D-04.7 invite, D-02.3 activation link |
-| RA-05 | A custom role is a named set of permissions inside one tenant; it cannot exceed the owner's own permissions. | D-04.8 |
+| RA-01 | A membership belongs to exactly one family context (platform or organization). A user may hold several memberships, but platform and organization roles are never active in the same context; multiple roles inside one context are unioned. | D-03.15; AUTHORIZATION §3 |
+| RA-02 | A tenant must always have at least one active owner; the last owner cannot be removed or demoted. | BR-086, BR-123 |
+| RA-03 | Deactivating an employee revokes access immediately and retains their audit trail. | D-04.2 «employee deactivated»; BR-125 |
+| RA-04 | An invited employee cannot log in until the invitation is accepted; resending invalidates the previous token. | D-04.7 invite, D-02.3 activation link |
+| RA-05 | A custom role is a named set of permissions inside one tenant; it cannot exceed the creator's own permissions or scope. | D-04.8; BR-084, BR-122 |
 | RA-06 | Changing a role's permissions affects all members holding that role, immediately (BR-088). | D-04.8 |
 | RA-07 | Deleting a role requires reassigning its members first; a role in use cannot be deleted silently. | D-03.15 team-role list |
 | RA-08 | Account blocking is platform-only and applies across all applications and sessions. | D-03.13, BR-030 |
+| RA-09 | Service scope is an additional restriction: a service owner or employee sees only the service lines in their scope, even when the role grants a generic key. | D-04.7, D-05.5; BR-121 |
+| RA-10 | Per-employee customisation is supported through role assignment plus bounded direct grants; every direct grant records its grantor and the grantor's ceiling at grant time. | D-04.7, D-04.8 |
+| RA-11 | Moving to another organization ends the old membership and creates a new one; roles, grants and service scopes do not carry over. | D-04.7; BR-125 |
+| RA-12 | Ownership transfer is an atomic, audited operation between two active members of the same organization; it is never an ordinary role assignment. | D-04.7; BR-123 |
+| RA-13 | Platform admins may assign roles and permissions in a tenant only through `platform.organization_access.manage`, and every such action is audited. | D-03.15; DEC-10 audit requirement |
 
 ---
 
@@ -338,5 +367,6 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 | R-14 | D-05.1, D-05.3, D-05.4 |
 | R-15 | D-05.7 |
 | R-16 | D-06.1, D-06.2, D-06.3 |
+| R-17 | D-04.7, D-04.8, D-05.5 (service-scoped use of the role editors) |
 
-**Validation:** 16 roles; every role has at least one defining screen; every screen in Phase 1 that requires an actor is covered by at least one role; no role is granted access to a module that its design screens do not show.
+**Validation:** 17 roles; every role has at least one defining screen; every screen in Phase 1 that requires an actor is covered by at least one role; no role is granted access to a module that its design screens do not show. Role creation, delegation and service scoping are defined in `AUTHORIZATION-ARCHITECTURE.md` §6–§8.

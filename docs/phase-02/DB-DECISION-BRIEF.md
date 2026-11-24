@@ -3,8 +3,8 @@
 **Project:** Traway
 **Purpose:** Resolve the 10 questions that block Phase 3 (data model) before any schema work starts.
 **Source:** [`OPEN-QUESTIONS.md`](./OPEN-QUESTIONS.md) §2 and §3
-**Status:** Awaiting business answers — **no decision has been taken**
-**Date:** 2026-11-23
+**Status:** Answered 2026-11-24 — all ten decisions recorded in §9
+**Date:** 2026-11-23 · **Decision date:** 2026-11-24
 
 ---
 
@@ -732,7 +732,9 @@ No code, migration, model or API will be produced until you approve Phase 3 sepa
 
 ---
 
-# 8. Quick reference — current blockers
+# 8. Quick reference — the ten blockers as originally posed
+
+All ten are answered; the table is retained unchanged so the decision record in §9 can be read against the question that produced it.
 
 | Q | One-line blocker | If you answer nothing else, decide |
 |---|---|---|
@@ -746,5 +748,38 @@ No code, migration, model or API will be produced until you approve Phase 3 sepa
 | Q-23 | Hotel search form missing | Which inputs, and are children's ages required? |
 | Q-21 | Deletion queue with no policy | Grace period, blocking conditions, retention |
 | Q-29 | Refund/payout actions with no approval flow | Who approves money out, and how are partners paid? |
+
+---
+
+# 9. Recorded decisions (2026-11-24)
+
+The owner answered all ten questions. These answers are authoritative and supersede the working assumptions and the "Options" analysis above. They are mirrored into `OPEN-QUESTIONS.md` §2.9, `BUSINESS-LOGIC.md`, `FEATURES-CATALOG.md`, `WORKFLOWS.md`, `USER-ROLES-AND-PERMISSIONS.md` and the two authorization documents.
+
+| Decision | Option chosen | Recorded answer |
+|---|---|---|
+| DEC-01 (Q-01) | A+ | USD only. All Figma amounts illustrative. No fee/refund rule derived from them. Cancellation and payment fees are gateway-handled; Traway has no custom cancellation-fee engine. |
+| DEC-02 (Q-19) | A | USD only — prices, display, bookings, payments. No multi-currency functionality. |
+| DEC-03 (Q-14) | A | One coupon per booking; no first-booking restriction; global or flights/hotels/visas scope; Platform Admin and company owners create (company owners own-company only); max usage limits enforced against concurrency. |
+| DEC-04 (Q-25) | A | Separate internal id and customer reference; `TRW-FLT-{random}` / `TRW-HOT-{random}`; random, unique, non-sequential; provider PNRs separate. |
+| DEC-05 (Q-11) | C | No fare hold; revalidate immediately before payment; no fixed reservation promise. |
+| DEC-06 (Q-12) | A (dimension present, unused) | Fees paid through Traway; non-refundable on rejection; no nationality pricing; Platform Admin or the publishing company sets price; per-offering processing duration and validity. |
+| DEC-07 (Q-13) | D (manual now, adapter later) | Manual dashboard processing; submission outside Traway; employees record decisions; visible states Submitted → Under Review → Documents Required → Processing → Approved / Rejected. |
+| DEC-08 (Q-23) | B modified (no ages/no nationality) | Inputs: city/destination, check-in, check-out, adults, children, rooms; lat/lng stored; no nationality or child-age pricing. |
+| DEC-09 (Q-21) | A | 7-day grace; cancellable; blocked by upcoming trips, visa under review, pending refunds; financial/booking records retained; partner PII masked after anonymisation. |
+| DEC-10 (Q-29) | A + C executor | Policy auto-refunds; exceptional require an authorised employee; no fixed threshold; gateway payouts on demand; negative balances offset future settlements; partners bear gateway fees/chargebacks. |
+
+## 9.1 Effect on the readiness gate
+
+* **Phase 3 blockers: 0.** The data model can be designed against these decisions.
+* **Phase 4 blockers: 13** (the 8 pre-existing API questions plus Q-40, Q-44, Q-46, Q-51, Q-52), each with a documented default.
+* **New questions raised: 13** (Q-40 – Q-52), of which 1 is answered by the requirement (Q-45), 5 block only Phase 4, and 7 are non-blocking.
+* **New rules:** BR-119 – BR-125 (authorization), for a total of 125.
+* **New features:** F-111 (coupons), F-112 (dynamic roles & audit), for a total of 112.
+* **New roles:** R-17 (service owner), for a total of 17.
+* **New workflow:** WF-15 (role, permission & employee administration), for a total of 15.
+* **New permission keys:** 78 (33 platform, 45 organization).
+
+No code, migration, model or API exists at this point.
+
 
 

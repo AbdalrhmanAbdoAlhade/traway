@@ -28,8 +28,7 @@ return new class extends Migration
             $table->string('scope_requirement', 30)->default('organization');
             // Which organization types may hold this permission, e.g. ["company","hotel"]; null = all.
             $table->json('allowed_org_types')->nullable();
-            // false = owners cannot delegate it to staff.
-            $table->boolean('is_delegable')->default(true);
+            // Delegability is defined centrally in config/authorization.php, not per row.
         });
     }
 
@@ -41,7 +40,7 @@ return new class extends Migration
             $table->dropIndex(['domain']);
             $table->dropColumn([
                 'family', 'domain', 'description', 'sensitivity',
-                'scope_requirement', 'allowed_org_types', 'is_delegable',
+                'scope_requirement', 'allowed_org_types',
             ]);
         });
 

@@ -20,6 +20,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             // Owning partner (hotel / company). NULL for platform-sold products.
             $table->foreignId('organization_id')->nullable()->constrained()->restrictOnDelete();
+            // Hotel property the booking belongs to. NULL for every non-hotel service.
+            // Validated against organization_id / service so a booking can never
+            // point at a property owned by a different tenant.
+            $table->foreignId('hotel_id')->nullable()->constrained()->restrictOnDelete();
             // BR-087 / BR-115: assigned-only employees.
             $table->foreignId('assigned_membership_id')->nullable()
                 ->constrained('memberships')->nullOnDelete();
@@ -64,6 +68,7 @@ return new class extends Migration
 
             $table->index(['user_id', 'status']);
             $table->index(['organization_id', 'status', 'created_at']);
+            $table->index(['hotel_id', 'status']);
             $table->index(['service', 'status']);
         });
     }

@@ -2,22 +2,22 @@
 
 **Project:** Traway
 **Phase:** 2 of 7 — Functional & Business Analysis
-**Status:** Complete — awaiting approval (`APPROVE PHASE 2`)
-**Inputs:** [`FEATURES-CATALOG.md`](./FEATURES-CATALOG.md), [`../phase-01/UI-SCREENS-INVENTORY.md`](../phase-01/UI-SCREENS-INVENTORY.md)
-**Date:** 2026-11-23
+**Status:** Decisions applied — awaiting approval (`APPROVE PHASE 3`)
+**Inputs:** [`FEATURES-CATALOG.md`](./FEATURES-CATALOG.md), [`../phase-01/UI-SCREENS-INVENTORY.md`](../phase-01/UI-SCREENS-INVENTORY.md), [`DB-DECISION-BRIEF.md`](./DB-DECISION-BRIEF.md)
+**Date:** 2026-11-23 · **Decisions applied:** 2026-11-24
 
 ---
 
 ## 1. How to read this document
 
-118 rules, grouped by domain. Each rule carries:
+125 rules, grouped by domain. Each rule carries:
 
 * **ID** — `BR-nnn`, referenced from features and workflows.
 * **Rule** — the statement to implement. Formulas are given where the design exposes arithmetic.
 * **Evidence** — the screen(s) that prove or imply it.
-* **Tag** — `C` confirmed by pixels, `I` inferred (design requires it but does not draw it), `U` unresolved (must be answered before implementation).
+* **Tag** — `C` confirmed by pixels, `I` inferred (design requires it but does not draw it), `D` decision-backed (records an owner decision where no screen proves the rule), `U` unresolved (must be answered before implementation).
 
-Rules marked `I` are the only place where Phase 2 adds mechanics that the UI does not show. Every `I` rule is mirrored by a question in `OPEN-QUESTIONS.md`. Rules marked `U` are **not** to be implemented until answered.
+Rules marked `I` are the only place where Phase 2 adds mechanics that the UI does not show. Every `I` rule is mirrored by a question in `OPEN-QUESTIONS.md`. Rules marked `D` implement the ten recorded decisions and the authorization requirement. Rules marked `U` are **not** to be implemented until answered.
 
 ### Global precedence
 
@@ -32,13 +32,13 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 
 | ID | Rule | Evidence | Tag |
 |---|---|---|---|
-| BR-001 | All monetary values are stored and computed in a single base currency (USD is the only currency shown) and displayed with 2 decimals. A currency setting exists, so conversion is a display concern, not a storage concern. | M-024, M-043, M-053, all dashboards | C |
-| BR-002 | If non-USD display is enabled, the conversion rate is captured once per booking and locked at payment; subsequent rate changes never alter a completed booking. | M-053 currency selector; M-024 | I |
+| BR-001 | All monetary values are stored and computed in USD, in integer minor units, and displayed with 2 decimals. USD is the only currency (DEC-02); no conversion, FX rate or currency selector is implemented. All Figma amounts are illustrative and never define a rule. | M-024, M-043, M-053, all dashboards; DEC-01/DEC-02 | D |
+| BR-002 | Multi-currency is out of scope: there is no display conversion, no FX snapshot and no per-currency ledger. This rule supersedes its Phase-2 working form (DEC-02). | M-043, M-053; DEC-02 | D |
 | BR-003 | A flight price is composed of base fare + taxes + carrier/airport fees; each component is summed into the total shown before payment. Provider-level component breakdown is not drawn. | M-020, M-021, M-024 | C |
 | BR-004 | The price displayed on a result card is the total for the whole passenger mix, not per person, unless the card explicitly says «للفرد». | M-021 (cards), M-024 (total $511 for 3 pax) | C |
 | BR-005 | Service/platform fees, if charged, are itemised in the payment breakdown; no fee may appear for the first time on the payment screen without an itemised line. | M-024 breakdown | I |
-| BR-006 | A price is only guaranteed during an active inventory hold. After the hold expires, the price must be re-quoted before payment. | M-024 timer | I |
-| BR-007 | Visa fees are administered in the admin catalogue per country and visa type and served to the app; the app never hard-codes a fee. The mobile detail screen is a rendered view of that catalogue row. | M-029 «[حسب لوحة التحكم]»; D-03.9 | C |
+| BR-006 | No fare hold exists. The fare is revalidated immediately before payment; if the total changed, the new total is shown and must be accepted explicitly (BR-043). | M-024; DEC-05 | D |
+| BR-007 | Visa fees are administered per offering (country + visa type) and served to the app; the app never hard-codes a fee. Platform Admin or the publishing tourism company sets and updates the price for its own offering. The fee is snapshotted on the application at submission. | M-029 «[حسب لوحة التحكم]»; D-03.9; DEC-06 | D |
 | BR-008 | eSIM sale price per package is set as provider cost + markup (admin shows 35 % markup and per-package cost/sale/margin); the customer price is the stored sale price, not a runtime markup. | D-03.10; M-034, M-035 | C |
 | BR-009 | Hotel total = nightly room price × number of nights + taxes/fees, for the selected room type and occupancy; the result screen and the checkout must show the same total. | M-059 (per night + total), M-062 (7 nights), M-063 ($958) | C |
 | BR-010 | Tour total = per-person price × paying participants (+ child price where applicable); the detail and checkout totals must match. | M-066 (2 participants), M-067 | C |
@@ -46,7 +46,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 | BR-012 | Rounding is half-up to 2 decimals at the line level; the sum of rounded lines must equal the displayed total (no rounding drift). | M-024, M-063 | I |
 | BR-013 | Changing any priced input (dates, passenger count, room type, participants, extras) invalidates the previous quote and forces recomputation. | M-017, M-018, M-040, M-041, M-063, M-067 | C |
 | BR-014 | A booking is settled in exactly one currency; mixed-currency carts are not permitted. | implied by M-024 | I |
-| BR-015 | At most one promo code may be applied per booking. The code is validated server-side for: existence, active state, expiry, minimum spend, service scope, and first-booking-only condition; the discount is recalculated by the server, never sent by the client. `TRAWAY10` = 10 % off the first booking, applied to the eligible subtotal (−$24 in the capture). | M-024, M-057 | C |
+| BR-015 | At most one coupon per booking. Validation is server-side for existence, active state, expiry, minimum spend, service scope (global, or one of flights/hotels/visas) and usage limits. There is no first-booking restriction. Platform Admin and company owners create coupons (company owners only for their own company). Redemption counters are decremented atomically so concurrent attempts cannot exceed the limit. The discount is recomputed by the server and snapshotted. `TRAWAY10` is illustrative. | M-024, M-057; DEC-03 | D |
 
 ## 3. Payments, instruments & refunds
 
@@ -65,7 +65,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 | BR-026 | OTP codes are single-use, time-limited and attempt-limited; resend invalidates the previous code. The visible countdown (00:42 / 00:58) governs the resend gate, not code validity. | M-007, M-009 | C |
 | BR-027 | Every authenticated request is bound to one principal and one device session; session invalidation (logout everywhere) revokes all refresh tokens. Logout is not drawn (`Q-05`). | all authenticated screens | I |
 | BR-028 | Guest mode is read-only with respect to commerce: browsing and search are allowed, while any booking, visa, eSIM purchase or profile mutation requires authentication. Exact guest limits unresolved. | M-005 «تصفح كضيف» | I |
-| BR-029 | Account deletion removes personal data, saved documents, travellers and favourites, but does **not** cancel existing bookings; deletion is blocked or deferred while a trip is in progress per the warning shown. | M-056 | C |
+| BR-029 | Account deletion is a request → 7-day grace → anonymisation workflow. The user may cancel during the grace period. Deletion is blocked while the user has upcoming trips, a visa application under review, or a pending refund. Existing bookings are not cancelled; financial and booking records are retained. After anonymisation, partner-facing views show a masked reference, never personal data. | M-056, D-03.11; DEC-09 | D |
 | BR-030 | A blocked or suspended account cannot authenticate or transact on any application; active sessions are revoked. | D-03.13 «حظر الحساب» | I |
 
 ## 4. Flight search, fares & filters
@@ -87,15 +87,15 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 
 | ID | Rule | Evidence | Tag |
 |---|---|---|---|
-| BR-041 | Entering payment creates an inventory hold with a visible countdown (14:32 in the capture). The hold duration is configuration, not a client constant. | M-024 | C |
-| BR-042 | When the hold expires: seats are released, the checkout session becomes invalid, and payment is refused with a re-quote path. | M-024 timer | I |
+| BR-041 | No inventory hold is created at payment. The checkout revalidates availability and price at the moment of capture. The client countdown is removed (Q-43). | M-024; DEC-05 | D |
+| BR-042 | If revalidation fails (sold out, fare withdrawn, or price changed and not accepted), no charge is made and the customer is returned to results with an explanation. A capture that nevertheless arrives after a failed revalidation is refunded automatically. | M-024; DEC-05 | D |
 | BR-043 | If the fare changed while the user was on payment, the new total must be shown and explicitly accepted before charging; silent repricing is forbidden. | M-024 | I |
 | BR-044 | Reschedule is permitted only before departure of the affected leg. Charge = change fee + (new fare − original fare); the difference may be zero but may not be negative unless the fare rules allow residual credit. | M-040 (+$65, total 135) | C |
 | BR-045 | Baggage add-ons are limited by carrier allowance and a maximum piece/weight per passenger; the stepper must stop at the carrier limit. Prices shown: 23 kg $24, 32 kg $35, sports equipment $19. | M-041, M-023 (+$19) | C |
 | BR-046 | The same passenger must not hold two overlapping bookings on overlapping flight segments; a duplicate-booking check runs before payment. | inferred from M-023/M-024 | I |
 | BR-047 | Name corrections after ticketing follow carrier rules (usually not permitted); the design shows no edit path after confirmation. Policy unresolved. | M-025 → M-038 | U |
 | BR-048 | Seat selection pricing, free-seat entitlement and availability are undefined; only a three-seat confirmation bar exists. | M-026 | U |
-| BR-049 | A ticket is issued only after the payment provider confirms capture. The PNR is generated once and is immutable; the same PNR appears in booking details, e-ticket and partner booking tables. | M-025 `TRW7K2`, M-038, M-039 | C |
+| BR-049 | A ticket is issued only after the provider confirms capture. The airline PNR is assigned by the carrier and stored as an external attribute of the ticket; it is never the Traway booking reference. The Traway reference (`TRW-FLT-…`) is immutable. | M-025 `TRW7K2`, M-038, M-039; DEC-04 | D |
 
 ## 6. Visa applications & documents
 
@@ -103,10 +103,10 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 |---|---|---|---|
 | BR-050 | Accepted document formats are PDF, JPG and PNG with a per-file maximum of 10 MB; a document that fails either check is rejected before upload. | M-029, M-030 | C |
 | BR-051 | A visa request can be submitted only when every mandatory document is present and accepted; optional documents never block submission. | M-030 (3 of 5, 2 remaining), M-032 | C |
-| BR-052 | The displayed review SLA (24–48 h) is an expectation shown to the customer; whether it is contractual or merely informational is unresolved. | M-031 | C |
+| BR-052 | The 24–48 h figure is an expectation. The authoritative expected processing duration is configured per visa offering and shown to the customer. | M-031, D-03.9; DEC-07 | D |
 | BR-053 | A reused saved document is attached only if it belongs to the same applicant, has not expired, and matches the document type required by the application. | M-032 reusable documents | I |
-| BR-054 | The visa fee rendered on the detail screen comes from the active catalogue row for that country + visa type; a deactivated type cannot be applied for. | M-029; D-03.9 toggles | C |
-| BR-055 | Eligibility rules by applicant nationality (which nationalities may apply for which visa) are not shown anywhere; the catalogue exposes country/type without eligibility constraints. | M-027 – M-029; D-03.9 | U |
+| BR-054 | The visa fee shown is the active price for that offering, snapshotted on the application at submission; later catalogue changes never alter a submitted application. A deactivated offering cannot be applied for. | M-029; D-03.9; DEC-06 | D |
+| BR-055 | Visa pricing and eligibility do not vary by the applicant's nationality or residence. Availability depends only on the offering being active. | M-027 – M-029; D-03.9; DEC-06 | D |
 
 ## 7. eSIM
 
@@ -121,7 +121,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 
 | ID | Rule | Evidence | Tag |
 |---|---|---|---|
-| BR-060 | A hotel search requires destination, check-in, check-out and occupancy (adults, children, rooms). The results screen only proves the summary line, so the input form's exact fields remain unresolved. | M-059 summary; form absent | U |
+| BR-060 | A hotel search requires destination/city, check-in, check-out, adults, children and rooms. Hotels store latitude and longitude so search and the map can query by location. No nationality-based or child-age pricing rules apply. | M-059 summary; DEC-08 | D |
 | BR-061 | Availability is tracked per room type per date; a room type is sellable for a stay only when every night in the range has at least one unit available. | M-062, M-063, D-05.3 | I |
 | BR-062 | Hotel total = sum of nightly rates for the selected room type across the stay + taxes/fees; the same total is shown on detail, checkout and confirmation. | M-059, M-062, M-063 | C |
 | BR-063 | Occupancy limits per room type (adults/children) are enforced; exceeding them requires selecting another room type or an additional room. Exact limits per type are not drawn. | M-059 (2 adults), M-063 | I |
@@ -149,7 +149,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 |---|---|---|---|
 | BR-076 | One canonical state machine serves all services: `pending_payment → confirmed → completed`, with `cancelled` and `refunded` reachable from confirmed, and `expired` from pending_payment. Service-specific sub-states must map onto these. | M-037 tabs, M-038, D-03.3, D-04.5, D-05.4 | I |
 | BR-077 | Cancellation eligibility is evaluated per service policy: flights per fare rules, hotels per rate policy, tours per 24-hour window, eSIM never after activation, visas per application stage. | M-042, M-064, M-068, M-035 | C |
-| BR-078 | Refund amount = amount paid − applicable cancellation fee, floored at zero. The fee and refund are both itemised before confirmation. | M-042 (3,605 refund / 1,515 fee) | C |
+| BR-078 | Refund = amount actually captured − any amount retained by the payment gateway under its rules, floored at zero. Traway implements no custom cancellation-fee engine; gateway fees and chargebacks are borne per contract (DEC-01, DEC-10). Figma's 3,605 / 1,515 values are illustrative and seed no fee table. | M-042; DEC-01 | D |
 | BR-079 | Refunds are returned to the original payment instrument within the displayed 7–14 day window, and the booking moves to `refunded` only when the provider confirms. | M-042 | C |
 
 ## 11. Partner onboarding & tenancy
@@ -165,7 +165,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 
 | ID | Rule | Evidence | Tag |
 |---|---|---|---|
-| BR-084 | A user can never grant, on any portal, a permission they do not themselves hold. This applies to role creation, employee invitations and permission edits. | D-03.15, D-04.8 | C |
+| BR-084 | No user can grant a permission, role or scope they do not themselves hold. This applies to platform role creation, tenant role creation, employee invitations, direct grants and permission edits. Platform permissions can never attach to organization roles, and vice versa. | D-03.15, D-04.8; authorization requirement | D |
 | BR-085 | Partner-side permissions are scoped to the partner's own tenant and data. A company employee can never read or mutate another partner's records, even with an equivalent role name. | D-04.7, D-04.8, D-06.1 | I |
 | BR-086 | Only the partner owner can transfer ownership or delete the partner tenant; delegated roles cannot acquire these powers through the custom-role editor. | D-04.7 roles, D-04.8 toggles | C |
 | BR-087 | An employee with the restricted role sees only records assigned to them; assignment is the authorisation boundary, not the sidebar. | D-06.1 «صلاحيات محددة» | C |
@@ -189,8 +189,8 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 |---|---|---|---|
 | BR-096 | Commission is configured per partner: 10 % default for tourism companies, 15 % for hotels (both visible in admin). Rate changes apply prospectively, never retroactively to settled periods. | D-03.5, D-03.7, D-03.8, D-04.4 | C |
 | BR-097 | Commission = commission rate × net sale, where net sale excludes taxes and refunded amounts. | D-03.14, D-04.9 | I |
-| BR-098 | Partner due for a period = partner sales − platform commission − refunds charged to that partner. Negative results carry forward rather than being paid. | D-03.14 partner dues table | C |
-| BR-099 | Settlement states are `pending → processing → transferred`, with `failed` returning to pending. Only `transferred` closes a period. | D-03.14 transfer status, D-04.9 upcoming settlements | C |
+| BR-098 | Partner due for a period = partner sales − platform commission − refunds charged to that partner. A negative balance is carried forward and deducted from future settlements; it is never paid out. | D-03.14 partner dues table; DEC-10 | D |
+| BR-099 | Settlement states are `pending → processing → transferred`, with `failed` returning to pending. Payouts are executed through the payment gateway where supported and requested on demand. Only `transferred` closes a period. | D-03.14 transfer status, D-04.9 upcoming settlements; DEC-10 | D |
 | BR-100 | A refund issued after a settlement reduces the partner's next settlement; it is never deducted twice. | D-03.14 refunds, M-042 | I |
 | BR-101 | Legal documents are re-verified whenever they are replaced or reach expiry; expired or unverified documents block payouts and, for hotels, publication. | D-03.7/D-03.8 expiry badges, D-04.10 | C |
 | BR-102 | The transaction log is append-only: entries can gain a status but their amount, reference and actor cannot be edited or deleted. | D-03.14 `PAY-xxxxx` log | I |
@@ -203,23 +203,35 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 | BR-104 | Notifications are generated by domain events, not by polling: booking confirmed/cancelled, visa submitted/documents-incomplete/approved, eSIM issued, partner join request, deletion request, refund request, settlement transferred, employee deactivated. | M-048, D-03.2, D-04.2, D-05.2, D-06.3 | C |
 | BR-105 | Read/unread state is per user per notification; «mark all read» affects only that user's visible set. | M-048, D-03.2 | C |
 | BR-106 | Stop-sell blocks new bookings for the affected room type/date; it never cancels or modifies existing bookings. | D-05.3 stop-sell | C |
-| BR-107 | Every change to price, availability, stop-sell, commission or document verification is audited with actor, timestamp, before and after values. | D-05.3 bulk adjust, D-03.9, D-03.5 | I |
+| BR-107 | Every change to price, availability, stop-sell, commission, document verification, role, permission, membership or service scope is audited with actor, timestamp, before and after values. | D-05.3 bulk adjust, D-03.9, D-03.5, D-03.15; DEC-10 | D |
 | BR-108 | An account-deletion request enters a review queue (14 open in the capture) and is not executed on user tap alone. | M-056, D-03.11 | C |
-| BR-109 | Deletion removes personal data but retains financial records (invoices, payments, refunds) for the legally required period, in a form that no longer identifies the user where possible. | D-03.11, M-051 | I |
+| BR-109 | Deletion removes personal data but retains financial and booking records (invoices, payments, refunds) for the legally required period, in a form that no longer identifies the user where possible. Partners lose access to personal data after anonymisation. The exact retention duration is Q-47. | D-03.11, M-051; DEC-09 | D |
 | BR-110 | A hotel cannot publish its profile until its legal documents and profile data are approved; publishing a price or availability change does not require re-approval. | D-05.6 «حفظ ونشر» | I |
-| BR-111 | Every administrative mutation (accept/reject partner, suspend, block customer, change role, transfer settlement) writes an audit entry with the acting staff account. | D-03.15, D-03.13, D-03.14 | I |
+| BR-111 | Every administrative or access-control mutation (accept/reject partner, suspend, block customer, change role or permission, transfer settlement, approve exceptional refund) writes an audit entry with the acting staff account. | D-03.15, D-03.13, D-03.14; DEC-10 | D |
 
 ## 16. Reporting & cross-portal consistency
 
 | ID | Rule | Evidence | Tag |
 |---|---|---|---|
 | BR-112 | Each KPI has one definition used by every portal: bookings = confirmed + completed (not cancelled); revenue = captured payments minus refunds; occupancy = occupied room-nights ÷ available room-nights for the period. | D-03.1, D-04.1, D-05.1, D-05.7 | I |
-| BR-113 | A booking carries one reference that is identical in the mobile app, the admin portal and the owning partner portal. The inconsistent prefixes in the captures (`TRW7K2`, `TW-48210`, `HTL-90418`, `TR-33107`, `PAY-90121`, `P-2291`) require one scheme per entity. | M-025, M-036, M-064, M-068, D-03.14, D-02.3 | U |
+| BR-113 | A booking carries one customer-facing reference that is identical in the mobile app, the admin portal and the owning partner portal. References are random, unique and non-sequential: `TRW-FLT-{random}`, `TRW-HOT-{random}`, plus per-entity prefixes for visa, tour, eSIM, payment and partner application. Internal primary keys and external provider references are separate columns. | M-025, M-036, M-064, M-068, D-03.14, D-02.3; DEC-04 | D |
 | BR-114 | The settlement amount shown to the partner equals the corresponding admin partner-due row for the same period, to the cent. | D-03.14, D-04.9 | C |
 | BR-115 | An employee sees only visa requests and bookings assigned to them; unassigned records are excluded at query level. | D-06.1, D-06.2 | C |
 | BR-116 | The employee role has no write capability on bookings; any write attempt is rejected even if the UI were bypassed. | D-06.2 | C |
 | BR-117 | Locked modules (team, finance, settings) are inaccessible to the employee role on the server, not merely hidden in navigation. | D-06.3 | C |
 | BR-118 | Every list export applies the filters currently active on screen and uses the same date range and status definitions. | D-03.3, D-03.12, D-04.5, D-05.4, D-05.7 | C |
+
+### 16.1 Authorization rules (new — authorization requirement)
+
+| ID | Rule | Evidence | Tag |
+|---|---|---|---|
+| BR-119 | Platform and organization permissions are two separate families. A role belongs to exactly one family, and a membership context evaluates only its own family. | D-03.15, D-04.7, D-04.8; authorization requirement | D |
+| BR-120 | Every tenant-owned record carries a non-null owning organization id. Tenant context is derived from the authenticated membership, never from a request parameter or header. | D-04.5, D-05.4, D-06.1; authorization requirement | D |
+| BR-121 | Service scope only narrows access. A member with service scopes sees only those service lines; organization owners see all; a non-owner with no service scope has no service access. | D-04.7, D-05.5; authorization requirement | D |
+| BR-122 | A grantor may grant only permissions and scopes they currently hold. Platform permissions never attach to organization roles; organization permissions never attach to platform roles. | D-04.8, D-03.15; authorization requirement | D |
+| BR-123 | Exactly one active owner exists per organization. Ownership is transferred atomically, the owner role is immutable, and the last active owner cannot be removed or demoted. | D-04.7, D-05.5; authorization requirement | D |
+| BR-124 | Role, permission, membership and service-scope changes take effect on the next request and are audited with before/after values and the actor's membership. | D-04.8, D-03.15; authorization requirement | D |
+| BR-125 | Deactivating or removing a membership revokes its sessions immediately. Roles, grants and service scopes never carry to another organization. | D-04.2, D-04.7; authorization requirement | D |
 
 ---
 
@@ -227,25 +239,21 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 
 | Check | Result |
 |---|---|
-| Rules defined | 118 (BR-001 – BR-118) |
-| Confirmed (`C`) | 75 |
-| Inferred (`I`) | 37 |
-| Unresolved (`U`) | 6 (BR-036, BR-047, BR-048, BR-055, BR-060, BR-113) |
-| Rules referencing a screen | 118 / 118 |
+| Rules defined | 125 (BR-001 – BR-125) |
+| Confirmed (`C`) | 63 |
+| Decision-backed (`D`) | 28 |
+| Inferred (`I`) | 31 |
+| Unresolved (`U`) | 3 (BR-036, BR-047, BR-048) |
+| Rules referencing a screen or a recorded decision | 125 / 125 |
 | Rules without evidence | 0 |
-| Rules that depend on a Phase 1 inconsistency | BR-113 (reference formats), BR-078 (cancellation amounts) |
-| Rules that assume a missing screen | BR-060 (hotel search form), BR-048 (seat map) — both `U` |
+| Rules that depend on an unresolved Phase 1 inconsistency | 0 — BR-078 and BR-113 are resolved by DEC-01/DEC-04 |
+| Rules that assume a missing screen | BR-048 (seat map) only |
 
 ### 17.1 Rules that cannot be implemented until answered
 
-| Rule | Blocking question |
-|---|---|
-| BR-036 Multi-city | Q-08 |
-| BR-047 Name correction | Q-10 |
-| BR-048 Seat selection | Q-09 |
-| BR-055 Visa eligibility | Q-12 |
-| BR-060 Hotel search inputs | Q-23 |
-| BR-113 Reference scheme | Q-25 |
-| BR-078 refund arithmetic (conflicting totals) | Q-01 |
-| BR-002 currency conversion | Q-19 |
+| Rule | Blocking question | Position |
+|---|---|---|
+| BR-036 Multi-city | Q-08 | Out of scope for v1; option hidden |
+| BR-047 Name correction | Q-10 | Blocking-4 |
+| BR-048 Seat selection | Q-09 | Out of scope for v1 |
 

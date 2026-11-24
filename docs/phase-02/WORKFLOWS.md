@@ -2,9 +2,9 @@
 
 **Project:** Traway
 **Phase:** 2 of 7 — Functional & Business Analysis
-**Status:** Complete — awaiting approval (`APPROVE PHASE 2`)
-**Inputs:** [`FEATURES-CATALOG.md`](./FEATURES-CATALOG.md), [`BUSINESS-LOGIC.md`](./BUSINESS-LOGIC.md), [`USER-ROLES-AND-PERMISSIONS.md`](./USER-ROLES-AND-PERMISSIONS.md)
-**Date:** 2026-11-23
+**Status:** Decisions applied — awaiting approval (`APPROVE PHASE 3`)
+**Inputs:** [`FEATURES-CATALOG.md`](./FEATURES-CATALOG.md), [`BUSINESS-LOGIC.md`](./BUSINESS-LOGIC.md), [`USER-ROLES-AND-PERMISSIONS.md`](./USER-ROLES-AND-PERMISSIONS.md), [`AUTHORIZATION-ARCHITECTURE.md`](./AUTHORIZATION-ARCHITECTURE.md)
+**Date:** 2026-11-23 · **Decisions applied:** 2026-11-24
 
 ---
 
@@ -88,9 +88,9 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 5. Select outbound flight.
 6. Round trip: select return leg from return results (M-022) with validity notice.
 7. Passenger details: prefill account holder, add travellers, passport numbers, optional extra baggage (M-023). **[U]** seat selection via M-026 is not a complete flow.
-8. Continue to payment: server creates inventory hold and starts the countdown (M-024).
-9. Apply promo (optional), choose payment method, enter card if needed; server recomputes the total.
-10. Pay → provider capture → booking `confirmed`, PNR issued.
+8. Continue to payment: the server revalidates availability and price. **No inventory hold is created** (DEC-05).
+9. Apply a coupon (optional), choose payment method, enter card if needed; the server recomputes the total.
+10. Pay → provider capture → booking `confirmed`, Traway reference `TRW-FLT-…` issued; the carrier PNR is stored as an external attribute.
 11. Confirmation screen with upsells to eSIM/visa (M-025); booking visible in My bookings (M-037) and in admin/partner booking tables.
 
 **Alternate flows**
@@ -100,16 +100,16 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 * A4 — Multi-city: **not implemented** — no form or pricing rule (Q-08, BR-036).
 
 **Exceptions**
-* E1 — Hold expires before payment: seats released, session invalid, re-quote (BR-042).
-* E2 — Price changed after hold: new total requires explicit acceptance (BR-043).
-* E3 — Payment declined: stay on M-024 with the hold still running; retry allowed; no duplicate charge (BR-020).
+* E1 — Revalidation fails before capture (sold out or fare withdrawn): no charge, return to results with an explanation (BR-042).
+* E2 — Price changed during checkout: the new total must be accepted explicitly before capture (BR-043).
+* E3 — Payment declined: stay on M-024; retry allowed; no duplicate charge (BR-020).
 * E4 — Duplicate booking detected: block and explain (BR-046).
 * E5 — Passenger passport invalid/expiring: inline warning on M-023; whether it blocks ticketing is unresolved (Q-10).
 * E6 — Filters yield zero results: explicit empty state + reset (BR-039). Not designed → Q-18.
 
 **Postconditions:** booking `confirmed`, payment captured, ticket issued, notifications emitted, partner/admin visibility.
 **Rules:** BR-031 – BR-049, BR-015, BR-020.
-**Open:** Q-08, Q-09, Q-10, Q-11, Q-18.
+**Open:** Q-08, Q-09, Q-10, Q-18, Q-43 (countdown replacement).
 
 ---
 
@@ -138,19 +138,20 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 5c. Total updates; add to booking; payment for the add-on is implied but not drawn (Q-31).
 
 **Branch D — Cancellation**
-4d. Open cancel; review refund/fee breakdown, refund SLA and irreversibility (M-042).
+4d. Open cancel; review the refund amount, any gateway-retained fee, the refund SLA and the irreversibility notice (M-042).
 5d. Select optional reason, type «إلغاء», confirm.
-6d. Booking → `cancelled`; refund → `refunded` when provider confirms; funds to original instrument (7–14 days).
+6d. Booking → `cancelled`; refund → `refunded` when the provider confirms; funds to the original instrument (7–14 days). In-policy cancellations refund automatically; out-of-policy cases route to WF-14 (DEC-10).
 
 **Exceptions**
 * E1 — Departure already passed: reschedule and cancellation disabled (BR-044).
 * E2 — Non-refundable fare: cancellation allowed only if taxes are refundable, with explicit copy (BR-038).
 * E3 — Baggage over carrier limit: stepper capped (BR-045).
-* E4 — Refund figures conflict with the original total (M-042 vs M-024) → Q-01 blocks refund arithmetic.
+* E4 — Fee display: the refund is the captured amount minus any amount retained by the gateway; Figma's figures are illustrative (DEC-01). Copy is Q-40.
+* E5 — Exceptional refund (outside policy): requires an authorised approver, not the customer flow (Q-51).
 
 **Postconditions:** booking state changed, payment/refund recorded, customer notified, partner/admin tables updated.
-**Rules:** BR-038, BR-044, BR-045, BR-076 – BR-079.
-**Open:** Q-01, Q-10, Q-31.
+**Rules:** BR-038, BR-044, BR-045, BR-076 – BR-079, BR-111.
+**Open:** Q-10, Q-31, Q-40, Q-51, Q-52.
 
 ---
 
@@ -163,12 +164,12 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 **Main flow**
 1. Visa countries list with search and region chips (M-027).
 2. Select country → visa types with duration, entry type, document count (M-028).
-3. Select type → detail: validity, fee, required documents and accepted formats (M-029).
+3. Select type → detail: validity, fee (from the active offering, never hard-coded), expected processing duration, required documents and accepted formats (M-029).
 4. «ابدأ رفع المستندات» → upload screen; upload each document, see progress (3 of 5, 60 %), optionally reuse a saved document (M-030, M-032).
 5. Save; the application persists as a draft while documents remain.
-6. When all mandatory documents are present, submit.
-7. Success screen with request number, 24–48 h review SLA (M-031).
-8. Tracker shows per-application checklist and any missing documents (M-032).
+6. When all mandatory documents are present, submit and pay the visa fee through Traway (DEC-06). The fee is snapshotted on the application.
+7. Success screen with request number `TRW-VIS-…`, the offering's processing expectation, and the customer-visible status (M-031).
+8. Tracker shows per-application checklist, status and any missing documents (M-032).
 
 **Alternate flows**
 * A1 — Resume a draft from My bookings / account («2 missing») → tracker → upload screen.
@@ -178,12 +179,12 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 **Exceptions**
 * E1 — Wrong format or >10 MB: rejected before upload (BR-050).
 * E2 — Missing mandatory document: submission blocked with the remaining count (BR-051).
-* E3 — Fee display placeholder `[حسب لوحة التحكم]` → Q-12 blocks any payment step; whether visas are paid in-app is part of the same question (Q-12).
-* E4 — Nationality not eligible: no rule exists in the design (BR-055, Q-12).
+* E3 — Payment step: required by DEC-06 but no payment screen is drawn; the fee checkout is a design deliverable (Q-44 covers withdrawal refundability).
+* E4 — Offering deactivated: cannot be applied for (BR-054). Eligibility does not depend on nationality (DEC-06).
 
-**Postconditions:** application `submitted`; queue entry for the company visa desk; traveller notification.
+**Postconditions:** application `submitted` and fee captured; queue entry for the company visa desk; traveller notification.
 **Rules:** BR-007, BR-050 – BR-055.
-**Open:** Q-12, Q-13.
+**Open:** Q-44, Q-46.
 
 ---
 
@@ -198,22 +199,25 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 2. Employee opens the request: applicant data, document list, review progress (1 of 5 completed) (D-04.6).
 3. Accept or reject each document; rejected documents require re-upload by the applicant.
 4. «قبول كل المستندات» bulk-accepts; «التالي» moves to the next applicant.
-5. When all mandatory documents are accepted, the request becomes ready to submit (stage not drawn).
-6. **[U]** Submission to the embassy/portal and the decision recording are not designed (Q-13).
-7. Customer is notified of incomplete documents and of the eventual decision (notification types confirmed on D-03.2).
+5. The application is already `Submitted` (WF-05). When all mandatory documents are accepted, the employee moves it to `Under Review` (DEC-07).
+6. Submission to the external authority happens **outside Traway**; the employee may store the authority's reference and any evidence.
+7. The employee records each status change: `Documents Required` (with the missing/rejected list) → `Processing` → `Approved` or `Rejected`. A rejection stores a reason category plus a note.
+8. The customer is notified of every visible status change and sees it on the tracker.
+
+**Status model (canonical, DEC-07):** `Submitted → Under Review → Documents Required → Processing → Approved / Rejected`. Internal document-level mechanics stay internal; only these states are customer-visible.
 
 **Alternate flows**
 * A1 — Restricted employee works only assigned requests and can request extra permission from the owner (D-06.1).
-* A2 — Platform admin sees the request in booking/visa oversight and in notifications (D-03.2, D-03.3).
+* A2 — Platform admin sees the request in booking/visa oversight and in notifications (D-03.2, D-03.3), with an audited override permission.
 
 **Exceptions**
-* E1 — Document rejected → application returns to `documents incomplete`; cannot advance (BR-095).
+* E1 — Document rejected → application returns to `Documents Required`; cannot advance (BR-095).
 * E2 — Applicant re-uploads → notification to the assigned reviewer (D-04.2 event «passport re-upload»).
-* E3 — Rejection decision → customer-side outcome screen is missing (Q-13).
+* E3 — Application rejected: the customer sees `Rejected` and the reason category; the re-application policy and reason wording are Q-46.
 
-**Postconditions:** documents verified; application state visible to traveller, company and admin.
-**Rules:** BR-095, BR-104, BR-115.
-**Open:** Q-13.
+**Postconditions:** documents verified; status history recorded; application state visible to traveller, company and admin.
+**Rules:** BR-052, BR-095, BR-104, BR-115.
+**Open:** Q-46.
 
 ---
 
@@ -254,7 +258,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 **Screens:** M-059, M-060, M-061, M-062, M-063, M-064, M-037
 
 **Main flow**
-1. Hotel results for destination/dates/occupancy with 186 properties and filter chips (M-059).
+1. Search with city/destination, check-in, check-out, adults, children and rooms (DEC-08); results show 186 properties with filter chips (M-059).
 2. Refine with filters (M-060) or switch to map (M-061).
 3. Open hotel detail: gallery, rating, amenities, room types and prices for the stay, cancellation/breakfast badges (M-062).
 4. Select room type → booking screen: stay summary, lead guest, special requests, payment timing (pay now −5 % / pay at hotel), taxes and total (M-063).
@@ -271,11 +275,11 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 * E1 — No availability for the full stay: room type not selectable (BR-066).
 * E2 — Occupancy exceeds room limit: require another room type (BR-063).
 * E3 — Stop-sell on a night: booking rejected (BR-106).
-* E4 — Hotel search inputs are undefined (BR-060, Q-23) — the form is missing from the corpus.
+* E4 — No hotel search form is drawn; the six required inputs are fixed by DEC-08 and the form is a design deliverable. Map search uses the stored latitude/longitude (BR-060, BR-065).
 
 **Postconditions:** booking `confirmed`, hotel notified, voucher available, settlement accrues.
 **Rules:** BR-009, BR-060 – BR-068, BR-106.
-**Open:** Q-23.
+**Open:** Q-49 (multi-property scope, non-blocking).
 
 ---
 
@@ -320,7 +324,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 4. Admin receives a join notification and reviews the request: applicant data, requested services, commission terms, document verification (D-03.6).
 5. Accept → partner tenant created; owner account created; activation link e-mailed (inferred mechanics, BR-083).
 6. Owner activates the account and logs into the correct portal (D-01.1 routing rule BR-080).
-7. Owner invites team members and assigns roles (D-04.7/D-04.8 for companies, D-05.5 for hotels).
+7. Owner invites team members, creates organization roles (or clones a template), assigns them, and may grant bounded per-employee permissions (D-04.7/D-04.8 for companies, D-05.5 for hotels; AUTHORIZATION-ARCHITECTURE §6–§7).
 8. Owner completes company/hotel settings and publishes (hotel publication requires approved documents, BR-110).
 
 **Alternate flows**
@@ -335,7 +339,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 
 **Postconditions:** tenant active, owner authenticated, roles assignable.
 **Rules:** BR-080 – BR-083, BR-101.
-**Open:** Q-25 (reference scheme), Q-26.
+**Open:** Q-26.
 
 ---
 
@@ -358,12 +362,12 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 * A2 — Deactivate a type: it disappears from the mobile list but existing applications remain valid.
 
 **Exceptions**
-* E1 — Missing price: the mobile screen currently shows `[حسب لوحة التحكم]`, proving the value is expected from this screen (Q-12).
+* E1 — Missing price: the mobile placeholder proves the fee is administered here; Platform Admin or the publishing company sets it (DEC-06).
 * E2 — Provider sync failure: availability must not silently change (Q-32).
 
 **Postconditions:** published catalogue values; audited change (BR-107).
 **Rules:** BR-007, BR-008, BR-054, BR-107.
-**Open:** Q-12, Q-32.
+**Open:** Q-32.
 
 ---
 
@@ -437,32 +441,66 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 **Main flow (support)**
 1. Customer opens customer service: WhatsApp, phone callback, working hours (M-055).
 2. Issue resolved externally, or escalated to a refund request (notification type «refund request» on D-03.2).
-3. Support reviews the booking and the refund eligibility; super admin executes the refund where policy allows (D-03.14).
+3. In-policy refunds execute automatically; exceptional refunds require an authorised approver (platform finance by default, Q-51), are audited, and have no fixed monetary threshold (DEC-10).
 4. Customer sees the refund in payment history with status `processing` → `refunded` (M-051).
 
 **Main flow (deletion)**
 1. Customer opens delete account, reviews consequences (documents deleted, travellers/favourites lost, bookings not cancelled) (M-056).
 2. Selects an optional reason, types «حذف», confirms.
-3. Request enters the admin queue (14 open) (D-03.11).
-4. Admin processes the request; personal data removed, financial records retained (BR-109).
-5. Sessions revoked; account cannot authenticate (BR-030).
+3. Request enters the admin queue (14 open) (D-03.11) and enters a **7-day grace period** during which the customer may cancel it (DEC-09).
+4. Deletion is blocked while the user has upcoming trips, a visa application under review, or a pending refund (DEC-09).
+5. After the grace period, the admin processes the request: personal data is anonymised, documents deleted, financial and booking records retained (BR-109).
+6. Sessions revoked; account cannot authenticate (BR-030).
 
 **Alternate flows**
-* A1 — Customer cancels the deletion request before processing (not drawn, Q-21).
+* A1 — Customer cancels the deletion request during the grace period (supported by DEC-09; the cancel control is a design deliverable).
 * A2 — Blocked account by admin (D-03.13) — customer sees an auth error, no UI drawn.
 
 **Exceptions**
-* E1 — Upcoming trip: warning shown but deletion is not blocked (BR-029) — Q-21.
-* E2 — Refund outside policy: support denies with an explanation; no denial reason field drawn (Q-29).
+* E1 — Upcoming trip, visa under review or pending refund: deletion is blocked until the condition clears (DEC-09).
+* E2 — Exceptional refund refused: the approver records a reason; the customer is informed (Q-51).
 * E3 — Support hours/phone are placeholders (Q-22) — WF depends on real values.
 
-**Postconditions:** ticket resolved or refund issued; account deleted/blocked.
-**Rules:** BR-019, BR-029, BR-030, BR-108, BR-109.
-**Open:** Q-21, Q-22, Q-29.
+**Postconditions:** ticket resolved or refund issued; account anonymised/blocked.
+**Rules:** BR-019, BR-029, BR-030, BR-107, BR-108, BR-109.
+**Open:** Q-22, Q-40, Q-47, Q-51.
 
 ---
 
-## 16. Workflow coverage
+## 16. WF-15 — Role, permission & employee administration
+
+**Actors:** Platform admin (R-03), Company owner (R-07), Hotel owner (R-12), Service owner (R-17)
+**Trigger:** create or change a role, invite an employee, adjust access
+**Preconditions:** actor holds the access-control permissions and an equal-or-broader ceiling
+**Screens:** D-03.15, D-04.7, D-04.8, D-05.5, D-06.1
+
+**Main flow**
+1. Platform admin opens D-03.15 and creates or edits a **platform role** from the platform permission catalog. Tenant roles/permissions may also be assigned through `platform.organization_access.manage`, which is audited.
+2. Owner opens Team (D-04.7 for a company, D-05.5 for a hotel) and invites an employee with a role and, when the organization uses service lines, a service scope.
+3. Owner optionally clones a seeded template into a **custom organization role** (D-04.8) containing only permissions the owner holds.
+4. Owner optionally adds a **bounded direct grant** to one employee for one extra capability, visible as an exception.
+5. The system validates every grant against the grantor's ceiling (BR-084, BR-122) and rejects escalation instead of trimming it silently.
+6. Invitation is sent; on acceptance the employee receives the resolved permission set for that membership.
+7. Any later change increments the membership version; the new set applies on the next request (BR-124) and the change is audited.
+
+**Alternate flows**
+* A1 — Service owner performs steps 2–4 only inside their service scope; a broader scope or permission is rejected.
+* A2 — Ownership transfer between two active members is atomic and audited (BR-123).
+* A3 — Suspension or removal revokes the membership's sessions immediately; assigned records are reassigned or flagged (BR-125).
+
+**Exceptions**
+* E1 — Grant exceeds the grantor's ceiling → rejected with an explicit authorisation error.
+* E2 — Platform permission attached to an organization role (or the reverse) → rejected (BR-119).
+* E3 — Role deleted while members still hold it → blocked until reassignment (RA-07).
+* E4 — Last active owner deactivated, removed or demoted → blocked (BR-123).
+
+**Postconditions:** effective permissions updated, membership version incremented, audit entry written, sessions adjusted.
+**Rules:** BR-084, BR-085, BR-087 – BR-089, BR-111, BR-119 – BR-125.
+**Open:** Q-41, Q-48, Q-49, Q-50 (all non-blocking).
+
+---
+
+## 17. Workflow coverage
 
 | Workflow | Applications | Screens used | Features |
 |---|---|---|---|
@@ -480,10 +518,11 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 | WF-12 | COM, ADM, MOB | D-04.3, D-04.4, D-03.1, M-065 | F-093, F-094, F-078 |
 | WF-13 | HTL, ADM, MOB | D-05.1, D-05.3, D-05.4, D-05.7, D-03.14 | F-101 – F-107, F-089 |
 | WF-14 | MOB, ADM | M-055, M-042, M-056, D-03.2, D-03.11, D-03.13 | F-049, F-057, F-058, F-086, F-088 |
+| WF-15 | ADM, COM, HTL, EMP | D-03.15, D-04.7, D-04.8, D-05.5, D-06.1 | F-090, F-097, F-098, F-105, F-108, F-112 |
 
-**Coverage check:** 14 workflows; every application acts in at least one; every P0 feature belongs to at least one workflow; 77 of 108 screens appear inside a workflow. The remaining 31 are supporting or administrative states that are entered from a workflow rather than forming one, and all are traced to features in `FEATURES-CATALOG.md` §3:
+**Coverage check:** 15 workflows; every application acts in at least one; every P0 feature belongs to at least one workflow; 79 of 108 screens appear inside a workflow. The remaining 29 are supporting or administrative states that are entered from a workflow rather than forming one, and all are traced to features in `FEATURES-CATALOG.md` §3:
 
 * **Account & settings states not stepped through by a workflow:** M-043 – M-054, M-057, M-058 (account hub, travellers, passport scan, profile edit, notifications, terms, cards, payment history, settings, favourites, support detail, offers, destinations). They are reached from Home, account or a booking rather than being part of a purchase flow.
-* **Back-office states not stepped through by a workflow:** D-01.2, D-03.3 – D-03.5, D-03.7, D-03.8, D-03.12, D-03.15, D-04.1, D-04.2, D-04.8 – D-04.10, D-05.2, D-05.6, D-06.2, D-06.3 (notification inboxes, directories, partner details, role editors, settings, read-only booking view). They are supporting screens of the platform/tenant administration workflows.
+* **Back-office states not stepped through by a workflow:** D-01.2, D-03.3 – D-03.5, D-03.7, D-03.8, D-03.12, D-04.1, D-04.2, D-04.9, D-04.10, D-05.2, D-05.6, D-06.2, D-06.3 (notification inboxes, directories, partner details, settings, read-only booking view). They are supporting screens of the platform/tenant administration workflows.
 
 No screen is untraced; the difference is only whether a screen is a workflow step or a supporting state.

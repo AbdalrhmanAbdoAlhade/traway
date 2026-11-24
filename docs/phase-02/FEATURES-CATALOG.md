@@ -2,16 +2,16 @@
 
 **Project:** Traway
 **Phase:** 2 of 7 — Functional & Business Analysis
-**Status:** Complete — awaiting approval (`APPROVE PHASE 2`)
-**Inputs:** [`../phase-01/UI-SCREENS-INVENTORY.md`](../phase-01/UI-SCREENS-INVENTORY.md), [`../phase-01/SCREEN-COVERAGE-REPORT.md`](../phase-01/SCREEN-COVERAGE-REPORT.md)
-**Companion documents:** `BUSINESS-LOGIC.md`, `USER-ROLES-AND-PERMISSIONS.md`, `WORKFLOWS.md`, `OPEN-QUESTIONS.md`
-**Date:** 2026-11-23
+**Status:** Decisions applied — awaiting approval (`APPROVE PHASE 3`)
+**Inputs:** [`../phase-01/UI-SCREENS-INVENTORY.md`](../phase-01/UI-SCREENS-INVENTORY.md), [`../phase-01/SCREEN-COVERAGE-REPORT.md`](../phase-01/SCREEN-COVERAGE-REPORT.md), [`DB-DECISION-BRIEF.md`](./DB-DECISION-BRIEF.md)
+**Companion documents:** `BUSINESS-LOGIC.md`, `USER-ROLES-AND-PERMISSIONS.md`, `AUTHORIZATION-ARCHITECTURE.md`, `ROLE-PERMISSION-SCOPE-MATRIX.md`, `WORKFLOWS.md`, `OPEN-QUESTIONS.md`
+**Date:** 2026-11-23 · **Decisions applied:** 2026-11-24
 
 ---
 
 ## 1. Method and conventions
 
-Every requirement in this phase is derived from a Phase 1 screen. No feature is invented; where a screen only proves an entry point, the behaviour behind it is marked unresolved and carried to `OPEN-QUESTIONS.md`.
+Every requirement in this phase is derived from a Phase 1 screen, except two features that the owner's decisions and the authorization requirement make mandatory (F-111, F-112 — tagged `D`). No other feature is invented; where a screen only proves an entry point, the behaviour behind it is marked unresolved and carried to `OPEN-QUESTIONS.md`.
 
 ### 1.1 Evidence tags
 
@@ -19,6 +19,7 @@ Every requirement in this phase is derived from a Phase 1 screen. No feature is 
 |---|---|
 | **C** | **Confirmed** — directly visible in one or more screens: label, field, state, amount, or workflow step. |
 | **C+i** | **Confirmed feature, inferred mechanics** — the screen proves the feature exists and its visible behaviour, but a server-side or non-depicted rule is required for it to work. The inference is named in the row. |
+| **D** | **Decision/requirement-backed** — no Phase 1 screen proves the feature, but the owner's recorded decision (DEC-03) or the authorization requirement makes it mandatory. The basis is cited in the row. |
 | **U** | **Unresolved** — the design shows a concept, fragment or promise but not the rule, data or outcome. Not a v1 requirement until answered. |
 
 No feature is tagged `U` and simultaneously treated as a committed requirement.
@@ -73,6 +74,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | 13 | Company portal | F-091 – F-100 | D-04.1 – D-04.10 |
 | 14 | Hotel portal | F-101 – F-107 | D-05.1 – D-05.7 |
 | 15 | Employee portal | F-108 – F-110 | D-06.1 – D-06.3 |
+| 16 | Coupons & authorization administration | F-111 – F-112 | — (decision/requirement-backed; editors on D-03.15, D-04.7, D-04.8, D-05.5) |
 
 ---
 
@@ -110,7 +112,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-016 | City & airport picker | MOB | M-016 | P0 | C | Inputs: text search, recent searches, popular destinations from Cairo (DXB, JED, RUH, IST, AYT, CDG, LHR, KUL). Output: selected city/airport returned to caller (flight search or hotel search). |
 | F-017 | Date range & price calendar | MOB | M-017 | P0 | C | Inputs: departure/return, ±3-day flexibility toggle, «أرخص الأسعار» toggle. Output: selected range. Rule: departure ≥ today; return ≥ departure (`BR-031`). Per-day prices imply fare-calendar data availability. |
 | F-018 | Passengers & cabin selector | MOB | M-018 | P0 | C | Inputs: adults (12+), children (2–11), infants (<2), cabin (economy/premium/business/first). Visible limits: max 9 passengers, max 1 infant per adult. Output: passenger mix + cabin. |
-| F-019 | Offers list | MOB | M-057 | P2 | C | Promo code `TRAWAY10` (10 % first booking), category chips (all, flights, hotels, tours, eSIM), offer cards with discount, conditions, expiry countdown. Redemption rules unresolved (`Q-14`). |
+| F-019 | Offers list | MOB | M-057 | P2 | C | Promo code `TRAWAY10` (10 % first booking), category chips (all, flights, hotels, tours, eSIM), offer cards with discount, conditions, expiry countdown. Rules fixed by DEC-03: one per booking, no first-booking restriction, global or flights/hotels/visas, usage limits (`BR-015`). |
 | F-020 | Featured destinations | MOB | M-058 | P2 | C | Region chips (all, Gulf, Europe, Asia, islands/beaches), hero destination with starting price, grid with visa-requirement badges. Destination → flight or hotel results is inferred. |
 | F-021 | Notifications inbox | MOB | M-048 | P1 | C | Filter chips (all, bookings, offers, payments), day/week grouping, unread dots, mark-all-read. Item destinations not drawn → deep links unresolved (`Q-07`). Push delivery is inferred (`BR-104`). |
 
@@ -124,7 +126,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-025 | Return-leg selection | MOB | M-022 | P0 | C | Return results (DXB→CAI) with same card pattern and «اختيار العودة». Visible rule: 18-day validity notice. Output: paired itinerary → passenger details. |
 | F-026 | Passenger details & validation | MOB | M-023 | P0 | C | Inputs per traveller: first/family name, passport number (adult), inline validation, add child (2–11), additional baggage (+$19). Output: traveller set + total for 3 passengers → payment. Name/passport format rules unresolved (`Q-10`). |
 | F-027 | Seat selection | MOB | M-026 (fragment) | P3 | U | Only a confirmation bar is supplied: 3 seats (12A/12B/12C), «مجاناً», «تأكيد المقاعد». No seat map, pricing or availability design. **Not a committed v1 requirement** until `Q-09` is answered. |
-| F-028 | Fare hold / checkout session | MOB | M-024 | P0 | C | Visible 14:32 countdown on the payment screen. Inferred: inventory is held for a fixed window; expiry must release the hold and return the user to results (`BR-041`). Hold duration source unresolved (`Q-11`). |
+| F-028 | Checkout price revalidation | MOB | M-024 | P0 | C | The 14:32 countdown in the capture is illustrative. **No fare hold exists** (DEC-05): the server revalidates availability and price immediately before payment, and a changed total requires explicit consent (`BR-006`, `BR-041` – `BR-043`). |
 | F-029 | Payment, promo & checkout | MOB | M-024 | P0 | C | Methods: card, e-wallet, Apple Pay. Card fields: number, expiry, CVV. Price breakdown with promo `TRAWAY10` (−$24) and total $511. Rule: one promo per booking, validated server-side (`BR-015`). |
 | F-030 | Flight booking confirmation | MOB | M-025 | P0 | C | Success overlay, PNR `TRW7K2`, route, duration, date/time, 3 passengers, economy, total; upsells to UAE eSIM and UAE visa; actions «عرض الحجز», «الرئيسية». Inferred: confirmation triggers booking record + notification + ticket issuance. |
 
@@ -134,11 +136,11 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 |---|---|---|---|---|---|---|
 | F-031 | Visa country catalogue | MOB | M-027 | P0 | C | Search country, region chips (all, Gulf, Europe/Schengen, Asia), country rows with visa-type counts (KSA 3, UAE 3, Turkey 2, France 2, Germany 2). Output: country selection. |
 | F-032 | Visa types per country | MOB | M-028 | P0 | C | Country hero + type cards (tourism, business, family visit) each with duration, entry type (multiple/single), document count. Output: type selection. |
-| F-033 | Visa type detail & fee display | MOB | M-029 | P0 | C | Shows stay validity (90 days), visa validity (1 year), entry type, fee placeholder «[حسب لوحة التحكم]», required documents (passport, photo, flight booking, hotel booking, bank statement) with accepted formats PDF/JPG/PNG ≤10 MB. Fee rendering rule unresolved (`Q-12`). |
+| F-033 | Visa type detail & fee display | MOB | M-029 | P0 | C | Shows stay validity (90 days), visa validity (1 year), entry type, fee placeholder «[حسب لوحة التحكم]», required documents (passport, photo, flight booking, hotel booking, bank statement) with accepted formats PDF/JPG/PNG ≤10 MB. Fee is rendered from the active offering and snapshotted on the application (`BR-007`, `BR-054`; DEC-06). |
 | F-034 | Visa document upload | MOB | M-030 | P0 | C | Per-document upload with status and progress (3 of 5, 60 %), camera/upload actions, optional document, save with 2 remaining, data-sharing consent note. Rules: file type/size, resumable draft (`BR-050`). |
 | F-035 | Visa request submission | MOB | M-031 | P0 | C | Success state with request number `TRW-V-2291`, review SLA 24–48 h, follow-up CTA. Only submittable when all mandatory documents are present (`BR-051`). |
 | F-036 | Visa document tracker | MOB | M-032 | P1 | C | Per-application checklist (2 of 5 missing), uploaded/required states with file types, complete-upload CTA, other application (UAE 5/5), reusable saved documents (passport, personal photo). |
-| F-037 | Visa application lifecycle | MOB / COM | M-031, M-032, D-04.6 | P0 | C+i | Statuses implied: draft → submitted → documents incomplete → ready to submit → under review → approved/rejected. Only partner-side review states are drawn; traveller-side approval/rejection screens are absent (`Q-13`). |
+| F-037 | Visa application lifecycle | MOB / COM | M-031, M-032, D-04.6 | P0 | C+i | Canonical customer-visible statuses (DEC-07): Submitted → Under Review → Documents Required → Processing → Approved / Rejected. Internal document mechanics stay internal. |
 | F-038 | Reusable saved documents | MOB | M-032 | P2 | C | Documents previously uploaded can be attached to a new application. Implied rule: reuse must not bypass validity/expiry checks (`BR-053`). |
 
 ### Domain 6 — eSIM
@@ -160,7 +162,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-046 | E-ticket / boarding pass | MOB | M-039 | P1 | C | Passenger chips, boarding-pass card (route, duration, flight no. MS 912, date, boarding 07:25, seat 14A, gate, baggage 23 kg), QR, arrival advisory, download PDF, add to wallet. Share action present. |
 | F-047 | Reschedule flight | MOB | M-040 | P1 | C | Inputs: new departure/return date. Shows change fee + fare difference (+$65), total difference 135, confirm. Rules: only before departure; fare difference may be zero or negative (`BR-044`). |
 | F-048 | Add baggage | MOB | M-041 | P1 | C | Steppers for 23 kg ($24), 32 kg ($35), sports equipment ($19), extra-weight options, running total ($245), add to booking. Rule: allowance must not exceed carrier limits (`BR-045`). |
-| F-049 | Cancel booking & refund | MOB | M-042 | P1 | C | Refund breakdown (3,605 refund / 1,515 fee), refund to original method, SLA 7–14 days, irreversibility notice, optional reason chips, typed «إلغاء» confirmation. Figures conflict with M-024 total — see `Q-01`. |
+| F-049 | Cancel booking & refund | MOB | M-042 | P1 | C | Refund breakdown (3,605 refund / 1,515 fee), refund to original method, SLA 7–14 days, irreversibility notice, optional reason chips, typed «إلغاء» confirmation. Figma figures are illustrative; the refund is the captured amount minus any gateway-retained fee (DEC-01, `BR-078`). |
 
 ### Domain 8 — Profile, payments & account
 
@@ -171,9 +173,9 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-052 | Passport OCR scan | MOB | M-047 | P2 | C | Camera frame with MRZ detection, extracted data preview, retake/gallery/flash, manual-entry fallback. Inferred: OCR result is user-confirmable and never auto-committed (`BR-024`). |
 | F-053 | Edit profile & completeness | MOB | M-046 | P1 | C | Fields: names, email (verified badge), phone, gender, passport no./expiry, completeness 80 %, save. Rule: changing email/phone requires re-verification (`BR-023`). |
 | F-054 | Favourites | MOB | M-054 | P2 | C | Tabs (hotels, destinations, tours); hotel cards with price/night and rating; remove. Card → detail is inferred. |
-| F-055 | Settings: language, currency, notifications, password | MOB | M-053 | P1 | C | Language toggle (AR/EN), notifications toggle, change password, terms, delete account. Currency label «دولار $» is shown but the selector itself is unresolved (`Q-19`). |
+| F-055 | Settings: language, currency, notifications, password | MOB | M-053 | P1 | C | Language toggle (AR/EN), notifications toggle, change password, terms, delete account. Currency label «دولار $» is shown but the selector is hidden because USD is the only currency (DEC-02). |
 | F-056 | Terms & privacy | MOB | M-049 | P1 | C | Tabbed terms/privacy, last-updated date, numbered sections, «موافق». Consent must be versioned and stored (`BR-025`). |
-| F-057 | Delete account | MOB | M-056 | P1 | C | Consequence list (documents deleted, travellers/favourites lost, existing bookings **not** cancelled), upcoming-trip warning, optional reason, typed «حذف» confirmation. Execution timing and retention unresolved (`Q-21`). |
+| F-057 | Delete account | MOB | M-056 | P1 | C | Consequence list (documents deleted, travellers/favourites lost, existing bookings **not** cancelled), upcoming-trip warning, optional reason, typed «حذف» confirmation. Seven-day grace, cancellable, blocked by upcoming trips / visa under review / pending refunds; financial records retained (DEC-09, `BR-029`). |
 | F-058 | Customer service | MOB | M-055 | P1 | C | WhatsApp contact, phone callback, working hours (placeholder «[المواعيد يحددها العميل]»), phone placeholder. No in-app chat drawn (`Q-22`). |
 | F-059 | Payment methods | MOB | M-052, M-050 | P0 | C | Default Visa card, Mastercard **** 1190, add card (preview, number, name, expiry, CVV, set-default, PCI note), recent payments. Rule: card data is tokenised; only last-4 stored (`BR-016`). |
 | F-060 | Payment history | MOB | M-051 | P1 | C | Totals (paid $657, refunded $65), status chips (all, paid, refunded, processing), month grouping, per-transaction status, export. Row → booking detail is inferred. |
@@ -182,7 +184,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 
 | ID | Feature | App | Screens | Pri | Ev | Notes — inputs, outputs, rules |
 |---|---|---|---|---|---|---|
-| F-061 | Hotel search & results | MOB | M-059 | P0 | C | Search summary (Dubai, 11–4 Dec, 2 adults), filter chips, 186 properties, sort, cards with rating/reviews, amenities, price/night and total, favourite toggle. **The search form itself is not supplied** (`Q-23`). |
+| F-061 | Hotel search & results | MOB | M-059 | P0 | C | Search summary (Dubai, 11–4 Dec, 2 adults), filter chips, 186 properties, sort, cards with rating/reviews, amenities, price/night and total, favourite toggle. **The search form itself is not supplied**, but the required inputs are fixed by DEC-08: destination/city, check-in, check-out, adults, children, rooms. |
 | F-062 | Hotel filters | MOB | M-060 | P0 | C | Price-per-night histogram + range, star rating, guest rating, amenity chips, free cancellation, pay-at-hotel, apply (62 offers). |
 | F-063 | Hotels on map | MOB | M-061 | P2 | C | Map with price pins, destination selector, list/map toggle, selected-hotel card. Inferred: map bounds query and clustering (`BR-065`). |
 | F-064 | Hotel detail & room selection | MOB | M-062 | P0 | C | Gallery, rating/reviews, amenities, room types with prices, cancellation/breakfast badges, total for 7 nights, book now. Rule: only room types with availability for the full stay are bookable (`BR-066`). |
@@ -220,12 +222,12 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-081 | Partner directory | ADM | D-03.4 | P0 | C | Tabs (tourism companies 3, hotels 4, join requests 3), add partner, table: partner, team size, active tours, tours/month, monthly sales, commission, status, actions. Rows → company/hotel detail; review → join review. |
 | F-082 | Add partner | ADM | D-03.5 | P0 | C | Inputs: commission (default 10 %), partner type, company/hotel data, owner invite e-mail, phone, licence no., supported services (tours; UAE/Saudi/Turkey/Georgia visas). Output: owner invitation sent, partner created in pending state. |
 | F-083 | Partner detail & suspension | ADM | D-03.7, D-03.8 | P0 | C | Company: sales $16.8K, tours 18, visa requests 142, rating 4.8, commission, allowed services, documents with expiry, team with owner flag, suspend. Hotel: revenue $22.4K, occupancy 82 %, 4 room types, rating 4.7, commission 15 %, services, documents, team, suspend. |
-| F-084 | Visa catalogue management | ADM | D-03.9 | P0 | C | 48 countries with active toggles; per-country visa types (tourist 30 d $599, business 3–5 y $156, residence 10–15 y $290); required-document editor with mandatory/optional toggles; add document; add country modal. This screen is the source of the mobile fee (`Q-12`). |
+| F-084 | Visa catalogue management | ADM | D-03.9 | P0 | C | 48 countries with active toggles; per-country visa types (tourist 30 d $599, business 3–5 y $156, residence 10–15 y $290); required-document editor with mandatory/optional toggles; add document; add country modal. Platform Admin or the publishing company sets the price, which is then snapshotted on the application (DEC-06). |
 | F-085 | eSIM catalogue & margin management | ADM | D-03.10 | P0 | C | Provider markup 35 %, total margin, wallet balance $4,210, provider block (146 countries, API-linked, term shows 12), packages with cost/sale/margin/availability, sync from API, price comparison, CSV export. |
-| F-086 | Account-deletion request queue | ADM | D-03.11 | P1 | C | Filters (all, this month), count 14, table with request state. Row → customer is inferred. Execution/approval semantics unresolved (`Q-21`). |
+| F-086 | Account-deletion request queue | ADM | D-03.11 | P1 | C | Filters (all, this month), count 14, table with request state. Row → customer is inferred. The queue is the operational control for the 7-day grace workflow (DEC-09). |
 | F-087 | Customer directory | ADM | D-03.12 | P1 | C | KPIs: 58,214 customers, 21,930 active, $246 average booking, 14 deletion requests. Searchable table: customer, city, bookings, spend, last activity, status. Export. Row → customer detail. |
 | F-088 | Customer detail & account actions | ADM | D-03.13 | P1 | C | KPIs ($657 spend, 5 bookings, 2 visa requests, 3 travellers), contact/profile, payment method, bookings table, saved travellers, block account, send report. Blocking rule unresolved (`Q-28`). |
-| F-089 | Finance & commissions | ADM | D-03.14 | P0 | C | KPIs: $96.4K payments, $12.2K platform commission, $34.2K partner dues, $1.7K refunds. Partner-dues table (period, sales, commission, due, transfer status), transaction log (`PAY-xxxxx`, method, customer, amount, status), commission-by-service chart, export, transfer actions. Payout execution UI is not drawn (`Q-29`). |
+| F-089 | Finance & commissions | ADM | D-03.14 | P0 | C | KPIs: $96.4K payments, $12.2K platform commission, $34.2K partner dues, $1.7K refunds. Partner-dues table (period, sales, commission, due, transfer status), transaction log (`PAY-xxxxx`, method, customer, amount, status), commission-by-service chart, export, transfer actions. Partner payouts go through the gateway on demand; negative balances offset future settlements (DEC-10). |
 | F-090 | Roles & permissions (platform) | ADM | D-03.15 | P1 | C | Permission hierarchy: system admin, finance, content, support; partner owner (company/hotel); employees. Section × action matrix (view/add/edit/delete) for content manager, role list with exemption counts, create-role modal. Rule: a user can never grant a permission they do not hold (`BR-084`). |
 
 ### Domain 13 — Tourism-company portal (APP-COM)
@@ -262,6 +264,13 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-108 | Assigned visa-request queue | EMP | D-06.1 | P1 | C | «صلاحيات محددة» banner, request queue, per-document accept/reject, request additional permission from owner. Rule: employee sees only assigned requests (`BR-115`). |
 | F-109 | Read-only bookings | EMP | D-06.2 | P1 | C | Read-only booking table, permission banner, no mutation affordances. Rule: no write endpoints are exposed to this role (`BR-116`). |
 | F-110 | Employee notifications | EMP | D-06.3 | P2 | C | Assigned-request notifications; locked sidebar entries (team, finance, settings) shown but disabled. Rule: locked modules must be enforced server-side, not only hidden (`BR-117`). |
+
+### Domain 16 — Coupons & authorization administration
+
+| ID | Feature | App | Screens | Pri | Ev | Notes — inputs, outputs, rules |
+|---|---|---|---|---|---|---|
+| F-111 | Coupon management | ADM / COM | — | P1 | D | Decision DEC-03. Platform Admin creates global coupons; company owners create coupons restricted to their own company. Fields: code, discount type (percentage/fixed), value, service scope (all / flights / hotels / visas), validity window, minimum spend, total usage limit, per-user limit, active state. One coupon per booking; no first-booking restriction; redemption is server-validated and counted atomically so concurrent attempts cannot exceed the limit (`BR-015`). Hotel-owner coupon scope is Q-41. |
+| F-112 | Dynamic roles, permissions & audit | ADM / COM / HTL | D-03.15, D-04.7, D-04.8, D-05.5 | P0 | D | Authorization requirement. Platform roles and tenant roles are data, not code. Platform Admin creates platform roles and may assign tenant roles/permissions through a dedicated permission; company and hotel owners invite employees, create organization roles, assign roles and grant bounded direct permissions. Service scope, grant ceilings, anti-escalation, lifecycle rules, enforcement layers and audit are specified in `AUTHORIZATION-ARCHITECTURE.md` and the 78-key catalog in `ROLE-PERMISSION-SCOPE-MATRIX.md`. |
 
 ---
 
@@ -337,6 +346,8 @@ Every one of the 108 Phase 1 screen states appears exactly once below (68 mobile
 
 Chapter-title strips `MT-01` – `MT-10` and annotation `DL-01` carry no interaction; they are accounted for in Phase 1 and require no feature. They confirm section grouping only (chapters ٢, ٣, ٣ب, ٤, ٥, ٦, ٧, ٧ب, ٨, ٩).
 
+**F-111 and F-112 have no Phase 1 screen by design.** They are decision/requirement-backed (DEC-03 and the authorization requirement) and are anchored to the drawn role editors D-03.15, D-04.7, D-04.8 and D-05.5 rather than to a new screen.
+
 ---
 
 ## 4. Cross-application relationships
@@ -351,6 +362,8 @@ Chapter-title strips `MT-01` – `MT-10` and annotation `DL-01` carry no interac
 | Company team roles → employee portal | COM → EMP | D-04.7/D-04.8 permissions → D-06.1 – D-06.3 locked modules | EMP is a restricted view of the company tenant, not a separate tenant. |
 | Admin role matrix → all portals | ADM → all | D-03.15 | Platform roles and partner roles are two distinct permission families sharing one authorisation model. |
 | Hotel portal ↔ hotel bookings | MOB ↔ HTL | M-063/M-064 ↔ D-05.1/D-05.4 | Rates, stop-sell and availability set in D-05.3 govern what M-059/M-062 can sell. |
+| Coupon scope → mobile checkout | ADM/COM → MOB | D-03.15, D-04.8; M-024, M-057 | One coupon per booking; service scope (flights/hotels/visas) and usage limits are enforced server-side, never by the client. |
+| Role & permission administration → all portals | ADM ↔ COM/HTL | D-03.15, D-04.7, D-04.8, D-05.5 | One authorization model with two permission families; platform staff administer tenants only through an explicit audited permission. |
 
 ---
 
@@ -364,7 +377,7 @@ Chapter-title strips `MT-01` – `MT-10` and annotation `DL-01` carry no interac
 | Phase 1 dashboard states mapped | 40 / 40 |
 | **Total mapped** | **108 / 108** |
 | Screens with no feature | 0 |
-| Features with no screen or cross-cutting justification | 0 (F-013 is the deliberate cross-cutting session rule) |
+| Features with no screen | 2 (F-111, F-112 — decision/requirement-backed; F-013 remains the deliberate cross-cutting session rule) |
 | Duplicate mapping errors | 0 (each screen appears once) |
 
 ### 5.2 Feature distribution
@@ -377,7 +390,8 @@ Chapter-title strips `MT-01` – `MT-10` and annotation `DL-01` carry no interac
 | COM | F-091 – F-100 (10) |
 | HTL | F-101 – F-107 (7) |
 | EMP | F-108 – F-110 (3) |
-| **Total** | **110** |
+| Cross-cutting (ADM + COM; ADM + COM + HTL) | F-111 – F-112 (2) |
+| **Total** | **112** |
 
 ### 5.3 Unresolved features (not committed to v1)
 
@@ -397,15 +411,17 @@ All other features are either confirmed (`C`) or confirmed with named inferred m
 |---|---|
 | Applications covered | 6 (5 products + shared public surface) |
 | Screen states traced | 108 / 108 |
-| Features identified | 110 |
+| Features identified | 112 |
 | Confirmed features (`C`) | 102 |
 | Confirmed with inferred mechanics (`C+i`) | 5 (F-003, F-005, F-013, F-037, F-077) |
+| Decision/requirement-backed (`D`) | 2 (F-111, F-112) |
 | Unresolved features (`U`) | 3 (F-027, F-043, F-071) |
-| Priority P0 / P1 / P2 / P3 | 63 / 36 / 9 / 2 |
-| Business rules extracted | 118 (see `BUSINESS-LOGIC.md`) |
-| Roles defined | 16 (see `USER-ROLES-AND-PERMISSIONS.md`) |
-| Workflows documented | 14 (see `WORKFLOWS.md`) |
-| Open questions raised | 39 (see `OPEN-QUESTIONS.md`) |
+| Priority P0 / P1 / P2 / P3 | 64 / 37 / 9 / 2 |
+| Business rules extracted | 125 (see `BUSINESS-LOGIC.md`) |
+| Roles defined | 17 (see `USER-ROLES-AND-PERMISSIONS.md`) |
+| Permission keys | 78 (33 platform, 45 organization — see `ROLE-PERMISSION-SCOPE-MATRIX.md`) |
+| Workflows documented | 15 (see `WORKFLOWS.md`) |
+| Open questions raised | 52 (see `OPEN-QUESTIONS.md`) |
 | Phase 1 inconsistencies addressed | 11 / 11 |
 | Phase 1 coverage gaps addressed | 15 / 15 |
 
@@ -416,8 +432,9 @@ All other features are either confirmed (`C`) or confirmed with named inferred m
 | Class | Count | Treatment |
 |---|---|---|
 | **Confirmed** — drawn and unambiguous | 102 features | Baseline for Phase 3 data model. |
-| **Inferred** — feature drawn, mechanics not | 5 features + 37 inferred rules in `BUSINESS-LOGIC.md` | Implementable, but each inference has a question ID and must be signed off. |
+| **Inferred** — feature drawn, mechanics not | 5 features + 31 inferred rules in `BUSINESS-LOGIC.md` | Implementable, but each inference has a question ID and must be signed off. |
+| **Decision/requirement-backed** — no screen | 2 features (F-111, F-112) + 28 decision rules | Mandatory because the owner decided it or the authorization requirement demands it; traced to DEC-03 / the requirement. |
 | **Unresolved** — concept drawn, behaviour absent | 3 features + 15 gap areas | Explicitly excluded from v1 scope until answered; listed in `OPEN-QUESTIONS.md`. |
 
-No screen was used to justify a feature it does not support, and no gap was silently converted into a requirement.
+No screen was used to justify a feature it does not support, and no gap was silently converted into a requirement. The two screenless features are explicitly marked so no reviewer mistakes them for pixel-confirmed scope.
 
