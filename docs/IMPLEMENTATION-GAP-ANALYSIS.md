@@ -827,7 +827,7 @@ The owner confirmed that a single service-provider organization may operate mult
 1. **Organization-enabled services are not yet represented by the existing membership service-scope relation.** The platform-controlled set of services enabled for an organization must be distinct from the services assigned to each membership. An employee cannot be assigned a service the organization does not have enabled.
 2. **Permission-to-service applicability needs authoritative metadata/enforcement.** `allowed_org_types` is not enough to prevent a provider employee with a generic permission from accessing unrelated service records.
 3. **Resource scopes beyond hotel properties need definition.** Tours, departures and visa offerings/requests must have resource ownership and assignment rules grounded in their workflows before implementation.
-4. **eSIM partner operations are not established by the current customer-side purchase/activation screens.** Do not seed provider eSIM permissions until Q-53 defines responsibility.
+4. **eSIM is platform-only by owner decision Q-53 (2026-11-24).** Traway owns catalogue, pricing, orders, activation orchestration, failure handling, support, refunds and usage inquiries. Do not create organization-side eSIM permissions, scopes or dashboard modules; any supplier/API is a platform integration.
 5. **Hotel empty-scope enforcement is currently unsafe.** `Membership::isRestrictedToHotel()` returns true when the membership has no hotel-scope rows, which means an empty scope is treated as unrestricted. This conflicts with G0-DEC-03/G0-DEC-05 and must be corrected for non-owner memberships with negative tests.
 6. **Service-scope enforcement must be rechecked against G0-DEC-05.** The earlier audit records that `AuthorizationService::withinServiceScope()` treats an empty service list as unrestricted. The implementation must fail closed for non-owners; verify the current source and add negative tests.
 
@@ -845,16 +845,16 @@ This section updates the implementation plan against the owner-confirmed multi-s
 3. Effective access is the intersection of permission, tenant ownership, organization-enabled service, membership service scope, applicable resource/property scope and assignment/workflow constraints.
 4. Empty or missing required scope denies access for non-owner memberships (`G0-DEC-05`). Ownership is an explicit bounded grant only within services enabled for that organization; it does not grant platform-only capabilities.
 5. Flights remain platform-only. Final visa approve/reject decisions remain platform-only (`G0-DEC-04`). Customer data is contextual and minimum-necessary.
-6. Do not create provider-side eSIM permissions until Q-53 defines the provider lifecycle and responsibility split.
+6. eSIM business operations are platform-only under Q-53; exclude eSIM from provider permissions, service scopes, resource scopes and provider dashboard modules.
 
 ### 13.2 Gate 0A blockers before implementation
 
 | Blocker | Required decision/design | Blocks |
 |---|---|---|
-| Q-53 | Provider eSIM responsibilities and lifecycle | Provider eSIM operations only |
-| Q-54 | Traway-controlled organization service enablement, persistence and disable behavior | Authorization schema and service assignment validation |
-| Q-55 | Unified multi-service provider dashboard requirements | Provider portal APIs/navigation/reports |
-| Q-56 | Resource boundaries and membership scope rules for each service | Resource policies, scoped queries and assignment flows |
+| Q-53 | **Answered:** eSIM business workflow belongs to Traway only | Exclude organization-side eSIM permissions/scopes; supplier integration remains Gate 0B |
+| Q-54 | **Direction approved:** organization requests; Platform Admin approves/rejects; per-service enable/suspend independent of organization status | Persistence, lifecycle states, authorization checks |
+| Q-55 | **Direction approved:** unified provider dashboard with enabled-service modules and scoped metrics | Detailed screen/queue/action mapping, provider portal APIs/navigation/reports |
+| Q-56 | **Direction approved:** hierarchical service then resource/property/assignment scope; service-only where no narrower boundary is meaningful | Exact resource mapping, policies, scoped queries and assignment flows |
 | Catalog | Exact service-aware permission keys, applicability and delegation metadata | Seeder, role templates and runtime authorization |
 
 ### 13.3 Required implementation sequence after Gate 0A approval
@@ -914,3 +914,15 @@ The following findings were verified against the current `main` source files dur
 8. Run focused Pest tests and the full suite locally; record actual output before changing implementation status.
 
 **No source code, migration, Seeder, authorization config or test file was changed in this review.** This section records verified discrepancies only.
+
+
+## 15. Owner decision reconciliation — Q-53–Q-56 (2026-11-24)
+
+The owner approved all four product directions. This closes the product-direction questions but not the implementation design details:
+
+1. **Q-53 eSIM — platform only:** Traway owns the complete eSIM business workflow. No provider-side permission, scope, dashboard module or queue. External supplier/API remains a platform-controlled Gate 0B integration.
+2. **Q-54 service enablement — Traway controlled:** organization requests; Platform Admin approves/rejects; approved service becomes enabled. Traway can suspend one service independently. Organization owner manages employees only in enabled services. Persistence, state machine and disable effects remain to design.
+3. **Q-55 dashboard — unified:** one provider dashboard shell with modules only for enabled services and authorized employee scopes. Service workflows/queues/reports remain distinct. Exact screens/actions must be mapped from the UI documentation.
+4. **Q-56 scopes — hierarchical:** membership service scope first, then resource/property/assignment scope where meaningful. Hotel properties are explicit; tours use applicable tour/departure/resource groups; visa requests use assignment or authorized team queues. Service-only access is acceptable only when no narrower resource boundary exists. Owner reach remains bounded by enabled services; required empty scope denies.
+
+The exact permission catalog, schema/migrations, dashboard screen map and per-service resource map remain subject to design review. No application code was changed by this documentation update.
