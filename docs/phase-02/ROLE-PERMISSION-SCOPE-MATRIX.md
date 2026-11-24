@@ -319,7 +319,7 @@ The R-19 role receives no `bookings.*` or `customers.view` permissions.
 
 This is the proposed assignment pending explicit P-09 approval. It does not authorize access to customer bookings through another permission or an unscoped endpoint.
 
-### 4.4 Assignment summary
+### 4.5 Assignment summary
 
 | Role | Explicit keys | Notes |
 |---|---|---|
@@ -466,7 +466,7 @@ These are operational domain records, not an audit log. The system does not reta
 * **R-17 Service owner** is modelled as an organization-level, service-scoped manager because that is the only interpretation that fits "manage employees and access within their own service scope" alongside company/hotel owners. **Q-45 is answered by the authorization requirement.** If a platform-level service-line owner is later required, it is an additive platform role family.
 * **`bookings.create`** has no drawn screen. It exists because the operation is required by the permission model and is a standard partner capability; if partner-created bookings are out of scope, the key can be dropped without affecting anything else.
 * **Hotel property scope is modelled** — `G0-DEC-03` confirms a hotel organization owns many properties, `hotels` is the property entity and `membership_hotel_scopes` scopes staff (Q-49 answered).
-* **Service-provider scope is narrow by design** — `bookings.*` and `customers.view` stay closed to service providers until a provider service catalogue exists (P-09, pending approval). The `All` org type in §3.2 therefore means company plus hotel for those keys.
+* **Service-provider scope is narrow by design** — `bookings.*` and `customers.view` stay closed to service providers until a provider service catalogue exists (P-09, pending approval). The previous `All`/`Company + Hotel` eligibility labels are under recalculation. Use §10 and `MULTI-SERVICE-PROVIDER-AUTHORIZATION.md` as the controlling provider rules.
 * **`status_history.view`** (formerly `team_activity.view`) reads business status transitions only. No audit log, activity log or user activity tracking exists or is planned (`G0-DEC-01`).
 
 
