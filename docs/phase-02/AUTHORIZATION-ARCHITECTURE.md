@@ -83,7 +83,7 @@ Consequences:
 
 ### 3.3 Permission
 
-* **Permission** — an operation, identified by a stable key in `domain.action` form (`bookings.cancel`, `visa_requests.update_status`, `platform.partners.approve`).
+* **Permission** — an operation, identified by a stable key in `domain.action` form (`bookings.cancel`, `visa_requests.review`, `platform.visa_requests.decide`).
 * Each permission row declares:
   * **family** — `platform` or `organization`;
   * **domain** — bookings, visas, tours, rooms, rates, properties, employees, roles, coupons, reports, settlements, profile, catalogue, customers, partners, finance, settings;
@@ -199,7 +199,7 @@ For every request the authorization service resolves, in order:
 An employee of «رحلات النيل» has the employee template `visa_offerings_manager` (permissions `visa_requests.view`, `visa_offerings.view`, `visa_offerings.manage`) plus a direct grant `reports.view`. Their membership has service scope `visas`.
 
 * They may open a visa request attached to one of their company's offerings — L2 and L4 pass.
-* They may not change the request status or record a decision; those are platform permissions (`platform.visa_requests.review`, `platform.visa_requests.update_status`) and the company key was removed (DEC-16).
+* They may not record a decision; that is a platform permission (`platform.visa_requests.decide`, `G0-DEC-04`). Their own `visa_requests.review` covers document validation only, and no company-side status key exists.
 * They may open the company's visa report — `reports.view` passes, but the service scope narrows the data to visas.
 * They may **not** open a booking — no booking permission.
 * They may **not** open another company's visa request — L2 fails.
@@ -311,7 +311,7 @@ The central list lives in `config/authorization.php`. At minimum:
 
 | Non-delegable capability | Key / surface |
 |---|---|
-| Delete the organization | `org.delete` (owner-only, not delegated) |
+| Delete the organization | owner-only structural action; **no assignable permission key exists** (there is no `org.delete` key in either family) |
 | Transfer ownership / manage owners | ownership transfer operation; no assignable key |
 | Edit protected owner templates | owner-template sync surface (system only) |
 | Grant a permission the grantor may not delegate | any non-delegable key in the list |
@@ -558,7 +558,7 @@ The permission catalog was derived bottom-up:
 6. Cross-cutting operations (exports, settings, impersonation) were given their own keys because they are sensitive.
 7. Owner-template and non-delegable keys were added or removed by DEC-11 – DEC-19 after the original derivation; the catalog was reconciled against the actual definitions rather than the earlier estimate.
 
-Result: **83 permission keys** — 36 platform, 47 organization. The full catalog, with the screens and features that justify each key, is in `ROLE-PERMISSION-SCOPE-MATRIX.md`.
+Result: the reconciled catalog is **85 permission keys** — 37 platform, 48 organization (proposed, awaiting Gate 0A approval). The full catalog, with the screens and features that justify each key, is in `ROLE-PERMISSION-SCOPE-MATRIX.md`; the derivation and the delta against both the documentation and the seeder are in `../PERMISSION-CATALOG-RECONCILIATION.md`.
 
 ### 14.1 Keys deliberately not created
 

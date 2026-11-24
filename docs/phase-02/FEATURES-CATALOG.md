@@ -270,7 +270,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | ID | Feature | App | Screens | Pri | Ev | Notes — inputs, outputs, rules |
 |---|---|---|---|---|---|---|
 | F-111 | Coupon management | ADM / COM | — | P1 | D | Decision DEC-03. Platform Admin creates global coupons; company owners create coupons restricted to their own company. Fields: code, discount type (percentage/fixed), value, service scope (all / flights / hotels / visas), validity window, minimum spend, total usage limit, per-user limit, active state. One coupon per booking; no first-booking restriction; redemption is server-validated and counted atomically so concurrent attempts cannot exceed the limit (`BR-015`). Hotel-owner coupon scope is Q-41. |
-| F-112 | Dynamic roles, permissions & audit | ADM / COM / HTL | D-03.15, D-04.7, D-04.8, D-05.5 | P0 | D | Authorization requirement. Platform roles and tenant roles are data, not code. Platform Admin creates platform roles and may assign tenant roles/permissions through a dedicated permission; company and hotel owners invite employees, create organization roles, assign roles and grant bounded direct permissions. Service scope, grant ceilings, anti-escalation, lifecycle rules, enforcement layers and audit are specified in `AUTHORIZATION-ARCHITECTURE.md` and the 78-key catalog in `ROLE-PERMISSION-SCOPE-MATRIX.md`. |
+| F-112 | Dynamic roles and permissions | ADM / COM / HTL | D-03.15, D-04.7, D-04.8, D-05.5 | P0 | D | Authorization requirement. Platform roles and tenant roles are data, not code. Platform Admin creates platform roles and may assign tenant roles/permissions through a dedicated permission; company and hotel owners invite employees, create organization roles, assign roles and grant bounded direct permissions. Service scope, grant ceilings, anti-escalation, lifecycle rules and enforcement layers are specified in `AUTHORIZATION-ARCHITECTURE.md`, and the catalog in `ROLE-PERMISSION-SCOPE-MATRIX.md`. **No audit log or activity log is part of this feature** (`G0-DEC-01`). |
 
 ---
 
@@ -419,7 +419,7 @@ All other features are either confirmed (`C`) or confirmed with named inferred m
 | Priority P0 / P1 / P2 / P3 | 64 / 37 / 9 / 2 |
 | Business rules extracted | 125 (see `BUSINESS-LOGIC.md`) |
 | Roles defined | 17 (see `USER-ROLES-AND-PERMISSIONS.md`) |
-| Permission keys | 78 (33 platform, 45 organization — see `ROLE-PERMISSION-SCOPE-MATRIX.md`) |
+| Permission keys | 85 proposed (37 platform, 48 organization — pending Gate 0A approval; see `ROLE-PERMISSION-SCOPE-MATRIX.md` and `../PERMISSION-CATALOG-RECONCILIATION.md`. The draft estimate at the time of this catalogue was 78) |
 | Workflows documented | 15 (see `WORKFLOWS.md`) |
 | Open questions raised | 52 (see `OPEN-QUESTIONS.md`) |
 | Phase 1 inconsistencies addressed | 11 / 11 |

@@ -143,7 +143,7 @@ These questions arise from the recorded decisions and the authorization requirem
 | Q-43 | With no fare hold, what replaces the 14:32 countdown on the payment screen? | M-024, DEC-05 | Payment-screen copy and UX only | Remove the countdown; show "price confirmed at payment". Block only if revalidation fails or the price changed and consent is refused. | Design | Non-blocking |
 | Q-44 | If a customer withdraws or cancels a visa application before the authority decides, is the fee refundable? | DEC-06, M-042 | Visa refund policy data | Non-refundable once submitted; refundable before submission. Modelled as a per-offering policy flag. | Product owner | Blocking-4 |
 | Q-45 | What is a "Service Owner" — an organization-level manager of a service line, or a platform-level owner of a service? | Authorization requirement item 7 | Role family and scope | **Answered by the requirement:** organization-level member scoped to one or more service lines (R-17). A platform variant is additive. | Product owner | **Answered (requirement)** |
-| Q-46 | Which actors may move a visa application between the DEC-07 statuses, and are rejection reasons mandatory and customer-visible? | DEC-07; D-04.6, D-06.1 | Transition permissions, reason fields | Company employees with `visa_requests.update_status`; platform staff may override with the platform visa permission, audited. Rejection reason mandatory; customer sees a reason category and note. | Operations | **Answered (G0-DEC-04)** |
+| Q-46 | Which actors may move a visa application between the DEC-07 statuses, and are rejection reasons mandatory and customer-visible? | DEC-07; D-04.6, D-06.1 | Transition permissions, reason fields | Company employees with `visa_requests.update_status`; platform staff may override with the platform visa permission, audited. Rejection reason mandatory; customer sees a reason category and note. **Superseded by `G0-DEC-04`: no `update_status` key exists in either family. Only platform staff holding `platform.visa_requests.decide` record a decision; company staff validate documents with `visa_requests.review`. Rejection reason remains mandatory; the customer sees a reason category and note.** | Operations | **Answered (G0-DEC-04)** |
 | Q-47 | How long are financial and booking records retained after anonymisation? | DEC-09, BR-109 | Retention/purge configuration, not table shape | Five years for invoices, payments and refunds; legal to confirm before production. | Legal | Non-blocking |
 | Q-48 | Can one person hold both a platform membership and a partner membership, and how is context chosen? | Authorization requirement | Identity/membership model, login context | Allowed; login chooses one active context; roles never mix. | Product owner | Non-blocking |
 | Q-49 | Can a hotel organization own more than one property (hotel group / branches)? | D-05.x, DEC-08 | Adds a branch scope level | One property per hotel organization at launch; branch scope is additive. | Product owner | **Answered (G0-DEC-03)** |
@@ -159,13 +159,18 @@ These follow the authorization audit in `../IMPLEMENTATION-GAP-ANALYSIS.md`. The
 
 | ID | Decision | Status | Resolves |
 |---|---|---|---|
-| G0-DEC-01 | Audit and general activity logs are permanently excluded. `status_histories` may record business entity status transitions only and must never become a user activity log. | **Approved** | Q-38; BR-107/111/124; F-112 audit clause; permission `platform.audit.view` |
-| G0-DEC-02 | One centralized authoritative permission catalog. Canonical content: 85 keys (37 platform + 48 organization), per `../PERMISSION-CATALOG-RECONCILIATION.md`. | Principle **approved**; catalog content **awaiting approval** | The 83/84/78/80 count conflict |
+| G0-DEC-01 | Audit and general activity logs are permanently excluded. `status_histories` may record business entity status transitions only and must never become a user activity log or a user activity feed. The organization read key is therefore `status_history.view`, not `team_activity.view`. | **Approved** | Q-38; BR-107/111/124; F-112 audit clause; permission `platform.audit.view` |
+| G0-DEC-02 | One centralized authoritative permission catalog. Proposed content: 85 keys (37 platform + 48 organization), per `../PERMISSION-CATALOG-RECONCILIATION.md`. | Principle **approved**; catalog content **awaiting approval** | The 83/84/78/80 count conflict |
 | G0-DEC-03 | A hotel organization may own multiple hotel properties; `hotels` is the property entity; `membership_hotel_scopes` scopes staff; bookings reference `hotel_id`; an empty property scope means no access. | **Approved** | Q-49; C-03; C-11 |
 | G0-DEC-04 | Only authorized Traway platform staff may make the final visa approval/rejection decision. Company users may view within scope and review documents, not decide. The six customer-visible statuses are unchanged. | **Approved** | Q-46; C-04 |
 | G0-DEC-05 | An empty scope means access to nothing. No empty array or null scope is implicit global access; every scoped query fails closed. | **Approved** | C-08; BR-121 |
 
-**Still awaiting approval (blocking Phase A and later phases):** the G0.2 catalog content, G0.5 notification strategy, G0.6 provider choice, G0.7 unresolved features (F-027, F-043, F-071, multi-city) and G0.8 settlement schema. Q-09, Q-17 and Q-24 remain open and are now linked to the `G0.7` recommendations.
+The decisions are now organised into two approval boundaries (see the register §1.3):
+
+- **Gate 0A — authorization.** Blocks Phase A. Contains `G0-DEC-01`–`G0-DEC-05` (the five approved decisions), the **exact 85-key catalog content** (awaiting approval), **P-09** (`bookings.*`/`customers.view` stay closed to service providers — awaiting approval), the delegation and owner-template rules, and the empty-scope enforcement detail. Against the current 80-key seeder the catalog change is add 6, remove 1, rename 1 — not "9 additions and 3 removals", which is the wider union comparison.
+- **Gate 0B — business and integration.** Does **not** block Phase A. Contains notifications (G0.5), provider architecture and selection (G0.6), F-027/F-043/multi-city, **F-071 (no policy approved)**, and settlements (G0.8). Each blocks only the phase that depends on it.
+
+Q-09, Q-17 and Q-24 remain open and are linked to the `G0.7` items; Q-24 (tour cancellation) stays open until the owner approves an F-071 policy.
 
 ---
 
@@ -215,7 +220,7 @@ These follow the authorization audit in `../IMPLEMENTATION-GAP-ANALYSIS.md`. The
 | 7 | Review submission | Deferred; ratings treated as seeded | Q-37 (open, non-blocking) |
 | 8 | Multi-city flights | Option marked out of scope | Q-08 (open, non-blocking) |
 | 9 | eSIM usage screen | Balance display only | Q-17 (open, non-blocking) |
-| 10 | Admin reports / audit log | Audit is now a first-class requirement (F-112); report screens still deferred | Q-38 (open, non-blocking) |
+| 10 | Admin reports / audit log | Audit is permanently excluded (`G0-DEC-01`); report screens still deferred | Q-38 — **Answered (`G0-DEC-01`)** |
 | 11 | Partner document re-upload after rejection | Covered by resubmission rule (BR-093) | Q-26 (open, Blocking-4) |
 | 12 | Refund processing UI | Approval model fixed: policy-auto + exceptional approval | Q-29 — **Answered (DEC-10)**; approver family Q-51 |
 | 13 | Payout / settlement detail | Gateway payouts, on demand, negative balance carry-forward | Q-29 — **Answered (DEC-10)** |

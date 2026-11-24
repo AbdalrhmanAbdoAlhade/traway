@@ -55,9 +55,11 @@ Two families are kept separate throughout:
 
 ---
 
-## 3. Permission catalog (83 keys)
+## 3. Permission catalog (85 keys — proposed, pending Gate 0A approval)
 
-### 3.1 Platform family (36)
+This catalog is the reconciled canonical set from `../PERMISSION-CATALOG-RECONCILIATION.md` (37 platform + 48 organization). The centralized-catalog principle is approved (`G0-DEC-02`); **the exact keys are not yet approved**. Compared with the current 80-key seeder it adds 6 keys, removes 1 (`org.profile.publish`) and renames 1 (`team_activity.view` → `status_history.view`).
+
+### 3.1 Platform family (37)
 
 | Key | Domain | Sensitivity | Description | Screens | Features |
 |---|---|---|---|---|---|
@@ -74,9 +76,10 @@ Two families are kept separate throughout:
 | `platform.partner_requests.review` | partners | Sensitive | Accept/reject join requests and verify documents | D-03.6 | F-077 |
 | `platform.visa_catalog.view` | catalogue | Normal | View visa countries, types, fees and documents | D-03.9 | F-084 |
 | `platform.visa_catalog.manage` | catalogue | Sensitive | Create/update/deactivate visa offerings and requirements | D-03.9 | F-084 |
-| `platform.visa_requests.view` | visas | Sensitive | View all visa applications and documents | D-03.3, D-04.6 (platform oversight, D) | F-096, F-115 |
-| `platform.visa_requests.review` | visas | Sensitive | Review documents and record the final decision | D-03.3, D-04.6 (D) | F-096, F-115 |
-| `platform.visa_requests.update_status` | visas | Sensitive | Move an application through the DEC-07 statuses | D-03.3, D-04.6 (D) | F-096, F-115 |
+| `platform.visa_requests.view` | visas | Sensitive | View all visa applications and documents | D-03.3, D-04.6 (platform oversight) | F-096, F-108 |
+| `platform.visa_requests.review` | visas | Sensitive | Review documents and request additional documents; no final decision (DEC-04) | D-03.3, D-04.6 | F-096, F-108 |
+| `platform.visa_requests.assign` | visas | Sensitive | Assign visa applications to platform staff | D-03.3 | F-096 |
+| `platform.visa_requests.decide` | visas | Sensitive | Record the final approval or rejection (DEC-04) | D-03.3 (D) | F-096 |
 | `platform.esim_catalog.view` | catalogue | Normal | View eSIM packages, costs and margins | D-03.10 | F-085 |
 | `platform.esim_catalog.manage` | catalogue | Sensitive | Create/update packages and availability | D-03.10 | F-085 |
 | `platform.esim_catalog.sync` | catalogue | Sensitive | Trigger provider sync and price comparison | D-03.10 | F-085 |
@@ -98,7 +101,7 @@ Two families are kept separate throughout:
 | `platform.organization_access.view` | access | Sensitive | View memberships, roles and grants of any organization | — (D) | F-112 |
 | `platform.organization_access.manage` | access | Access-control | Assign roles and permissions to owners and employees of any organization | — (D) | F-112 |
 
-### 3.2 Organization family (47)
+### 3.2 Organization family (48)
 
 Org type values: `All` = company + hotel + service provider; `Company` = company only; `Hotel` = hotel only.
 
@@ -129,13 +132,14 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 | `tours.delete` | tours | Company | Sensitive | Delete/withdraw a tour | D-04.3 | F-093 |
 | `tours.submit` | tours | Company | Sensitive | Submit a tour for platform review | D-04.4 | F-094 |
 | `tours.slots.manage` | tours | Company | Sensitive | Manage departure slots and seat capacity | D-04.4 | F-094 |
-| `visa_requests.view` | visas | Company | Sensitive | View applications attached to the company's own offerings; no decision | D-04.6 (view scope, DEC-16) | F-096, F-108 |
+| `visa_requests.view` | visas | Company | Sensitive | View applications attached to the company's own offerings; read-only, no decision | D-04.6 (view scope, DEC-16) | F-096, F-108 |
+| `visa_requests.review` | visas | Company | Sensitive | Validate documents and flag missing items; no final decision (DEC-04) | D-04.6 | F-096, F-108 |
 | `visa_offerings.view` | visas | Company | Normal | View the company's visa offerings | D-03.9 (company scope, D) | F-084 |
 | `visa_offerings.manage` | visas | Company | Sensitive | Create/update own visa offerings and prices | D-03.9 (company scope, D) | F-084 |
-| `properties.view` | properties | Hotel | Normal | View hotel properties of the organization | D-05.1, D-05.6 | F-101, F-106, F-113 |
-| `properties.create` | properties | Hotel | Sensitive | Add a hotel property | D-05.6 (D) | F-113 |
-| `properties.update` | properties | Hotel | Sensitive | Edit property details, address, location and documents | D-05.6 | F-106, F-113 |
-| `properties.publish` | properties | Hotel | Sensitive | Publish or unpublish a hotel property | D-05.6 (D) | F-106, F-113 |
+| `properties.view` | properties | Hotel | Normal | View hotel properties of the organization | D-05.1, D-05.6 | F-101, F-106 |
+| `properties.create` | properties | Hotel | Sensitive | Add a hotel property | D-05.6 (D) | F-106 |
+| `properties.update` | properties | Hotel | Sensitive | Edit property details, address, location and documents | D-05.6 | F-106 |
+| `properties.publish` | properties | Hotel | Sensitive | Publish or unpublish a hotel property | D-05.6 (D) | F-106 |
 | `rooms.view` | rooms | Hotel | Normal | View room types and availability | D-05.3 | F-103 |
 | `rooms.manage` | rooms | Hotel | Sensitive | Create/edit/delete room types | D-05.3 | F-103 |
 | `rates.view` | rooms | Hotel | Normal | View the rate calendar | D-05.3 | F-103 |
@@ -149,10 +153,12 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 | `settlements.view` | settlements | All | Financial | View settlements and dues | D-04.9, D-03.14 | F-099 |
 | `settlements.manage` | settlements | All | Financial | Request an on-demand payout under delegation rules | D-04.9 (D) | F-099 |
 | `settlements.accounts.manage` | settlements | All | Financial | Manage payout accounts; owner-only, non-delegable | — (D) | F-099 |
-| `team_activity.view` | reports | Company | Normal | View the team activity feed derived from status histories | D-04.1 | F-091 |
+| `status_history.view` | reports | Company | Normal | View business status-history records (booking, visa, refund, payout-request and tour-review status transitions). Does **not** authorise a general activity feed or user activity tracking | D-04.1 | F-091 |
 | `customers.view` | customers | All | Sensitive | View customer contact for own bookings | D-04.5, D-05.4 | F-095, F-104 |
 
-**Catalog totals: 36 platform + 47 organization = 83 permissions.**
+**Catalog totals: 37 platform + 48 organization = 85 permissions (proposed — pending approval).**
+
+Former keys, retained here so no reader mistakes them for active permissions: `platform.audit.view` (removed — audit and activity logs are permanently excluded, `G0-DEC-01`), `platform.visa_requests.update_status` (removed — split into `review` + `decide`, `G0-DEC-04`), `org.profile.publish` (removed — superseded by `properties.publish`), `team_activity.view` (renamed `status_history.view`).
 
 ---
 
@@ -177,7 +183,8 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 | `platform.visa_catalog.manage` | ● | ○ | ● | ○ | ○ |
 | `platform.visa_requests.view` | ● | ○ | ● | ● | ● |
 | `platform.visa_requests.review` | ● | ○ | ○ | ○ | ● |
-| `platform.visa_requests.update_status` | ● | ○ | ○ | ○ | ● |
+| `platform.visa_requests.assign` | ● | ○ | ○ | ○ | ● |
+| `platform.visa_requests.decide` | ● | ○ | ○ | ○ | ● |
 | `platform.esim_catalog.view` | ● | ● | ● | ○ | ○ |
 | `platform.esim_catalog.manage` | ● | ○ | ● | ○ | ○ |
 | `platform.esim_catalog.sync` | ● | ○ | ● | ○ | ○ |
@@ -227,6 +234,7 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 | `tours.submit` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `tours.slots.manage` | ● | ○ | ○ | ○ | ● | ○ | S |
 | `visa_requests.view` | ● | ○ | ● | ○ | ○ | A | S |
+| `visa_requests.review` | ● | ○ | ● | ○ | ○ | A | S |
 | `visa_offerings.view` | ● | ○ | ● | ○ | ● | ○ | S |
 | `visa_offerings.manage` | ● | ○ | ● | ○ | ○ | ○ | S |
 | `coupons.view` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
@@ -237,7 +245,7 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 | `settlements.view` | ● | ○ | ○ | ● | ○ | ○ | S |
 | `settlements.manage` | ● | ○ | ○ | ○ | ○ | ○ | S |
 | `settlements.accounts.manage` | ● | ○ | ○ | ○ | ○ | ○ | ○ |
-| `team_activity.view` | ● | ○ | ○ | ○ | ○ | ○ | S |
+| `status_history.view` | ● | ○ | ○ | ○ | ○ | ◐ | S |
 | `customers.view` | ● | ● | ● | ○ | ○ | A | S |
 
 ### 4.3 Hotel roles
@@ -277,7 +285,7 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 | `settlements.view` | ● | ○ | ○ | ● |
 | `settlements.manage` | ● | ○ | ○ | ○ |
 | `settlements.accounts.manage` | ● | ○ | ○ | ○ |
-| `team_activity.view` | ● | ○ | ○ | ○ |
+| `status_history.view` | ● | ○ | ○ | ○ |
 | `customers.view` | ● | ● | ● | ○ |
 
 ### 4.4 Service provider role
@@ -312,7 +320,7 @@ Org type values: `All` = company + hotel + service provider; `Company` = company
 
 | Role | Explicit keys | Notes |
 |---|---|---|
-| R-03 | 33 | All platform permissions |
+| R-03 | 37 | All platform permissions |
 | R-04 | 12 | Financial + read operations + audit |
 | R-05 | 10 | Catalogues, coupons, notifications |
 | R-06 | 11 | Read/assist + deletion processing (includes one partial export) |
@@ -436,12 +444,12 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 
 | # | Check | Result |
 |---|---|---|
-| 1 | Permission keys defined | 78 (33 platform, 45 organization) |
-| 2 | Keys derived from screens/features | 73 by screen/feature; 5 decision-backed (`platform.coupons.*`, `platform.organization_access.*`, `platform.audit.view`) |
+| 1 | Permission keys defined | 85 (37 platform, 48 organization) — proposed |
+| 2 | Keys derived from screens/features | 73 by screen/feature; 12 decision-backed (`platform.settings.manage`, `platform.coupons.*`, `platform.organization_access.*`, `platform.visa_requests.decide`, `visa_offerings.view`, `properties.create`, `properties.publish`, `settlements.manage`, `settlements.accounts.manage`) |
 | 3 | Roles using the catalog | 17 (15 RBAC roles; R-01/R-02 ownership-based) |
 | 4 | Platform/organization family mixing | 0 roles |
-| 5 | Every organization permission declares organization-type applicability | 45/45 |
-| 6 | Owner roles contain all applicable keys | Company 37/37; hotel 30/30 |
+| 5 | Every organization permission declares organization-type applicability | 48/48 |
+| 6 | Owner roles contain all applicable keys | Company 37/37; hotel 34/34 |
 | 7 | Roles with zero permissions | R-01, R-02 (intentional) |
 | 8 | Service scope defined per role | 17/17 |
 | 9 | Delegation ceiling defined | 17/17 |
@@ -453,5 +461,7 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 
 * **R-17 Service owner** is modelled as an organization-level, service-scoped manager because that is the only interpretation that fits "manage employees and access within their own service scope" alongside company/hotel owners. **Q-45 is answered by the authorization requirement.** If a platform-level service-line owner is later required, it is an additive platform role family.
 * **`bookings.create`** has no drawn screen. It exists because the operation is required by the permission model and is a standard partner capability; if partner-created bookings are out of scope, the key can be dropped without affecting anything else.
-* **Hotel branch scope** is not modelled. If a hotel organization can own multiple properties, a branch scope level must be added (Q-49, non-blocking).
+* **Hotel property scope is modelled** — `G0-DEC-03` confirms a hotel organization owns many properties, `hotels` is the property entity and `membership_hotel_scopes` scopes staff (Q-49 answered).
+* **Service-provider scope is narrow by design** — `bookings.*` and `customers.view` stay closed to service providers until a provider service catalogue exists (P-09, pending approval). The `All` org type in §3.2 therefore means company plus hotel for those keys.
+* **`status_history.view`** (formerly `team_activity.view`) reads business status transitions only. No audit log, activity log or user activity tracking exists or is planned (`G0-DEC-01`).
 

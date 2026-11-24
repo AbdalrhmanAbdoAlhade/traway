@@ -360,7 +360,7 @@ The architecture defines seven enforcement layers and an L1–L5 scope model. Cu
 
 ### 6.3 Permission catalogue differences (docs vs seeder)
 
-The docs state **83 keys (36 platform + 47 organization)**, but the matrix tables actually contain **84 distinct keys (37 platform + 47 organization)** — the 83/36/47 numbers are themselves inconsistent. `RolesAndPermissionsSeeder` contains **80 keys (36 platform + 44 organization)**.
+At the time of this audit the docs stated **83 keys (36 platform + 47 organization)**, but the matrix tables actually contained **84 distinct keys (37 platform + 47 organization)** — the 83/36/47 numbers were themselves inconsistent. `RolesAndPermissionsSeeder` contained **80 keys (36 platform + 44 organization)**. These figures are the audit's evidence, not the current catalog: the reconciled proposal is **85 keys (37 platform + 48 organization)** — see §9.1 and `PERMISSION-CATALOG-RECONCILIATION.md`.
 
 **Documented keys missing from implementation (8):**
 
@@ -635,7 +635,7 @@ Each conflict above is resolved, recommended, or explicitly carried forward. Dec
 | C-17 Settings authority | **RESOLVED** | `G0-DEC-02` — `platform.settings.manage` added; `platform_settings` table already exists |
 | C-18 Legal document types | **OPEN — Phase H.3** | Requires a document-type enum decision before partner onboarding |
 
-**Net effect on §6:** the eight documented-but-missing permission keys and four undocumented keys are itemised in `PERMISSION-CATALOG-RECONCILIATION.md` §6–7, with 9 retained, 3 removed and 0 renamed.
+**Net effect on §6:** the eight documented-but-missing permission keys and four undocumented keys are itemised in `PERMISSION-CATALOG-RECONCILIATION.md` §6–7. Against the current seeder the catalog change is **add 6, remove 1, rename 1**; against the 88-key union of documented and code-defined keys it is **retain 9 single-source keys, remove 3**. Both baselines are stated separately in that document's §3 and must not be mixed.
 
 ---
 
@@ -645,13 +645,15 @@ These are not "nice to have"; documented requirements cannot be implemented with
 
 | Missing data | Required by | Notes |
 |---|---|---|
-| `settlements`, settlement items/periods | BR-098–BR-100, BR-114, F-099, DEC-10 | Payout requests exist but no settlement calculation/state |
+| `settlement_periods` + `settlement_items` | BR-098–BR-100, BR-114, F-099, DEC-10 | Payout requests exist but no settlement calculation/state. Design proposed in `GATE-0-DECISION-REGISTER.md` §5.4 (Gate 0B, awaiting approval) |
+| `notification_deliveries` | BR-104/105, F-021 | Dedupe of notification creation is solved by a deterministic UUID; per-channel retry tracking is not. Proposed in the register §5.1 (Gate 0B) |
+| `payment_webhooks` | BR-016–020 | Every gateway delivers at-least-once; replay cannot be diagnosed without a raw-event record. Proposed in the register §5.2 (Gate 0B) |
 | `reviews` (approved moderation) | BR-074, F-061/F-067 | Hotels/tours only cache `rating_avg/count` |
 | `airports`, `cities`, `destinations`, recent searches | F-015/F-016/F-020 | No reference data for pickers/search |
 | `coupons.minimum_spend_cents` | BR-015, F-111 | Validation impossible today |
 | Notification preferences + push device tokens | F-055, BR-104/105 | `user_devices` exists but no preference/token semantics verified |
 | Flight reschedule/change records, baggage add-ons | F-047/F-048, BR-044/045 | No tables |
-| Audit log (if approved) | BR-107/111/124, F-112 | Contradiction C-01 must be resolved first |
+| Audit log | BR-107/111/124, F-112 | **Resolved — not required.** `G0-DEC-01` permanently excludes audit and activity logs; the three business rules are superseded. No table will be added |
 | Commission rate history/effective dates | BR-096 | Only current rate on organization; prospective changes not representable |
 | Terms document/version catalogue | BR-025, F-056 | Acceptance table exists; versions must come from somewhere |
 | Support request model (if in scope) | F-058 | Docs show screen only; channel/contract undecided |
@@ -660,20 +662,28 @@ These are not "nice to have"; documented requirements cannot be implemented with
 
 ## 11. Implementation checklist (proposed order — requires approval)
 
-No implementation below has been started. Gate 0 has since been recorded as decisions (not code) in `GATE-0-DECISION-REGISTER.md`: four are approved, five still await approval, so **Phase A has not begun**. Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
+No implementation below has been started. Gate 0 has since been recorded as decisions (not code) in `GATE-0-DECISION-REGISTER.md`, split into two independent approval boundaries: **Gate 0A (authorization)** blocks Phase A, **Gate 0B (business and integration)** blocks only the phases that depend on a specific item. Five architectural decisions are approved; nothing else is. **Phase A has not begun.** Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
 
-### Gate 0 — Decisions before coding (blocking)
+### Gate 0A — Authorization approval (blocks Phase A)
 
-Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISION-REGISTER.md`.
+Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISION-REGISTER.md` §4.
 
 - [x] **G0.1** Resolve C-01 (audit in/out). → **APPROVED (`G0-DEC-01`)**: audit and activity logs permanently excluded. Determines schema and permission catalog.
-- [ ] **G0.2** Freeze the permission catalog as a single source of truth (C-02, C-03, C-04, C-17). → **Principle approved (`G0-DEC-02`); the 85-key catalogue content awaits approval.** Regenerate docs + seeder together.
+- [x] **G0.2 (principle)** One centralized permission catalog (C-02, C-03, C-04, C-17). → **APPROVED (`G0-DEC-02`)** as a principle only.
+- [ ] **G0.2 (content)** Freeze the exact 85-key catalog (37 platform + 48 organization). → **RECOMMENDED, AWAITING APPROVAL.** Against the 80-key seeder: add 6, remove 1 (`org.profile.publish`), rename 1 (`team_activity.view` → `status_history.view`). Regenerate docs + seeder together.
+- [ ] **G0.2 (P-09)** Keep `bookings.*` and `customers.view` closed to service providers until a provider service catalogue exists. → **RECOMMENDED, AWAITING APPROVAL.**
+- [ ] **G0.2 (delegation)** Freeze the family rule, the non-delegable list, owner-only actions and owner-template rules. → **RECOMMENDED, AWAITING APPROVAL.**
 - [x] **G0.3** Decide property model vs hotels-as-properties (C-03, C-11). → **APPROVED (`G0-DEC-03`)**: `hotels` is the property entity, many per hotel organization, staff scoped by `membership_hotel_scopes`.
 - [x] **G0.4** Decide visa transition authority and keys (C-04). → **APPROVED (`G0-DEC-04`)**: platform staff only decide; company users review documents.
-- [ ] **G0.5** Decide notification channels and provider strategy (BR-104, F-021/079/092/102/110). → **RECOMMENDED**: database + e-mail over the database queue; push/SMS/WhatsApp deferred.
+- [x] **G0.5 (empty scope)** Empty scope means access to nothing. → **APPROVED (`G0-DEC-05`)**; enforcement detail in the register §4.4 awaits acknowledgement.
+
+### Gate 0B — Business and integration approval (does not block Phase A)
+
+- [ ] **G0.5** Decide notification architecture and delivery behaviour (BR-104, F-021/079/092/102/110). → **RECOMMENDED**: database + e-mail over the database queue; per-channel `notification_deliveries`; at-least-once delivery (no exactly-once e-mail claim); push/SMS/WhatsApp deferred.
 - [ ] **G0.6** Decide payment/refund, flight, hotel, eSIM provider(s) and sandbox credentials. → **ARCHITECTURE RECOMMENDED; PROVIDER CHOICE REQUIRES CLARIFICATION.**
-- [ ] **G0.7** Decide unresolved features F-027, F-043, F-071 and multi-city (C-13/C-14). → **RECOMMENDED**: defer F-027 and F-043 usage, implement F-071 eligibility, drop multi-city.
-- [ ] **G0.8** Approve settlement schema design (C-16). → **RECOMMENDED**: `settlement_periods` + `settlement_items` derived from the ledger.
+- [ ] **G0.7** Decide unresolved features F-027, F-043 and multi-city (C-13/C-14). → **RECOMMENDED**: defer F-027, show an allowance instead of live eSIM usage, drop multi-city.
+- [ ] **G0.7 (F-071)** Tour cancellation policy (C-14). → **PENDING — NO POLICY APPROVED.** Eligibility follows the tour company's policy; the platform must not invent a mandatory full-refund rule; terms and refund basis must be explicit before booking.
+- [ ] **G0.8** Approve settlement schema and lifecycle (C-16). → **RECOMMENDED**: `settlement_periods` + `settlement_items` derived from the ledger, with the eligibility, closing, reopening, failure, timezone and double-settlement rules in register §5.4.
 
 ### Phase A — Authorization and tenancy repairs (P0 security)
 
@@ -706,7 +716,7 @@ Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISIO
 ### Phase D — Notifications and domain events
 
 - [ ] **D1** Event/listener infrastructure for booking/visa/eSIM/account events (BR-104).
-- [ ] **D2** Database + push/e-mail channels, per-user read state, mark-all-read (BR-105).
+- [ ] **D2** Database + e-mail channels at launch (push deferred behind an adapter), per-channel delivery tracking with at-least-once retries, per-user read state, mark-all-read (BR-105).
 - [ ] **D3** Notification inbox APIs for customer/admin/company/hotel/employee.
 
 ### Phase E — Reference data and public catalogues

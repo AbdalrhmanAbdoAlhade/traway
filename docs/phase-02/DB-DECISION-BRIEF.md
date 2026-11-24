@@ -774,10 +774,10 @@ The owner answered all ten questions. These answers are authoritative and supers
 * **Phase 4 blockers: 13** (the 8 pre-existing API questions plus Q-40, Q-44, Q-46, Q-51, Q-52), each with a documented default.
 * **New questions raised: 13** (Q-40 – Q-52), of which 1 is answered by the requirement (Q-45), 5 block only Phase 4, and 7 are non-blocking.
 * **New rules:** BR-119 – BR-125 (authorization), for a total of 125.
-* **New features:** F-111 (coupons), F-112 (dynamic roles & audit), for a total of 112.
+* **New features:** F-111 (coupons), F-112 (dynamic roles and permissions — no audit, per `G0-DEC-01`), for a total of 112.
 * **New roles:** R-17 (service owner), for a total of 17.
 * **New workflow:** WF-15 (role, permission & employee administration), for a total of 15.
-* **New permission keys:** 78 (33 platform, 45 organization).
+* **New permission keys:** 85 in the reconciled proposal (37 platform, 48 organization). The draft estimate at the time of this brief was 78 (33 platform, 45 organization); see `../PERMISSION-CATALOG-RECONCILIATION.md`. Officially pending Gate 0A approval.
 
 No code, migration, model or API exists at this point.
 

@@ -9,29 +9,43 @@ Last updated: 2026-11-24
 
 ## Gate 0 — Decision Alignment
 
-**Status: Documentation complete — 4 decisions approved, 5 awaiting approval**
+**Status: split into two approval gates. Gate 0A is ready for owner review. Gate 0B is pending.**
 
-Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md). Produced by the gap analysis in [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md).
+Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md). Produced by the gap analysis in [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md). Documentation map: [`README.md`](./README.md).
+
+### Gate 0A — Authorization (blocks Phase A)
 
 | Item | Subject | Status |
 |---|---|---|
-| G0.1 | Audit and activity logs | **Approved — permanently excluded** (`G0-DEC-01`) |
-| G0.2 | Permission catalog | Principle approved (`G0-DEC-02`); **85-key catalog content awaiting approval** (37 platform + 48 organization) |
-| G0.3 | Hotel properties | **Approved** (`G0-DEC-03`) — one hotel organization, many properties |
-| G0.4 | Visa decision authority | **Approved** (`G0-DEC-04`) — platform staff only |
-| — | Empty scope semantics | **Approved** (`G0-DEC-05`) — empty means no access |
-| G0.5 | Notification strategy | Recommended — awaiting approval |
-| G0.6 | Payment / flight / hotel / eSIM providers | Architecture recommended; provider choice requires clarification |
-| G0.7 | F-027, F-043, F-071, multi-city | Recommended — awaiting approval |
-| G0.8 | Settlement schema | Recommended — awaiting approval |
+| `G0-DEC-01` | Audit and activity logs | **Approved** — permanently excluded |
+| `G0-DEC-02` | One centralized permission catalog | **Approved (principle)** |
+| `G0-DEC-03` | Hotel properties | **Approved** — one hotel organization, many properties |
+| `G0-DEC-04` | Visa decision authority | **Approved** — platform staff only |
+| `G0-DEC-05` | Empty scope semantics | **Approved** — empty means no access |
+| Catalog content | The exact 85 keys (37 platform + 48 organization) | **Awaiting approval** — vs the 80-key seeder: add 6, remove 1 (`org.profile.publish`), rename 1 (`team_activity.view` → `status_history.view`) |
+| P-09 | `bookings.*` / `customers.view` closed to service providers | **Awaiting approval** — recommended |
+| Delegation | Family rule, non-delegable list, owner-only actions, owner templates | **Awaiting approval** — recommended |
+| Empty-scope enforcement | Query-layer filter, ownership as the explicit grant, pre-deploy data check | **Awaiting approval** — recommended |
 
-**No code, migration, seeder or `.env` change was made for Gate 0.** Phase A does not start until the five pending items are approved.
+### Gate 0B — Business and integration (does not block Phase A)
+
+| Item | Subject | Status |
+|---|---|---|
+| G0.5 | Notification architecture and delivery | Recommended — awaiting approval |
+| G0.6 | Payment / flight / hotel / eSIM provider architecture | Recommended — awaiting approval |
+| G0.6 | Provider selection (gateway, flight, eSIM; partner-payout capability) | **Requires clarification** |
+| G0.7 | F-027 seat selection, F-043 eSIM usage, multi-city | Recommended — awaiting approval |
+| G0.7 | F-071 tour cancellation policy | **Pending — no policy approved** |
+| G0.8 | Settlement schema and lifecycle | Recommended — awaiting approval |
+
+**No code, migration, seeder or `.env` change was made for Gate 0.** **Phase A does not start until Gate 0A is approved in full.** Gate 0B items block only the phases that depend on them.
 
 ### Effects on the previously recorded state
 
-- **Permission catalogue.** The "80 permissions (36 platform + 44 organization)" figure in Phase 0 below is the *seeded* count, not the canonical one. The canonical catalogue is **85 keys** (37 + 48) pending approval; see the reconciliation document for the 9 retained, 3 removed and 0 renamed keys.
+- **Permission catalogue.** The "80 permissions (36 platform + 44 organization)" figure in Phase 0 below is the *seeded* count, not the canonical one. The proposed catalogue is **85 keys** (37 + 48), pending approval. Against the seeder that is **add 6, remove 1, rename 1** — not "9 additions and 3 removals", which was the wider union comparison (88 keys) and is explained separately in the reconciliation document §3.
 - **Audit.** The Phase 0 decision to delete the audit architecture is now confirmed as permanent policy (`G0-DEC-01`), not just a repository cleanup.
-- **Visa.** `platform.visa_requests.decide` is confirmed as the only final-decision right (`G0-DEC-04`); the company key `visa_requests.update_status` is permanently removed from the catalogue.
+- **Visa.** `platform.visa_requests.decide` is confirmed as the only final-decision right (`G0-DEC-04`); no `visa_requests.update_status` key exists in either family, and `platform.visa_requests.update_status` is permanently removed from the catalogue.
+- **Status history.** The organization read key is renamed `status_history.view` (formerly `team_activity.view`) so it cannot be read as a general activity feed. `status_histories` remains the only history table (G0-DEC-01).
 - **Properties.** `hotels` is confirmed as the hotel-property entity, and `properties.*` becomes the canonical permission family for it (`G0-DEC-03`).
 - **Known defect recorded, not fixed:** the `membership_hotel_scopes` migration comment still says "No rows = every property the organization owns", which contradicts `G0-DEC-05`. To be corrected when Phase A touches the file.
 

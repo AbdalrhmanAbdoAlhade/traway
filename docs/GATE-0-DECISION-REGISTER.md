@@ -2,11 +2,11 @@
 
 **Project:** Traway
 **Date:** 2026-11-24
-**Status:** Open — 4 decisions approved, 5 awaiting owner approval
+**Status:** Gate 0A open — **5 architectural decisions approved; the exact catalog, P-09 and the delegation rules await owner approval.** Gate 0B open — **6 business/integration items awaiting approval.**
 **Source of the blocking list:** `IMPLEMENTATION-GAP-ANALYSIS.md` §11 "Gate 0"
-**Companion documents:** [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md) · [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md) · [`IMPLEMENTATION-STATUS.md`](./IMPLEMENTATION-STATUS.md) · [`phase-02/OPEN-QUESTIONS.md`](./phase-02/OPEN-QUESTIONS.md)
+**Companion documents:** [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md) · [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md) · [`IMPLEMENTATION-STATUS.md`](./IMPLEMENTATION-STATUS.md) · [`phase-02/OPEN-QUESTIONS.md`](./phase-02/OPEN-QUESTIONS.md) · [`README.md`](./README.md)
 
-> **This register is documentation only.** No application code, migration, model, service, controller, policy, middleware, route, seeder, test or `.env` file was created or modified in producing it. Phase A has not started.
+> **This register is documentation only.** No application code, migration, model, service, controller, policy, middleware, route, seeder, test or `.env` file was created or modified in producing it. Phase A has not started. No decision below has been approved by the project owner except the five marked **Approved**.
 
 ---
 
@@ -14,9 +14,9 @@
 
 ### 1.1 Decision identifiers and the ID collision
 
-`docs/phase-02/OPEN-QUESTIONS.md` §2.9 already records ten business decisions numbered **DEC-01 – DEC-10** (USD only, coupon rules, reference formats, no fare hold, visa payment, manual visa processing, hotel search inputs, deletion grace, settlement policy). Those IDs are referenced throughout `BUSINESS-LOGIC.md` and `FEATURES-CATALOG.md` and cannot be reused without corrupting every cross-reference.
+`docs/phase-02/OPEN-QUESTIONS.md` §2.9 already records ten business decisions numbered **DEC-01 – DEC-10** (USD only, coupon rules, reference formats, no fare hold, visa payment, manual visa processing, hotel search inputs, deletion grace, settlement policy). Those IDs are referenced throughout `BUSINESS-LOGIC.md` and `FEATURES-CATALOG.md` and cannot be reused without corrupting every cross-reference. `DB-DECISION-BRIEF.md` carries a second, overlapping `DEC-01 – DEC-10` numbering for the same ten answers.
 
-The five decisions approved for this task were supplied labelled `DEC-01 – DEC-05`. They are registered here as **`G0-DEC-01` – `G0-DEC-05`** so that the two sets never collide. The mapping is explicit:
+The five decisions approved for this task were supplied labelled `DEC-01 – DEC-05`. They are registered here as **`G0-DEC-01` – `G0-DEC-05`** so that the three sets never collide. The mapping is explicit:
 
 | Supplied label | Register ID | Subject |
 |---|---|---|
@@ -30,41 +30,65 @@ The five decisions approved for this task were supplied labelled `DEC-01 – DEC
 
 | Status | Meaning |
 |---|---|
-| **Already approved** | The owner has approved this decision; it is authoritative |
-| **Recommended — awaiting user approval** | A single recommendation is made and needs the owner's yes |
+| **Approved** | The owner has approved this decision; it is authoritative and must not be reopened |
+| **Recommended — awaiting approval** | A single recommendation is made and needs the owner's explicit yes |
 | **Requires clarification** | The owner must supply information the documents and code cannot determine (provider selection, business intent) |
+| **Deferred to Phase A** | An implementation decision, not a contract; it does not block the authorization work |
 
-No recommendation in this register is labelled "approved".
+Three statuses are kept strictly apart throughout:
 
-### 1.3 Gate 0 item → register record
+1. **The principle** — e.g. "there is one centralized permission catalog". Approved (`G0-DEC-02`).
+2. **The content** — the exact 85 keys. **Not approved.** A principle being approved does not approve a list of keys.
+3. **Everything in Gate 0B** — business and integration choices. None approved.
 
-| Gate 0 item (§11 of the gap analysis) | Register record | Approval status |
+### 1.3 The two approval gates
+
+Gate 0 was a single list. It is now split so that the authorization work is not held hostage by provider and business choices.
+
+| | **Gate 0A — Authorization approval** | **Gate 0B — Business & integration approval** |
 |---|---|---|
-| G0.1 Audit in/out | `G0-DEC-01` (§3.1) | **Already approved** |
-| G0.2 Freeze the permission catalog | `G0-DEC-02` (§3.2) + catalog content (§4.1) | Principle approved; **content recommended — awaiting approval** |
-| G0.3 Property model vs hotels-as-properties | `G0-DEC-03` (§3.3) | **Already approved** |
-| G0.4 Visa transition authority | `G0-DEC-04` (§3.4) | **Already approved** |
-| G0.5 Notification channels and provider strategy | §4.2 + Topic A (§5.1) | **Recommended — awaiting approval** |
-| G0.6 Payment / flight / hotel / eSIM providers | §4.3 + Topics B–D (§5.2–5.4) | **Requires clarification** (provider selection); architecture recommended |
-| G0.7 Unresolved features F-027, F-043, F-071 and multi-city | §4.4 + Topic F (§5.6) | **Recommended — awaiting approval** |
-| G0.8 Settlement schema | §4.5 + Topic E (§5.5) | **Recommended — awaiting approval** |
-| *(cross-cutting, not a Gate 0 item)* Empty scope = no access | `G0-DEC-05` (§3.5) — unblocks Phase A item A1 | **Already approved** |
+| Purpose | Everything Phase A (authorization and tenancy repairs) depends on | Everything later phases depend on |
+| Blocks | Phase A, and by consequence every later phase | Only the phase that needs the specific decision |
+| Items | `G0-DEC-01` … `G0-DEC-05`; the 85-key catalog content; P-09 (`bookings.*` / `customers.view` scope); delegation and owner-template rules; empty-scope fail-closed behaviour | Notification architecture and delivery; payment gateway, flight and eSIM provider selection; gateway partner-payout capability; F-027/F-043/F-071 and multi-city; settlement schema and lifecycle; other open feature decisions |
+| Sections | §4 | §5 |
+| Current state | **Ready for owner review** — no item needs information from outside the repository except the owner's yes | **Pending** — provider selection cannot be answered from the repository |
 
-### 1.4 What Gate 0 does and does not unblock
+**No Phase A work starts until Gate 0A is approved in full.** Gate 0B does not block Phase A, but no implementation phase that depends on an unresolved Gate 0B item may begin until that item is approved.
 
-Gate 0 exists because Phase A (authorization repairs) needs a frozen permission catalog and unambiguous scope semantics, and Phases E–J need contract decisions. Gate 0 does **not** require provider credentials: the adapters, state machines, ledger and settlement logic can all be built and tested against fake providers. Only real flight/eSIM/payment traffic requires credentials (§5.2–5.4).
+### 1.4 What the gates do and do not unblock
+
+Gate 0A exists because Phase A needs a frozen permission catalog and unambiguous scope semantics. Gate 0B exists because Phases D–J need contract decisions. Neither gate requires provider credentials: adapters, state machines, the ledger and settlement logic can all be built and tested against fake providers (the hotel flow needs no provider at all). Only real flight/eSIM/payment traffic requires credentials.
 
 ---
 
-## 2. Summary of remaining approvals required
+## 2. Gate 0 at a glance
 
-| # | Decision | Recommendation in one line | Status |
+### 2.1 Gate 0A — Authorization (blocks Phase A)
+
+| # | Item | Position | Status |
 |---|---|---|---|
-| 1 | **G0.2 content** — the 85-key catalog | Adopt 37 platform + 48 organization keys; remove `platform.audit.view`, `platform.visa_requests.update_status`, `org.profile.publish`; add 9 retained keys | Recommended — awaiting approval |
-| 2 | **G0.5** — notifications | Database + e-mail at launch on the database queue; push/SMS/WhatsApp deferred behind adapters; deterministic notification IDs for dedupe | Recommended — awaiting approval |
-| 3 | **G0.6** — providers | Gateway/adapter contracts + fake providers now; hotels are first-party inventory so the hotel flow needs no credentials; flights and eSIM return `provider_unavailable` until a provider is chosen | Requires clarification (which providers) + architecture recommended |
-| 4 | **G0.7** — F-027 / F-043 / F-071 / multi-city | Defer seat selection and eSIM usage tracking; implement tour cancellation eligibility (not fee calculation); remove multi-city from UI scope | Recommended — awaiting approval (2 items need clarification) |
-| 5 | **G0.8** — settlements | Add `settlement_periods` + `settlement_items` keyed to `partner_ledger_entries` so BR-114 reconciles to the cent by construction | Recommended — awaiting approval |
+| 1 | `G0-DEC-01` | Audit and general activity logs permanently excluded; `status_histories` only | **Approved** |
+| 2 | `G0-DEC-02` | One centralized authoritative permission catalog | **Approved (principle)** |
+| 3 | `G0-DEC-03` | A hotel organization owns many properties; `hotels` is the property entity | **Approved** |
+| 4 | `G0-DEC-04` | Only platform staff holding `platform.visa_requests.decide` decide a visa | **Approved** |
+| 5 | `G0-DEC-05` | An empty scope means access to nothing | **Approved** |
+| 6 | **Catalog content** (§4.1) | 85 keys — 37 platform + 48 organization; vs the seeder: **+6 added, −1 removed, 1 renamed** | **Recommended — awaiting approval** |
+| 7 | **P-09** (§4.2) | Keep `bookings.*` and `customers.view` closed to service providers for now | **Recommended — awaiting approval** |
+| 8 | **Delegation and owner templates** (§4.3) | Family rule, 8 non-delegable keys, 3 owner-only actions, 3 immutable owner templates | **Recommended — awaiting approval** |
+| 9 | **Empty scopes fail closed** (§4.4) | Restates `G0-DEC-05` as an enforceable rule and names the data check before deploy | **Approved; enforcement detail awaiting approval** |
+
+### 2.2 Gate 0B — Business and integration (does not block Phase A)
+
+| # | Item | Position | Status |
+|---|---|---|---|
+| 1 | `G0.5` Notifications (§5.1) | Database + e-mail at launch on the database queue; per-channel delivery rows; at-least-once delivery, **not** exactly-once; push/SMS/WhatsApp deferred behind adapters | **Recommended — awaiting approval** |
+| 2 | `G0.6` Providers — architecture (§5.2) | Gateway/flight/eSIM adapter contracts + fakes; hotels are first-party inventory and need no provider; unconfigured flight/eSIM search returns `provider_unavailable`; add `payment_webhooks` | **Recommended — awaiting approval** |
+| 3 | `G0.6` Providers — selection | *Which* gateway, flight provider and eSIM provider; whether the gateway can execute partner payouts (DEC-10 depends on it) | **Requires clarification** |
+| 4 | `G0.7` F-027 seat selection | Defer; free and optional at launch | **Recommended — awaiting approval** |
+| 5 | `G0.7` F-043 eSIM usage | Show purchased allowance only; no live remaining-data figure unless a provider exposes one | **Recommended — awaiting approval; clarification advisable** |
+| 6 | `G0.7` F-071 tour cancellation | Follow the tour company's own policy; **no platform-invented 24-hour full-refund rule**; terms and refund basis explicit before booking | **Pending — policy not approved** |
+| 7 | `G0.7` Multi-city | Remove from v1 scope | **Recommended — awaiting approval** |
+| 8 | `G0.8` Settlements (§5.4) | `settlement_periods` + `settlement_items` derived from the ledger, with the full lifecycle in §5.4; `payout_accounts` stays a **proposal** | **Recommended — awaiting approval** |
 
 ---
 
@@ -73,616 +97,447 @@ Gate 0 exists because Phase A (authorization repairs) needs a frozen permission 
 ### 3.1 G0-DEC-01 — Audit and activity logs permanently excluded
 
 **Current documented situation.**
-`BUSINESS-LOGIC.md` BR-107, BR-111 and BR-124, feature F-112 ("Dynamic roles, permissions **& audit**") and the "audit" columns of `ROLE-PERMISSION-SCOPE-MATRIX.md` require an audit trail with actor, timestamp and before/after values. `AUTHORIZATION-ARCHITECTURE.md` §11 states the opposite: audit logs are permanently removed and no UI shows them. The implementation has no audit table and never seeded the audit permission. Phase 0 had already deleted a previously-drafted audit architecture (migration, model, service, event, listener, controller, resource, policy, two tests) and recorded the deletion in `IMPLEMENTATION-STATUS.md` row 3. This is conflict **C-01**.
+`BUSINESS-LOGIC.md` BR-107, BR-111 and BR-124, feature F-112 ("Dynamic roles, permissions **& audit**") and the "audit" columns of `ROLE-PERMISSION-SCOPE-MATRIX.md` require an audit trail with actor, timestamp and before/after values. `AUTHORIZATION-ARCHITECTURE.md` §11 states the opposite: audit logs are permanently removed and no UI shows them. The implementation has no audit table and never seeded the audit permission. Phase 0 had already deleted a previously drafted audit architecture (migration, model, service, event, listener, controller, resource, policy, two tests) and recorded the deletion in `IMPLEMENTATION-STATUS.md` row 3. This was conflict **C-01**.
 
-**Recommended decision (approved).**
-Permanently excluded. No audit log, no general activity log, no audit table, service, event, listener or endpoint. `status_histories` remains and is permitted **only** for business-entity status transitions (booking, visa application, refund, payout request, tour review). It must never be widened into a record of user actions, logins, reads, or permission changes.
+**Decision (approved).**
+Permanently excluded. No audit log, no general activity log, no user activity tracking, no audit table, service, event, listener or endpoint. `status_histories` remains and is permitted **only** for business-entity status transitions (booking, visa application, refund, payout request, tour review). It must never be widened into a record of user actions, logins, reads, or permission changes.
 
-**Reasoning.**
-The authorization architecture, the Phase 0 correction log and the current schema all already assume audit is absent; BR-107/111/124 are the only remaining source of the requirement, and they are the older text. Keeping exactly one append-only history table for entity lifecycle satisfies the operational need that the audit rule was reaching for (who moved this booking to `cancelled`, when) without building a second, parallel event store. It also preserves the security properties already proven: append-only `status_histories`, idempotent `partner_ledger_entries.entry_key`, and immutable `payments`/`refunds`.
+**Consequence for the catalog.** `platform.audit.view` is removed and is not re-purposed. The remaining organization permission that reads status histories is renamed `status_history.view` (formerly `team_activity.view`) so its name cannot be mistaken for a general activity feed — see §4.1 and `PERMISSION-CATALOG-RECONCILIATION.md` §8 P-08.
 
 **Database impact.**
 - Tables affected: `status_histories` only (already exists, append-only, model throws on update/delete).
-- New tables required: **none**.
-- Columns required: **none**.
-- Foreign keys / unique constraints / indexes: **none**.
-- Data-integrity implication: `team_activity.view` must read `status_histories`, so every entity whose transitions appear in a team activity feed must write a status history row. The feed is therefore bounded by the set of entities that have status histories — this is the intended constraint, not a gap.
+- New tables required: **none**. Columns: **none**. Constraints/indexes: **none**.
+- Data-integrity implication: every entity whose transitions appear in `status_history.view` must write a status-history row. The feed is therefore bounded by the set of entities that have status histories — the intended constraint, not a gap.
 
 **API impact.**
-- Affected API groups: platform administration, organization reports (`team_activity.view`), and every admin mutation response.
-- Required endpoints: **no** audit endpoints. One read-only "team activity" endpoint under the organization reports group, serving `status_histories` rows scoped to the caller's organization and service/property scope.
-- Authorization: `team_activity.view` (company only) and `reports.view`.
-- Request/response implications: no `audit`, `activity` or `changed_by` block may appear in any resource. Existing business tables keep their `created_by` / `updated_by` / `updated_by`-style columns (e.g. `room_rates.updated_by`, `payments` attribution, `payout_requests.processed_by`) — these are attribution fields, not an activity log, and are permitted.
-- Webhook/background-job implications: none.
+- Affected API groups: organization reports and every admin mutation response.
+- Required endpoints: **no** audit endpoints. One read-only status-history endpoint under the organization reports group, scoped to the caller's organization and service/property scope.
+- Authorization: `status_history.view` (company only) and `reports.view`.
+- No `audit`, `activity` or `changed_by` block may appear in any resource. Existing attribution columns (`room_rates.updated_by`, `payout_requests.processed_by`, `payments` attribution) are attribution fields, not an activity log, and are permitted.
 
 **Security and tenant isolation impact.**
-The deliberate trade-off: after-the-fact reconstruction of *who changed a permission or a role* is not possible. This is the one element of BR-107 with genuine security value, and it is being accepted as a residual risk. Compensating controls that remain: single active owner per organization enforced by a unique index; non-delegable permission list enforced centrally; `permissions_version` bumped on every role/grant/scope change (so stale access ends on the next request, PE-12); append-only status histories; immutable financial rows. Tenant isolation is unaffected — activity feeds are strictly organization-scoped and must fail closed under `G0-DEC-05`.
+The deliberate trade-off: after-the-fact reconstruction of *who changed a permission or a role* is not possible. That is the one element of BR-107 with genuine security value, accepted as a residual risk. Compensating controls that remain: single active owner per organization enforced by a unique index; a non-delegable permission list enforced centrally; `permissions_version` bumped on every role/grant/scope change (so stale access ends on the next request, PE-12); append-only status histories; immutable financial rows. Tenant isolation is unaffected — status-history reads are strictly organization-scoped and fail closed under `G0-DEC-05`.
 
-**Dependencies.**
-- Blocks nothing.
-- Resolved by it: **C-01**; the permission key `platform.audit.view` (§4.1); F-112's title and scope; gap-analysis §11 Phase K audit item.
+**Dependencies.** Resolves C-01; removes the audit key from the catalog; retitles F-112; retires the Phase K audit item.
 
-**Risks.**
-If a legal, tax or insurer requirement for an audit trail appears later, it is not a bolt-on: it needs a schema addition plus an interceptor or observer on every mutation, retrofit across all services. Mitigation available now at no cost: never repurpose `status_histories`, and keep the permission catalog free of audit keys so nobody believes an audit capability exists.
+**Risks.** If a legal, tax or insurer requirement for an audit trail appears later, it is not a bolt-on: it needs a schema addition plus an interceptor on every mutation, retrofitted across all services. Mitigation available now at no cost: never repurpose `status_histories`, and keep the catalog free of audit keys so nobody believes an audit capability exists.
 
-**Approval status:** **Already approved.**
+**Approval status:** **Approved.**
 
 ---
 
 ### 3.2 G0-DEC-02 — One centralized authoritative permission catalog
 
 **Current documented situation.**
-Four conflicting counts: 83 (matrix header and totals), 84 (naive extraction, inflated by the phantom `platform.audit.view`), 78 (matrix §9 self-check), 80 (seeder). Eight documented keys are missing from the seeder and four seeded keys are undocumented. Full analysis in `PERMISSION-CATALOG-RECONCILIATION.md`. This is conflict **C-02**, with C-03, C-04 and C-17 attached.
+Four conflicting counts: 83 (matrix catalog tables), 84 (naive extraction, inflated by the phantom `platform.audit.view`), 78 (matrix §9 stale self-check), 80 (seeder). Six documented keys are missing from the seeder and four seeded keys are undocumented. Full analysis in `PERMISSION-CATALOG-RECONCILIATION.md`. Conflict **C-02**, with C-03, C-04 and C-17 attached.
 
-**Recommended decision (approved in principle).**
-There is exactly one permission catalog, held in one place. The **content** of that catalog is the 85-key list in `PERMISSION-CATALOG-RECONCILIATION.md` §4–5: **37 platform + 48 organization**. Every addition, removal, rename and consolidation is individually justified there; no key is invented.
+**Decision (approved in principle).**
+There is exactly one permission catalog, held in one place: the `permissions` table for content and metadata, `config/authorization.php` for delegability, owner templates, families and owner-only actions. **The content of that catalog is not approved by this decision** — it is the 85-key list in §4.1 and `PERMISSION-CATALOG-RECONCILIATION.md` §4–5, and it awaits explicit approval.
 
-**Reasoning.**
-The count cannot be chosen by majority or by seniority of document — it has to be derived from capabilities. The reconciliation derives it by unioning what the documents require with what the implementation already enforces, then removing only what the approved Gate 0 decisions make impossible (`audit.view`, `update_status`) or redundant (`org.profile.publish`). That yields 85 keys with no orphans in either direction. Keeping the catalog in the `permissions` table (with `family`, `domain`, `sensitivity`, `scope_requirement`, `allowed_org_types`) and delegability in `config/authorization.php` preserves the existing single-source-of-truth split that Phase 0 deliberately established.
+**Reasoning.** The count cannot be chosen by majority or by seniority of document — it has to be derived from capabilities. The reconciliation unions what the documents require with what the implementation enforces, then removes only what an approved Gate 0 decision makes impossible (`audit.view`, `update_status`) or redundant (`org.profile.publish`). Keeping the split established in Phase 0 (metadata in the table, delegability in config) preserves the single source of truth.
 
-**Database impact.**
-- Tables affected: `permissions` (data rows only), `roles`, `role_has_permissions`, `model_has_roles`, `model_has_permissions`.
-- New tables required: **none**. No migration.
-- Columns required: **none** — `permissions` already stores `family`, `domain`, `description`, `sensitivity`, `scope_requirement`, `allowed_org_types`.
-- Foreign keys / unique constraints / indexes: unchanged. `permissions` already unique on (`name`, `guard_name`).
-- Data-integrity implications: `scope_requirement` is currently computed by string prefix in the seeder (`tours.`, `visa_requests.`, `visa_offerings.`, `rooms.`, `rates.`). `properties.` must be added to that prefix list as a `property` scope, and the `access_control` sensitivity value normalised to `access-control` (P-14). Removing a key that a custom role references must be handled by the authorization service, not by a silent cascade.
+**Database impact.** Data-only changes to `permissions` and the role tables; **no migration**. `scope_requirement` is computed by string prefix in the seeder (`tours.`, `visa_requests.`, `visa_offerings.`, `rooms.`, `rates.`) and `properties.` must join that list as a `property` scope. Removing a key that a custom role references must be handled by the authorization service, not a silent cascade.
 
-**API impact.**
-- Affected API groups: platform roles/permissions (F-112), organization roles (F-097/F-098), and every endpoint that asserts a permission.
-- Required endpoints: none new; the role editor's available-permission list and the grant validation must read the frozen catalog.
-- Authorization: the catalog defines authorization; it does not consume it. `platform.roles.*` and `roles.*` gate the editors.
-- Request/response implications: permission keys appear in role resources as strings; removing a key changes those payloads. No versioning needed while nothing is released.
-- Webhook/background-job implications: none.
+**API impact.** No new endpoints; the role editor's available-permission list and grant validation read the frozen catalog. Removed keys must be rejected with a clear error, not ignored.
 
-**Security and tenant isolation impact.**
-This is the highest-leverage decision in Gate 0: every owner template, every custom role and every policy check derives from these keys. The catalog closes the visa-decision escalation (`update_status` could record a final decision without holding `decide`), makes property publishing a per-property right, and introduces `settlements.accounts.manage` as a non-delegable financial control. The family rule (no `platform.*` key on an organization role) is unchanged and must be asserted on every grant path.
+**Security and tenant isolation impact.** Every owner template, custom role and policy check derives from these keys. The catalog closes the visa-decision escalation, makes publishing a per-property right, and introduces `settlements.accounts.manage` as a non-delegable financial control. The family rule (no `platform.*` key on an organization role) is unchanged and must be asserted on every grant path.
 
-**Dependencies.**
-- Depends on `G0-DEC-01` (removes the audit key), `G0-DEC-03` (defines `properties.*`), `G0-DEC-04` (defines review/decide/assign).
-- Blocks Phase A entirely, and Phases C–J.
+**Dependencies.** Depends on `G0-DEC-01`, `G0-DEC-03`, `G0-DEC-04`. Blocks Phase A entirely, and Phases C–J.
 
-**Risks.**
-A wrong catalog mis-seeds every role in every tenant at once, and the damage is silent. Two specific hazards: (a) removing a key later breaks custom roles that reference it — deletion must be a documented migration, not a seed refresh; (b) widening `bookings.*`/`customers.view` to service providers before their service catalog exists grants access to a business they cannot operate (P-09).
+**Risks.** A wrong catalog mis-seeds every tenant at once, silently. Two specific hazards: (a) removing a key later breaks custom roles that reference it, so deletion must be a documented migration, not a seed refresh; (b) widening `bookings.*`/`customers.view` to service providers before their service catalog exists grants access to a business they cannot operate (P-09).
 
-**Approval status:** **Already approved in principle; catalog content recommended — awaiting user approval** (§4.1).
+**Approval status:** **Approved in principle; catalog content recommended — awaiting approval** (§4.1).
 
 ---
 
 ### 3.3 G0-DEC-03 — A hotel organization may own multiple hotel properties
 
 **Current documented situation.**
-The matrix defines `properties.view/create/update/publish` for hotel organizations (F-101, F-106), while the implementation models hotels directly under a hotel organization and instead has the organization-wide `org.profile.publish`. `OPEN-QUESTIONS.md` Q-49 assumes one property per hotel organization at launch, while `DB-DECISION-BRIEF.md` DEC-14 supports multiple hotels. Conflict **C-03** and **C-11**.
+The matrix defines `properties.view/create/update/publish` for hotel organizations (F-101, F-106), while the implementation modelled hotels directly under a hotel organization and instead had the organization-wide `org.profile.publish`. `OPEN-QUESTIONS.md` Q-49 assumed one property per hotel organization at launch, while `DB-DECISION-BRIEF.md` DEC-14 supports multiple hotels. Conflicts **C-03** and **C-11**.
 
-**Recommended decision (approved).**
+**Decision (approved).**
 - `hotels` **is** the hotel-property entity; it is not renamed and not duplicated.
 - A hotel organization **may own many** hotels.
 - `membership_hotel_scopes` carries property-level membership access.
 - Bookings reference the relevant `hotel_id`.
-- Every property access validates the organization ownership chain (`hotel.organization_id` = the acting membership's organization).
+- Every property access validates the ownership chain (`hotel.organization_id` = the acting membership's organization).
 - Hotel owners manage every property of their organization; hotel staff reach only properties in their assigned scope.
 - An empty property scope means **no** property access (`G0-DEC-05`).
 
-**Reasoning.**
-The schema already implements this model — `hotels.organization_id` (FK, restrict), `membership_hotel_scopes` (`unique(membership_id, hotel_id)`), `bookings.hotel_id`, `hotel_bookings.hotel_id` — so the approved decision aligns the documents with the stronger model already in place, rather than forcing a one-property constraint that the tables would have to be weakened to express. It also makes the documented `properties.*` keys meaningful and lets `BR-110` (publish requires verified legal documents) attach to the correct unit.
+**Reasoning.** The schema already implements this model — `hotels.organization_id` (FK, restrict), `membership_hotel_scopes` (`unique(membership_id, hotel_id)`), `bookings.hotel_id`, `hotel_bookings.hotel_id` — so the decision aligns the documents with the stronger model already in place instead of weakening the tables to express a one-property constraint. It also makes `properties.*` meaningful and lets BR-110 (publish requires verified legal documents) attach to the correct unit.
 
 **Database impact.**
-- Tables affected: `hotels`, `membership_hotel_scopes`, `bookings`, `hotel_bookings`.
-- New tables required: **none**.
-- Columns required: **none** — `hotels.organization_id`, `membership_hotel_scopes.membership_id`/`hotel_id`, `bookings.hotel_id`, `hotel_bookings.hotel_id` already exist.
-- Foreign keys: present and correct (`hotels.organization_id` restrict; `membership_hotel_scopes.*` cascade; `bookings.hotel_id` restrict-nullable; `hotel_bookings.hotel_id` restrict).
-- Unique constraints: `membership_hotel_scopes` unique (`membership_id`, `hotel_id`) — present. `hotels` must **not** receive a unique constraint on `organization_id`.
-- Indexes: `hotels` has (`city`,`status`) and (`latitude`,`longitude`); the `organization_id` FK is indexed implicitly by InnoDB, which serves the ownership-chain lookup. `hotel_bookings` has (`hotel_id`,`check_in`). No new index is required for correctness.
-- Data-integrity implications: nothing at the database level prevents a `membership_hotel_scopes` row pointing at a hotel owned by a *different* organization. That invariant must be enforced in the service layer (and by a policy check on every property-scoped query) until a composite FK on (`hotel_id`, `organization_id`) is considered. Recorded as an implementation requirement, not a migration.
-- **Comment defect to fix when code is next touched (not now):** the migration comment on `membership_hotel_scopes` currently reads "No rows = every property the organization owns", which contradicts `G0-DEC-05`. The comment must be corrected to "No rows = no property access".
+- Tables affected: `hotels`, `membership_hotel_scopes`, `bookings`, `hotel_bookings`. New tables: **none**. Columns: **none** — all required columns exist.
+- Constraints: `hotels` must **not** receive a unique constraint on `organization_id`. `membership_hotel_scopes` unique (`membership_id`,`hotel_id`) is present and correct.
+- Nothing at the database level prevents a `membership_hotel_scopes` row pointing at a hotel owned by a *different* organization. That invariant must be enforced in the service layer (and by a policy check on every property-scoped query) until a composite FK on (`hotel_id`,`organization_id`) is considered. Recorded as an implementation requirement, not a migration.
+- **Comment defect to fix when code is next touched (not now):** the `membership_hotel_scopes` migration comment reads "No rows = every property the organization owns", which contradicts `G0-DEC-05`. It must read "No rows = no property access".
 
-**API impact.**
-- Affected API groups: hotel portal (F-101, F-103, F-106), hotel bookings (F-104), platform partner/hotel oversight.
-- Required endpoints: property list/create/update/publish within the hotel portal; room-type and rate endpoints nested under a property; booking list/detail filtered by `hotel_id`.
-- Authorization: `properties.view/create/update/publish`, `rooms.*`, `rates.*`, `bookings.*`, plus the property-scope and ownership-chain checks. Publishing additionally requires verified legal documents (`BR-110`).
-- Request/response implications: every property-scoped request must carry or derive the property id explicitly; responses must not leak other properties of the same organization to scoped staff. Reservation/booking responses must include the property reference.
-- Webhook/background-job implications: none. (Rate/availability jobs iterate properties, a later Phase K concern.)
+**API impact.** Property list/create/update/publish within the hotel portal; room-type and rate endpoints nested under a property; booking list/detail filtered by `hotel_id`. Authorization: `properties.*`, `rooms.*`, `rates.*`, `bookings.*` plus the property-scope and ownership-chain checks; publishing additionally requires verified legal documents (BR-110). Every property-scoped request must carry or derive the property id explicitly and must not leak sibling properties to scoped staff. No webhook/job implication.
 
-**Security and tenant isolation impact.**
-Two boundaries now exist inside one tenant — organization and property — and both must fail closed. The organization boundary alone is insufficient for staff: a receptionist restricted to one property must not enumerate a sibling property's rooms, rates, arrivals or bookings. Property scope narrows; it never widens. The ownership-chain check must run before the scope check, so a forged `hotel_id` belonging to another tenant is a 404/403, never a cross-tenant read.
+**Security and tenant isolation impact.** Two boundaries now exist inside one tenant — organization and property — and both must fail closed. A receptionist restricted to one property must not enumerate a sibling property's rooms, rates, arrivals or bookings. Property scope narrows; it never widens. The ownership-chain check must run before the scope check, so a forged `hotel_id` belonging to another tenant is a 404/403, never a cross-tenant read.
 
-**Dependencies.**
-- Depends on `G0-DEC-05` (empty scope meaning) and `G0-DEC-02` (`properties.*` keys).
-- Blocks Phase E (hotel catalogue/search), Phase G.4 (hotel booking) and Phase H.5 (hotel portal).
+**Dependencies.** Depends on `G0-DEC-05` and `G0-DEC-02` (`properties.*`). Blocks Phase E (hotel catalogue/search), Phase G.4 (hotel booking) and Phase H.5 (hotel portal).
 
-**Risks.**
-If property scope is implemented only in policies and not in the query layer, a scoped employee can still page through siblings by pagination or by id enumeration. If `hotels` were later given a `unique(organization_id)`, the approved multi-property model would be silently broken. If publishing stays organization-wide (`org.profile.publish`), one unverified document set could block or release every property at once.
+**Risks.** If property scope is implemented only in policies and not in the query layer, a scoped employee can still page through siblings. If `hotels` were later given `unique(organization_id)`, the approved model would silently break. If publishing stayed organization-wide, one unverified document set could block or release every property at once.
 
-**Approval status:** **Already approved.**
+**Approval status:** **Approved.**
 
 ---
 
 ### 3.4 G0-DEC-04 — Only platform staff may make the final visa decision
 
 **Current documented situation.**
-`ROLE-PERMISSION-SCOPE-MATRIX.md` defines `platform.visa_requests.update_status` for platform staff and a "final decision" description on `platform.visa_requests.review`; `AUTHORIZATION-ARCHITECTURE.md`/DEC-16 removed the company-side status key; `OPEN-QUESTIONS.md` Q-46 still says "company employees with `visa_requests.update_status`"; DEC-07 says "employees record decisions". The implementation seeds `platform.visa_requests.review`/`decide`/`assign` and organization `visa_requests.review`, with no `update_status` anywhere. Conflict **C-04**.
+`ROLE-PERMISSION-SCOPE-MATRIX.md` defined `platform.visa_requests.update_status` for platform staff and a "final decision" description on `platform.visa_requests.review`; `AUTHORIZATION-ARCHITECTURE.md`/DEC-16 removed the company-side status key; `OPEN-QUESTIONS.md` Q-46 still said "company employees with `visa_requests.update_status`"; DEC-07 said "employees record decisions". The implementation seeds `platform.visa_requests.review`/`decide`/`assign` and organization `visa_requests.review`, with no `update_status` anywhere. Conflict **C-04**.
 
-**Recommended decision (approved).**
+**Decision (approved).**
 - Only Traway platform staff holding `platform.visa_requests.decide` may record an approval or rejection.
 - Company users may view visa requests within their authorized scope (`visa_requests.view`) and validate documents / flag missing items (`visa_requests.review`). They cannot decide.
 - Customer-visible statuses stay exactly `Submitted → Under Review → Documents Required → Processing → Approved / Rejected`. No new customer-facing status is introduced.
 - Internal operational transitions (assignment, document requests, notes) are separate from customer-visible statuses.
 
-**Reasoning.**
-A visa decision is a legal/consular act with financial and regulatory exposure, and the traveler has no contractual relationship with the company beyond the offering. Centralising the decision in platform staff makes the outcome attributable to one accountable actor, keeps a single quality gate across all publishing companies, and matches the schema: `visa_applications.decided_by` / `decided_at` / `rejection_reason` exist for exactly one decider. It also removes the last path by which a partner could approve its own sale.
+**Reasoning.** A visa decision is a legal/consular act with financial and regulatory exposure, and the traveler has no contractual relationship with the company beyond the offering. Centralising the decision in platform staff makes the outcome attributable to one accountable actor, keeps a single quality gate across all publishing companies, and matches the schema: `visa_applications.decided_by` / `decided_at` / `rejection_reason` exist for exactly one decider. It also removes the last path by which a partner could approve its own sale.
 
 **Database impact.**
-- Tables affected: `visa_applications`, `visa_application_documents`, `status_histories`.
-- New tables required: **none**.
-- Columns required: **none** — `visa_applications` already has `status`, `assigned_membership_id`, `rejection_reason`, `decided_by`, `decided_at`, `submitted_at`; documents have per-document `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`.
-- Foreign keys / unique constraints / indexes: unchanged (`visa_applications` already indexes (`organization_id`,`status`) and (`user_id`,`status`); `booking_id` is unique).
-- Data-integrity implications: the decision columns must only be written when the actor holds `decide` **and** the transition is legal; the customer-visible status must never be set by a company-side review action. If internal states later need to be distinguishable from the six customer statuses, that is an added internal column — deliberately **not** proposed here, because DEC-04 forbids new customer-facing statuses and the current `status` column plus document states is sufficient.
+- Tables affected: `visa_applications`, `visa_application_documents`, `status_histories`. New tables: **none**. Columns: **none** — `status`, `assigned_membership_id`, `rejection_reason`, `decided_by`, `decided_at`, `submitted_at` and per-document `status`/`rejection_reason`/`reviewed_by`/`reviewed_at` all exist. Indexes unchanged.
+- The decision columns must only be written when the actor holds `decide` **and** the transition is legal; the customer-visible status must never be set by a company-side review action. Internal states beyond the six customer statuses are deliberately **not** proposed: DEC-04 forbids new customer-facing statuses and the current `status` column plus document states is sufficient.
 
-**API impact.**
-- Affected API groups: customer visa tracker, company visa workspace (D-04.6), restricted employee queue (D-06.1), platform visa queue (D-03.3).
-- Required endpoints: company — list/detail visa requests within scope, per-document accept/reject, request additional documents. Platform — list/detail all, assign, review, decide (approve/reject with mandatory reason on rejection).
-- Authorization: `visa_requests.view` + `visa_requests.review` (company, service-scoped to `visas`); `platform.visa_requests.view`/`review`/`assign`/`decide` (platform). `update_status` does not exist.
-- Request/response implications: the decision endpoint is platform-only and requires `rejection_reason` when rejecting. Company responses expose documents and review status but not decision controls. Customer responses expose only the six statuses plus reason category/note.
-- Webhook/background-job implications: decision and status change emit notification events (BR-104, G0.5); no external authority submission exists inside Traway (DEC-07).
+**API impact.** Company: list/detail visa requests within scope, per-document accept/reject, request additional documents. Platform: list/detail all, assign, review, decide (approve/reject with mandatory reason on rejection). Authorization: `visa_requests.view` + `visa_requests.review` (company, service-scoped to `visas`); `platform.visa_requests.view`/`review`/`assign`/`decide` (platform). `update_status` does not exist. Decision and status changes emit notification events (§5.1); no external authority submission exists inside Traway (DEC-07).
 
-**Security and tenant isolation impact.**
-Removes the partner's ability to approve its own application — the main conflict-of-interest path in the visa module. Company scope remains service- (`visas`) and organization-bound: a company sees only applications attached to its own offerings (`visa_applications.organization_id`), and a restricted employee sees only assigned requests (`assigned_membership_id`, `BR-115`). Platform access is cross-tenant by design and must be the only path that ignores the tenant filter.
+**Security and tenant isolation impact.** Removes the partner's ability to approve its own application — the main conflict-of-interest path in the visa module. Company scope remains service- (`visas`) and organization-bound; a restricted employee sees only assigned requests (`assigned_membership_id`, BR-115). Platform access is cross-tenant by design and is the only path that ignores the tenant filter.
 
-**Dependencies.**
-- Depends on `G0-DEC-02` (`review`/`decide`/`assign` are the canonical keys; `update_status` removed) and `G0-DEC-05`.
-- Supersedes the "employees record decisions" phrasing in DEC-07 and resolves Q-46.
-- Blocks Phase H.2 (visa review workflow) and Phase C (customer tracker copy).
+**Dependencies.** Depends on `G0-DEC-02` (`review`/`decide`/`assign` are the canonical keys; `update_status` removed) and `G0-DEC-05`. Supersedes the "employees record decisions" phrasing in DEC-07 and resolves Q-46. Blocks Phase H.2 and Phase C (customer tracker copy).
 
-**Risks.**
-Platform staff become a throughput bottleneck for every visa decision, and there is no fallback if the visa-officer role is unstaffed. If `visa_requests.review` is loosely interpreted, company staff could still request documents in a way that reads as a decision to the customer — the customer-facing status vocabulary must be driven only by platform-confirmed transitions.
+**Risks.** Platform staff become a throughput bottleneck for every visa decision, with no fallback if the visa-officer role is unstaffed. If `visa_requests.review` is loosely interpreted, company staff could request documents in a way that reads as a decision to the customer — the customer-facing status vocabulary must be driven only by platform-confirmed transitions.
 
-**Approval status:** **Already approved.**
+**Approval status:** **Approved.**
 
 ---
 
 ### 3.5 G0-DEC-05 — An empty scope means access to nothing
 
 **Current documented situation.**
-BR-121 and MT-11 state that a non-owner with no service scope has no service access. `AuthorizationService` treats an **empty** service or hotel scope as unrestricted, and the `membership_hotel_scopes` migration comment says "No rows = every property". Conflict **C-08**, and Phase A item A1. This decision is not one of the eight Gate 0 items, but it is approved and blocks the same work.
+BR-121 and MT-11 state that a non-owner with no service scope has no service access. `AuthorizationService` treats an **empty** service or hotel scope as unrestricted, and the `membership_hotel_scopes` migration comment said "No rows = every property". Conflict **C-08**, and Phase A item A1.
 
-**Recommended decision (approved).**
+**Decision (approved).**
 An empty property, organization or resource scope grants access to **nothing**. No empty array and no null scope value may be read as implicit global access. Global access is explicit and independently authorized. Every scoped query fails closed. Authorization validates, in order: permission → active membership → organization ownership → applicable resource scope.
 
-**Reasoning.**
-Fail-open defaults are the classic source of cross-tenant leaks, and this codebase's default is exactly backwards from its documented rule. An explicit "all services"/"all properties" representation is required so that legitimate full access is still expressible — a hotel owner must see all properties **because they are the owner**, not because their scope list happens to be empty. Making ownership the explicit grant, and empty the denial, means the absence of a row can never be a privilege.
+**Reasoning.** Fail-open defaults are the classic source of cross-tenant leaks, and this codebase's default was exactly backwards from its documented rule. An explicit "all"/ownership representation is required so that legitimate full access is still expressible — a hotel owner must see all properties **because they are the owner**, not because their scope list happens to be empty. Making ownership the explicit grant, and empty the denial, means the absence of a row can never be a privilege.
 
 **Database impact.**
-- Tables affected: `membership_service_scopes`, `membership_hotel_scopes`.
-- New tables required: **none**.
-- Columns required: **none**, provided "all" is expressed by ownership (`memberships.is_owner`) rather than by an empty scope set. If a non-owner must be granted all properties/services, that is an explicit row per value, which the existing unique constraints support.
-- Foreign keys / unique constraints / indexes: unchanged.
-- Data-integrity implications: existing rows with zero scope rows now become "no access" rather than "all access". Any seeded or manually created membership relying on the old meaning will lose access — this is the intended correction and must be covered by the Phase A migration/verification plan for existing data (development data only at present).
+- Tables affected: `membership_service_scopes`, `membership_hotel_scopes`. New tables: **none**. Columns: **none**, provided "all" is expressed by ownership (`memberships.is_owner`) rather than by an empty scope set. Constraint: if a non-owner must be granted all properties/services, that is an explicit row per value, which the existing unique constraints support.
+- Existing rows with zero scope rows become "no access" rather than "all access". Any seeded or manually created membership relying on the old meaning loses access — the intended correction, covered by the data check in §4.4.
 
-**API impact.**
-- Affected API groups: every organization-scoped endpoint, plus restricted-employee queues (F-108, F-109, F-110).
-- Required endpoints: none new; the behavior of scoped list/detail endpoints changes to empty (not forbidden) result sets for members with no applicable scope.
-- Authorization: policies and queries must both consult scope; a permission alone must not imply record access.
-- Request/response implications: an empty list is a legitimate response for a scoped member; a 403 is reserved for a missing permission or a foreign record.
-- Webhook/background-job implications: none.
+**API impact.** No new endpoints; scoped list/detail endpoints return empty (not forbidden) result sets for members with no applicable scope. An empty list is a legitimate response for a scoped member; a 403 is reserved for a missing permission or a foreign record. No webhook/job implication.
 
-**Security and tenant isolation impact.**
-Directly closes the highest-severity class of defect found in the audit. It also fixes the restricted-employee tier (BR-087/115), which today could see the whole organization because its scope list is empty.
+**Security and tenant isolation impact.** Directly closes the highest-severity class of defect found in the audit, and fixes the restricted-employee tier (BR-087/115), which could previously see the whole organization because its scope list was empty.
 
-**Dependencies.**
-- Blocks Phase A (A1/A2) and every later phase's query layer.
-- Required by `G0-DEC-03` (empty property scope = none), `G0-DEC-04` (assigned-only queue).
+**Dependencies.** Blocks Phase A (A1/A2) and every later phase's query layer. Required by `G0-DEC-03` and `G0-DEC-04`.
 
-**Risks.**
-Failing closed can lock out legitimate members whose access was implicitly granted by the old semantics — notably hotel staff created without property rows, and company staff created without service rows. The correction must be accompanied by a data check that every non-owner member who needs access has explicit scope rows; otherwise the first deploy looks like an outage.
+**Risks.** Failing closed can lock out legitimate members whose access was implicitly granted by the old semantics — notably hotel staff created without property rows and company staff created without service rows. The correction must ship with the data check in §4.4; otherwise the first deploy looks like an outage.
 
-**Approval status:** **Already approved.**
+**Approval status:** **Approved.**
 
 ---
 
-## 4. Remaining decisions requiring approval
+## 4. Gate 0A — Authorization approval
 
-### 4.1 G0.2 (content) — Freeze the canonical permission catalog
+Everything Phase A depends on. Gate 0A is independently reviewable: no item below needs information that is not in this repository.
+
+### 4.1 The exact catalog content — 85 keys
 
 **Current documented situation.**
-The principle is approved (`G0-DEC-02`), but the catalog itself is not: 83 documented, 84 by naive extraction, 78 in a stale self-check, 80 implemented, 88 in the union. Eight documented keys missing from the seeder; four seeded keys undocumented; `platform.audit.view` exists only as a mention in a validation note; the non-delegable table in `AUTHORIZATION-ARCHITECTURE.md` §7.2 cites a key (`org.delete`) that exists nowhere. Full evidence in `PERMISSION-CATALOG-RECONCILIATION.md`.
+The principle is approved (`G0-DEC-02`), but the catalog itself is not: 83 documented, 84 by naive extraction, 78 in a stale self-check, 80 implemented, 88 in the union. Six documented keys are missing from the seeder; four seeded keys are undocumented; `platform.audit.view` exists only as a mention in a validation note; the non-delegable table in `AUTHORIZATION-ARCHITECTURE.md` §7.2 cites a key (`org.delete`) that exists nowhere. Full evidence in `PERMISSION-CATALOG-RECONCILIATION.md`.
 
 **Recommended decision.**
-Adopt the **85-key** catalog: **37 platform + 48 organization**.
-- **Add (9):** `platform.settings.manage`; `platform.visa_requests.assign`; `platform.visa_requests.decide`; `visa_requests.review`; `properties.view`; `properties.create`; `properties.update`; `properties.publish`; `settlements.accounts.manage`.
-- **Remove (3):** `platform.audit.view` (G0-DEC-01); `platform.visa_requests.update_status` (G0-DEC-04); `org.profile.publish` (superseded by `properties.publish`).
-- **Rename (0).** The `org.` prefix inconsistency is recorded, not fixed — renaming 44 keys would invalidate every role for no functional gain.
-- **Description change (1):** `platform.visa_requests.review` loses "and record the final decision".
-- **Non-delegable list:** add `settlements.accounts.manage`.
-- **Open sub-items:** P-09 (`bookings.*`/`customers.view` and service providers — recommend keeping `['company','hotel']` until the provider catalog exists) and P-14 (sensitivity spelling).
+Adopt the **85-key** catalog: **37 platform + 48 organization**, exactly as listed in `PERMISSION-CATALOG-RECONCILIATION.md` §4–5.
 
-**Reasoning.**
-Derived, not chosen: union of documented and implemented keys, minus what the approved decisions make impossible or redundant. That is the only method that leaves no orphan keys in either direction and needs no invention. Keeping delegability in config and metadata in the `permissions` table preserves the Phase 0 split.
+**Two different baselines — do not mix them.**
 
-**Database impact.**
-No migration. Data-only changes to `permissions` + role assignments; `scope_requirement` prefix list gains `properties.`; `config/authorization.php` non-delegable list gains one key; `access_control` spelling normalised.
+The earlier draft of this register described "9 additions and 3 removals". That was a **union** comparison, not a change to the seeder, and presenting it as "9 new permissions" was wrong. Both baselines are correct for their own question and are now stated separately:
 
-**API impact.**
-No new endpoints. Role editor payloads and grant validation read the frozen list; removed keys must be rejected with a clear error, not silently ignored.
+| Baseline | Count | Comparison | Additions | Removals | Renames | Result |
+|---|---|---:|---|---:|---:|---|
+| **A. Current seeder** (what the code creates today) | 80 (36 platform + 44 organization) | Seeder → final catalog | **6 genuinely new keys** | **1** (`org.profile.publish`) | **1** (`team_activity.view` → `status_history.view`) | 80 + 6 − 1 = **85** |
+| **B. Union of documented + code-defined keys** (what exists anywhere) | 88 (39 platform + 49 organization) | Union → final catalog | 9 single-source keys are *retained* (6 exist only in the docs, 3 only in the code) | **3** (`platform.audit.view`, `platform.visa_requests.update_status`, `org.profile.publish`) | see baseline A | 88 − 3 = **85** |
 
-**Security and tenant isolation impact.**
-Closes the visa decision escalation path, makes publishing per-property, adds a non-delegable payout-account control, and eliminates a phantom capability from the docs. Unchanged: the family rule and owner-template immutability.
+- Under **baseline A** the six new keys are: `platform.settings.manage`, `properties.view`, `properties.create`, `properties.update`, `properties.publish`, `settlements.accounts.manage`. They are new *to the seeder*; five of the six already existed in the documented catalog, which is why the union view counts them as "retained from a single source" rather than new.
+- Under **baseline B** the three removals include two documented keys that never existed in code. Only one of the three removals is a change to the seeder.
+- The one rename changes no count. The catalog adopts `status_history.view`; the seeder still creates `team_activity.view` and is renamed when the catalog is approved.
+- One description narrows: `platform.visa_requests.review` loses "and record the final decision".
 
-**Dependencies.** `G0-DEC-01`, `G0-DEC-03`, `G0-DEC-04`. Blocks all of Phase A.
+**Retained, promoted, renamed, removed — individually.** All fourteen keys that exist in only one source, plus the three decisions, are justified one by one in `PERMISSION-CATALOG-RECONCILIATION.md` §6–7. No key is invented in either source.
+
+**Non-delegable list:** add `settlements.accounts.manage` (`config/authorization.php`).
+
+**Open sub-item:** P-14 — sensitivity value spelling (`access_control` → `access-control`), data value only.
+
+**Reasoning.** Derived, not chosen: union of documented and implemented keys, minus what the approved decisions make impossible or redundant. That is the only method that leaves no orphan keys in either direction.
+
+**Database impact.** No migration. Data-only changes to `permissions` + role assignments; `scope_requirement` prefix list gains `properties.`; `config/authorization.php` non-delegable list gains one key; `access_control` spelling normalised.
+
+**API impact.** No new endpoints. Role editor payloads and grant validation read the frozen list; removed keys are rejected with a clear error.
+
+**Security and tenant isolation impact.** Closes the visa decision escalation path, makes publishing per-property, adds a non-delegable payout-account control, renames the status-history read so it cannot be mistaken for an activity feed, and eliminates a phantom capability.
+
+**Dependencies.** `G0-DEC-01`, `G0-DEC-03`, `G0-DEC-04`. Blocks Phase A.
 
 **Risks.** A wrong key set mis-seeds every tenant at once; later removals break custom roles. The exact 85 must be approved before the seeder is touched.
 
-**Approval status:** **Recommended — awaiting user approval.**
+**Approval status:** **Recommended — awaiting approval.**
+
+### 4.2 P-09 — `bookings.*` and `customers.view` and service providers
+
+The documented matrix gives `bookings.*` and `customers.view` to org type `All`, which includes service providers. The implementation restricts both to `['company','hotel']`. No service-provider service catalogue, offering type or booking flow is defined anywhere, and `service_provider_owner` holds structural keys only with commission at 0 BP.
+
+**Recommendation.** **Keep both families closed to service providers for now** (`['company','hotel']`), and record the narrowing as deliberate in the matrix. Widening later is additive, needs no migration, and can be approved when the provider service catalogue exists. Opening them now would give a tenant access to a business it cannot operate, including guest data, with no corresponding capability to justify it.
+
+**Impact.** No schema change; one catalog metadata value (`allowed_org_types`) and the matrix's `All` wording. **Approval status:** **Recommended — awaiting approval.**
+
+### 4.3 Delegation and owner-template rules
+
+Gate 0A needs these frozen because Phase A rewrites the grant paths. The source of truth is `config/authorization.php`; `PERMISSION-CATALOG-RECONCILIATION.md` §9 is the canonical list.
+
+1. **Family rule.** A `platform.*` key can never be attached to an organization role, and an organization key can never be attached to a platform role. No exceptions. Enforced on every grant path: role create/edit, direct grant, template copy, invitation and transfer.
+2. **Non-delegable keys** — an owner may hold them but may never grant them: `employees.create`, `employees.update`, `employees.deactivate`, `roles.manage`, `roles.assign`, `settlements.manage`, `settlements.accounts.manage`, `bookings.refund`.
+3. **Owner-only structural actions**, never expressible as a permission string and never delegable: `ownership.transfer`, `organization.close`, `organization.delete`. `AUTHORIZATION-ARCHITECTURE.md` §7.2 previously listed `org.delete` as a permission key; no such key exists and none is proposed.
+4. **Owner templates** `company_owner`, `hotel_owner`, `service_provider_owner` are immutable, system-only, derived from the catalog, and never shared with `organization_id = NULL` pending Q-50.
+5. **Grant ceiling.** A grantor may grant only permissions and scopes they currently hold (`PE-01`/`PE-02`), never to themselves (`PE-06`).
+
+**Impact.** No schema change. Phase A enforces all five rules in the service layer and asserts them in tests. **Approval status:** **Recommended — awaiting approval** (rule 3 and 4 are already implemented behaviour and are recorded here so the gate is complete).
+
+### 4.4 Empty scopes fail closed — enforcement detail
+
+`G0-DEC-05` is approved. Gate 0A adds the enforceable statement Phase A implements:
+
+- A membership with **no** row in `membership_service_scopes` sees no service-scoped resources. A membership with **no** row in `membership_hotel_scopes` sees no property. Neither is "all".
+- Full access is expressed by ownership (`memberships.is_owner`) or by explicit rows, never by absence.
+- The query layer, not only the policy, applies the scope filter; a scoped list returns an empty set rather than a 403.
+- Before deploy, a data check must confirm that every non-owner member who legitimately needs access has explicit scope rows (development data only at present).
+- The `membership_hotel_scopes` migration comment is corrected to "No rows = no property access" when Phase A touches the file.
+
+**Approval status:** **Decision approved; the enforcement detail above needs the owner's acknowledgement as part of Gate 0A.**
+
+### 4.5 Gate 0A exit criteria
+
+Gate 0A is approved when the owner has confirmed §4.1, §4.2, §4.3 and §4.4. At that point Phase A may begin with: A1 empty-scope semantics, A2 assigned-only filters, A3 removal of the `X-Organization-Id` fallback, A4 transfer as remove + create, A5 invitation rotation, A6 grant reconciliation, A7 tenant middleware and policy enforcement, A8 the catalog keys and the `status_history.view` rename.
+
+Gate 0A does **not** include, and must not be delayed by: notification delivery design, provider selection, F-027/F-043/F-071, or settlements. Those are §5.
 
 ---
 
-### 4.2 G0.5 — Notification channels and initial architecture
+## 5. Gate 0B — Business and integration approval
+
+None of these blocks Phase A. Each blocks only the phase that depends on it. None is approved.
+
+### 5.1 G0.5 — Notification architecture and delivery behaviour
 
 **Current documented situation.**
 BR-104 requires notifications generated by domain events; BR-105 requires per-user read state; F-021 defines the mobile inbox with filters, grouping, unread dots and mark-all-read. The `notifications` table exists (Laravel standard: uuid id, type, morphs notifiable, data, read_at). There are **no** Events, Listeners, Jobs, Mailables or Notifications, no queue worker configuration beyond the default `jobs` table, no push credentials and no SMS/WhatsApp provider. Q-07 (deep links, push in scope) is Blocking-4 and open.
 
-**Recommended decision.**
-Launch on **database notifications + e-mail**, processed by the **database queue**:
-- One domain event per business fact (booking confirmed/cancelled, visa submitted/documents required/approved/rejected, eSIM issued, join request, deletion request, refund requested/settled, settlement transferred, employee deactivated) — BR-104's list, no polling.
-- Delivery through Laravel's notification system with two channels at launch: `database` (the inbox, read state via `read_at`) and `mail`.
-- **Dedupe:** set the notification UUID to a deterministic value derived from (event class, entity id, recipient id, milestone). The primary key then makes duplicate delivery a no-op — no schema change, no dedupe table.
-- **Queue/retry:** dispatch **after** the domain transaction commits; 3 attempts with exponential backoff, then the failed-jobs path. A notification failure never rolls back a booking or payment.
-- **Preferences:** transactional categories (bookings, payments, visas, eSIM, security) are always on; only marketing/offer categories are opt-out. Store preferences in a small per-user table added in Phase D, not now.
-- **Push, SMS, WhatsApp:** deferred. No credentials, no selected provider, and no mobile app in this repository. Define channel adapters so they can be added without touching domain code; do not implement providers.
-- Deep links (Q-07) stay open; the payload carries a typed `{entity, id}` pair rather than a URL, so the surface can be decided later.
-
-**Reasoning.**
-Database + e-mail is the only combination that can be built and verified today with zero external dependencies, it satisfies BR-105 natively, and it keeps the inbox as the single source of truth that push would later mirror. Deterministic IDs solve duplicate prevention without adding a table or a cleanup job — the failure mode of the obvious alternative (a `dedupe_key` column plus a unique index) is that it needs a migration for a problem the primary key already solves.
-
-**Database impact.**
-- Tables affected: `notifications` (existing), `jobs`/`failed_jobs` (existing).
-- New tables required: **none at launch**. Phase D adds `notification_preferences` (user, category, channel, enabled) when opt-outs ship.
-- Columns required: **none** — no `dedupe_key` (deterministic `id` used instead).
-- Foreign keys / unique constraints / indexes: unchanged; `notifications` primary key on `uuid id` provides the dedupe guarantee. `morphs(notifiable)` is already indexed.
-- Data-integrity implications: the notification `data` payload must be self-contained enough to render the inbox without joining business tables (so a deleted booking still renders); it must not contain secrets or full passport/IBAN values.
-
-**API impact.**
-- Affected API groups: customer inbox (F-021), platform/company/hotel/employee inboxes (F-079, F-092, F-102, F-110).
-- Required endpoints: list (filter by category, paginate), unread count, mark one read, mark-all-read (BR-105: only the caller's visible set).
-- Authorization: ownership-based for customers (`notifiable` = the user); organization/role-scoped for staff inboxes.
-- Request/response implications: category enum matches the filter chips (all, bookings, offers, payments) plus visa/eSIM/account; response carries `read_at`, `created_at`, type, and the typed deep-link pair.
-- Webhook/background-job implications: notifications are queued jobs; e-mail is the only outbound channel at launch.
-
-**Security and tenant isolation impact.**
-Notifications are the most common source of cross-tenant leakage when a queue job carries the wrong recipient; the recipient must be resolved server-side from the event's owning entity, never from a request parameter. Staff inboxes must respect organization and (for hotels) property scope under `G0-DEC-05`. E-mail must never include another party's personal data (e.g. a hotel must not receive the customer's passport number).
-
-**Dependencies.** `G0-DEC-05` (inbox scoping), Phase C (identity) for recipient resolution. Blocks Phase D and every later phase that promises "notify the customer".
-
-**Risks.** Deferring push means BR-104's "prompt" expectation is only met in-app until a push provider and the mobile app exist. A shared queue with no separate worker would let a slow mail provider stall bookings — the queue must be separated by queue name when workers are configured.
-
-**Approval status:** **Recommended — awaiting user approval.**
-
----
-
-### 4.3 G0.6 — Payment, flight, hotel and eSIM provider strategy
-
-**Current documented situation.**
-`payments`, `refunds`, `checkout_sessions`, `esim_packages`, `esim_orders`, `hotels`/`room_types`/`room_rates` and the booking tables exist; `bookings.provider_reference` holds the upstream reference. No gateway, no flight/GDS provider and no eSIM provider is approved or contracted, and no SDK is installed. DEC-10 says partner payouts go through the payment gateway "subject to its capabilities" — which is unverified. Q-31 (baggage payment), Q-40 (gateway fees shown as cancellation fees), Q-44 (visa withdrawal refund) are Blocking-4.
-
-**Recommended decision.**
-Build **adapter contracts plus fake providers** now; keep provider choice as a configuration decision:
-- `PaymentGateway` contract: initialise/authorise, capture, refund, fetch transaction, verify + parse webhook. The `payments.provider` column already discriminates implementations.
-- `FlightProvider` contract: search, revalidate, book, cancel, refund status.
-- `HotelProvider`: **not required at launch** — hotels, room types and daily rates are first-party Traway inventory, so hotel search/availability/booking is fully implementable without any external provider.
-- `EsimProvider` contract: sync catalogue, availability/pricing, purchase, provisioning, activation, status/usage (usage optional).
-- Fake implementations for every contract, enabled only in non-production through a config guard; production refuses to boot with a fake gateway.
-- Flights and eSIM **without** a provider return an explicit `provider_unavailable` error — never simulated availability or prices.
-
-**Reasoning.**
-The audit's core warning is that inventing availability or prices produces a product that lies to customers and corrupts the ledger. Separating "domain logic exists" from "provider is connected" lets Phases F–H proceed on real business rules (quote snapshots, idempotency, state machines, ledger posting) while making the missing integration a visible, handled state rather than fake data. It also keeps booking logic provider-neutral, which is what makes a later switch of gateway or GDS survivable.
-
-**Database impact.**
-- Tables affected: `payments`, `refunds`, `checkout_sessions`, `bookings`, `flight_bookings`, `flight_segments`, `flight_passengers`, `esim_packages`, `esim_orders`.
-- New tables required: **one, recommended** — `payment_webhooks` (id, provider, provider_event_id unique per provider, type, payload json, received_at, processed_at, error). Rationale: webhook replay and at-least-once delivery are guaranteed behaviours of every gateway; without a raw-event record, a duplicate capture cannot be diagnosed and `unique(provider, provider_payment_id)` alone cannot tell a replay from a genuine second event.
-- Columns required: none mandatory. `bookings.provider_reference`, `payments.provider`/`provider_payment_id`/`idempotency_key`/`failure_code`, `refunds.provider_refund_id`/`gateway_fee_cents`, `esim_orders.provider_order_id`/`activation_payload`, `esim_packages.provider`/`provider_package_id`/`is_stale`/`synced_at` already cover the adapter needs. **Gap to confirm later:** BR-058 "single-use activation" may require an `activation_payload_viewed_at` column; not proposed now.
-- Foreign keys / unique constraints / indexes: `payments` unique (`idempotency_key`) and unique (`provider`,`provider_payment_id`) exist; `refunds.provider_refund_id` indexed; new `payment_webhooks` needs unique (`provider`,`provider_event_id`).
-- Data-integrity implications: money movements must be insert-only; a webhook may only advance a payment's status forward; refunds reference a payment; every ledger entry carries an idempotency `entry_key`.
-
-**API impact.**
-- Affected API groups: checkout/payment, flight search+booking, hotel search+booking, eSIM catalogue+purchase, refunds, and the provider webhook endpoint.
-- Required endpoints: checkout initialise, payment intent/confirm, refund request; flight search, revalidate-and-book; hotel availability and book; eSIM packages and purchase/QR; one unauthenticated webhook receiver per provider prefix with mandatory signature verification.
-- Authorization: customer-owned checkout/booking; platform for refund approval and settlement execution; webhook endpoints authenticated by signature, never by session.
-- Request/response implications: idempotency key required on initialise and on every money-writing call; price-change responses require explicit customer consent (checkout `price_changed` + `price_change_accepted_at`); provider errors mapped to safe codes, never raw provider text.
-- Webhook/background-job implications: signature verification, replay protection, `payment_webhooks` persistence, post-commit jobs for confirmation notifications, and a reconciliation job comparing provider transactions with `payments`.
-
-**Security and tenant isolation impact.**
-Provider credentials stay server-side and out of the browser; `payments.provider` must never echo secrets. Webhooks are unauthenticated by nature, so signature verification is the only boundary — a forged webhook that marks a booking paid is a direct financial loss. Idempotency keys prevent double charging on retries. Fake providers must be impossible to enable in production.
-
-**Dependencies.** Blocks Phase G (payments/bookings) and Phase J (settlements/payouts). Requires owner clarification on: gateway choice, flight provider, eSIM provider, and whether the gateway supports partner payouts (DEC-10's assumption).
-
-**Risks.** Choosing a gateway that cannot do partner payouts invalidates the DEC-10 payout design; choosing a flight provider with no cancellation/refund API makes F-049 unbuildable; a GDS with no seat data makes F-027 impossible. Building against fakes risks discovering late that a real provider cannot express something the fake could (price validity windows, per-passenger tickets).
-
-**Approval status:** **Requires clarification** (provider selection). The adapter architecture is **recommended — awaiting user approval**.
-
----
-
-### 4.4 G0.7 — Unresolved features F-027, F-043, F-071 and multi-city
-
-**Current documented situation.**
-The catalogue marks three features `U` (unresolved) and offers multi-city flights while a business rule forbids partial implementation. Details and recommendations are in Topic F (§5.6). Conflicts **C-13**, **C-14**.
-
-**Recommended decision.**
-- **F-027 Seat selection — defer.** No seat map, no seat inventory, no seat fee in v1. Seats are free and optional (Q-09's working assumption).
-- **F-043 eSIM usage & balance — defer live usage; display package allowance only.** No usage screen, no polling, no usage table. Show the purchased data/validity from the package snapshot; hide the progress bar if no source exists.
-- **F-071 Tour cancellation — implement the eligibility rule, not a fee engine.** Full refund when cancelling ≥24h before slot start; no self-service cancellation inside 24h; gateway applies any fee (DEC-01). Add a per-tour policy flag only when a second policy exists.
-- **Multi-city — remove from scope.** `flight_bookings.trip_type` already constrains `one_way|round_trip`; the option is hidden in the UI.
-
-**Reasoning.**
-All four are places where the design shows a concept without the rule needed to build it. Deferring keeps the launch surface honest and avoids inventing inventory or pricing that no provider has confirmed. The tour rule is the one case where a real customer promise ("free cancellation within 24 hours") exists, and it can be honoured by an eligibility check plus a refund, without Traway computing fees — consistent with DEC-01.
-
-**Database impact.**
-No schema change for any of the four. F-027 would later need seat inventory per flight segment; F-043 would need usage snapshots only if the provider exposes an API; F-071 uses existing `bookings`/`refunds`/`status_histories`. Multi-city would require multiple `flight_bookings` per order and a fare-combination model — explicitly out of scope.
-
-**API impact.** No endpoints for F-027/F-043. Tour cancellation adds a cancel-eligibility check to the existing booking-cancel path. Multi-city: the trip-type enum rejects `multi_city`.
-
-**Security and tenant isolation impact.** None directly; the tour cancellation path inherits booking ownership and refund authorization (`bookings.cancel`, `bookings.refund`).
-
-**Dependencies.** F-071 depends on the refund path (G0.6). F-043 depends on eSIM provider selection or its absence.
-
-**Risks.** Shipping a UI that promises seats or live data usage without the backend is a support and chargeback risk; conversely, deferring tour cancellation while the UI says "free cancellation within 24 hours" is a consumer-protection risk — the rule must ship with the promise.
-
-**Approval status:** **Recommended — awaiting user approval.** User clarification is **essential** for F-043 (is a live data source expected?) and **advisable** for F-071's exact refund basis; **not essential** for F-027 or multi-city, where the documents already defer.
-
----
-
-### 4.5 G0.8 — Settlement and payout schema
-
-**Current documented situation.**
-BR-098–BR-100, BR-114 and DEC-10 require settlement periods with states `pending → processing → transferred` (with `failed` returning to pending), partner dues reconciling to the cent with the admin view, refunds reducing the next settlement, and on-demand payouts. The schema has `payout_accounts`, `payout_requests` (`requested|processing|transferred|failed|rejected`, `method` manual|gateway) and an append-only `partner_ledger_entries` with a signed amount and unique `entry_key` — but **no** settlement table, so a settlement period cannot be represented, locked or reconciled. Conflict **C-16**.
-
-**Recommended decision.**
-Add two tables, both derived from the ledger:
-- `settlement_periods`: `id`, `organization_id` (FK restrict), `period_start`, `period_end`, `status` (`pending|processing|transferred|failed`), `sales_cents`, `commission_cents`, `refunds_cents`, `adjustments_cents`, `due_cents`, `payout_request_id` (nullable FK), `computed_at`, `transferred_at`, timestamps; **unique (`organization_id`,`period_start`,`period_end`)**.
-- `settlement_items`: `id`, `settlement_period_id` (FK cascade), `partner_ledger_entry_id` (FK restrict, **unique**), `amount_cents`, timestamps.
-- Partner balance remains `SUM(partner_ledger_entries.amount_cents)` — a derived value, never stored as a mutable column.
-- BR-114 is satisfied structurally: the partner's settlement total and the admin's partner-due figure are both `SUM(settlement_items.amount_cents)` for the same period, so they cannot diverge.
-
-**Reasoning.**
-The ledger is already the append-only truth and the codebase already derives balance from it. A settlement is therefore a *claim over a closed set of ledger rows*, not a second money store — which is why `settlement_items` keys individual ledger entries rather than storing a total. That design makes double-counting and "deducted twice" (BR-100) impossible: an entry belongs to at most one settlement, enforced by a unique constraint, instead of by careful arithmetic.
-
-**Database impact.**
-- New tables: `settlement_periods`, `settlement_items` (as above).
-- Tables affected: `payout_requests` (add nullable `settlement_period_id` FK, or keep the link on the period — one direction is enough; the recommendation above puts it on `settlement_periods`).
-- Columns required: the two new tables only.
-- Foreign keys: `settlement_periods.organization_id` → organizations (restrict); `settlement_periods.payout_request_id` → payout_requests (restrict, nullable); `settlement_items.settlement_period_id` → settlement_periods (cascade); `settlement_items.partner_ledger_entry_id` → partner_ledger_entries (restrict).
-- Unique constraints: (`organization_id`,`period_start`,`period_end`); `settlement_items.partner_ledger_entry_id`.
-- Indexes: (`organization_id`,`status`), (`status`,`period_end`).
-- Data-integrity implications: only `transferred` closes a period (BR-099); a `failed` period returns to pending; an entry may not be reassigned to another period once transferred; refund carry-forward is expressible as a negative `settlement_items` row or a `refunds_cents` total plus the entry links.
-
-**API impact.**
-- Affected API groups: platform finance (F-089), company/hotel settlements (F-099), payout requests.
-- Required endpoints: list periods and their items; compute/close a period (platform); request an on-demand payout; mark transferred/failed; export.
-- Authorization: `platform.finance.view`, `platform.finance.settlements.execute`; partner side `settlements.view`/`settlements.manage`; `settlements.accounts.manage` for destination changes (non-delegable).
-- Request/response implications: the partner view and the admin partner-dues row must be produced by the same aggregation code path; amounts in cents, USD only.
-- Webhook/background-job implications: payout execution via gateway where supported (`method=gateway`), otherwise manual with recorded `transferred_at`; gateway payout callbacks reuse the `payment_webhooks` pattern.
-
-**Security and tenant isolation impact.**
-Settlements are the highest-value cross-tenant risk: a partner must see only its own periods and items, and an organization must never be able to trigger a payout to an account it does not own. Payout-account changes are owner-only and non-delegable; execution is platform-only. `payout_accounts` currently has no approved design — it is an unapproved implementation artefact and its KYC/re-verification change control is still open (Q-54).
-
-**Dependencies.** Depends on Phase G (payments/refunds produce the ledger entries a settlement closes) and G0.6 (gateway payout capability). Blocks Phase J.
-
-**Risks.** Building settlements before payments/refunds are stable produces unverifiable numbers. Adding a mutable "balance" column would create a second source of truth that will drift from the ledger. Assuming the gateway supports payouts (DEC-10's caveat) could leave `method=gateway` unimplementable, forcing a manual-only launch — acceptable, but it must be stated to partners.
-
-**Approval status:** **Recommended — awaiting user approval.**
-
----
-
-## 5. Topic deep-dives
-
-These sections answer the specific topics required in addition to the eight decision records. Where a topic duplicates a decision record, the record states the decision and this section states the architecture.
-
-### 5.1 A — Notification strategy
-
-**Channels**
+**Recommended decision — channels and queue.**
 
 | Channel | Launch | Rationale |
 |---|---|---|
 | Database (in-app inbox) | **Yes** | Satisfies BR-105 natively (`read_at`), needs no external service, and is the source of truth any future push mirrors |
-| E-mail | **Yes** | Transactional receipts and visa/settlement notices; Laravel mail with a configured driver |
-| Push (APNs/FCM) | **No** | No credentials, no provider chosen, and no mobile app exists in this repository (Q-07 open) |
+| E-mail | **Yes** | Transactional receipts and visa/settlement notices |
+| Push (APNs/FCM) | **No** | No credentials, no provider chosen, no mobile app in this repository (Q-07 open) |
 | SMS | **No** | No provider selected |
-| WhatsApp | **No** | No provider selected, and business-initiated templates must be approved per provider — cannot be assumed |
+| WhatsApp | **No** | No provider selected; business-initiated templates must be approved per provider and cannot be assumed |
 
-**Queue processing.** Every notification is a queued job on the `database` queue driver (`jobs` and `failed_jobs` tables already exist). Dispatch happens **after** the domain transaction commits (`DB::afterCommit` / `ShouldDispatchAfterCommit`), so a mail provider slowdown or failure can never abort a booking, payment or visa transition. Notification and outbound-delivery queues should be separate queue names so a stuck mail worker does not starve booking work.
+One domain event per business fact (booking confirmed/cancelled, visa submitted/documents required/approved/rejected, eSIM issued, join request, deletion request, refund requested/settled, settlement transferred, employee deactivated) — BR-104's list, no polling. Two channels at launch: `database` and `mail`. Preferences are by category, not channel: bookings, payments/refunds, visa, eSIM and security are always on; only offers/marketing are opt-out, stored in a `notification_preferences` table added in Phase D. Deep links (Q-07) stay open; the payload carries a typed `{entity, id}` pair rather than a URL.
 
-**Retry and failure behavior.** Three attempts with exponential backoff, then the job lands in `failed_jobs` and is surfaced by the admin failure view (Phase K observability). A permanently failed *delivery* never fails the *business fact*: the inbox row is the durable record and the customer can still see the notification in-app.
+**Delivery semantics — what is and is not guaranteed.**
 
-**Duplicate prevention.** The notification's UUID is **deterministic**: a UUIDv5 over `(event class, entity id, recipient user id, milestone)`. Delivering the same milestone twice writes the same primary key, so the second insert is a no-op. This needs no `dedupe_key` column, no unique index and no cleanup job — the ledger of record is the primary key. This also makes queue retries safe by construction.
+The earlier draft claimed that a deterministic UUIDv5 notification ID made delivery safe. It does not. A deterministic primary key makes **notification creation** idempotent; it says nothing about a delivery that is retried, a worker that dies mid-send, or a channel that has already accepted an e-mail. The design is therefore stated honestly:
 
-**Notification preferences.** Split by category, not by channel:
-- **Always on** (no opt-out): bookings, payments and refunds, visa status, eSIM issuance, security/account actions.
-- **Opt-out**: offers, marketing, recommendations.
-A `notification_preferences` table (user, category, channel, enabled) is added in Phase D when opt-outs ship. Until then the split is enforced by category, so no preference storage is required to launch.
+- **Guarantee: at-least-once delivery per channel, at-most-once notification creation.** Exactly-once e-mail is **not** claimed and cannot be guaranteed without provider-side idempotency.
+- **Creation is idempotent.** The notification UUID is a UUIDv5 over `(event class, entity id, recipient user id, milestone)`. Re-emitting the same milestone inserts nothing new; the primary key is the dedupe record. No `dedupe_key` column, no cleanup job.
+- **Per-channel delivery is tracked.** A `notification_deliveries` table: `id`, `notification_id` (FK cascade), `channel` (`database|mail|push|sms|whatsapp`), `status` (`pending|sending|sent|failed|skipped`), `attempts`, `last_attempt_at`, `sent_at`, `failed_at`, `error_code` (safe, non-provider text), timestamps, **unique (`notification_id`,`channel`)**. One row per notification per channel; the row is the retry unit.
+- **A worker claims before it sends.** The delivery job performs an atomic claim — `UPDATE notification_deliveries SET status='sending', attempts=attempts+1, last_attempt_at=now() WHERE id=? AND status IN ('pending','failed') AND attempts < max_attempts`. Zero rows affected means another worker owns it or the retry budget is exhausted; the job exits without sending. This prevents two concurrent workers sending the same e-mail.
+- **A crash after send is possible and is reported as such.** If the process dies after the provider accepted the message but before `status='sent'` was written, the row stays `sending`. A recovery sweep marks rows `sending` older than a configured threshold as `failed` with `error_code=unknown_outcome` and re-queues them. **This may deliver a duplicate e-mail.** That is the accepted cost of at-least-once, and it is why the inbox row (already written, immutable) remains the authoritative record of the notification.
+- **Dispatch after commit, creation inside it.** The notification and its `notification_deliveries` rows are inserted **inside** the domain transaction (cheap inserts, so a rollback leaves nothing behind), and the delivery jobs are dispatched **after** commit via `ShouldDispatchAfterCommit` / `DB::afterCommit`. A crash between commit and dispatch is recovered by a sweeper that picks up `pending` delivery rows older than the threshold. This is why creation is not deferred to a listener that could be lost.
+- **Retries and failure.** Bounded attempts (default 3) with exponential backoff at job level, then `status='failed'` with the row preserved and surfaced in the admin failure view (Phase K). A terminal delivery failure never fails the business fact, never removes the inbox row, and never rolls back a booking or payment. A manual re-send resets the row to `pending` and increments `attempts`.
+- **Queues.** Notification and outbound-delivery work runs on separate queue names from booking/payment work, so a slow mail provider cannot starve financial jobs.
+- **Push, SMS, WhatsApp** are deferred behind one messaging contract with a no-op implementation. No SDK is installed until a provider is chosen; domain code emits events and never names a channel.
 
-**Future SMS/WhatsApp.** Define one `SmsChannel`/messaging contract with a no-op implementation and register it only when a provider is selected. Domain code emits events and never names a channel, so adding WhatsApp later is a listener plus credentials, not a rewrite. **Do not install an SMS/WhatsApp SDK until a provider is chosen.**
+**Database impact.**
+- Tables affected: `notifications` (existing), `jobs`/`failed_jobs` (existing).
+- New tables: **`notification_deliveries`** (recommended, above). `notification_preferences` in Phase D. No `dedupe_key` column.
+- Constraints: `notification_deliveries` unique (`notification_id`,`channel`); index (`status`,`last_attempt_at`) for the recovery sweep; `notifications` PK on `uuid id` is the creation dedupe.
+- The notification `data` payload must render the inbox without joining business tables (so a deleted booking still renders) and must not contain secrets or full passport/IBAN values.
 
-**What can be built now vs later.** Buildable now with no credentials: events, listeners, inbox API, e-mail channel, deterministic IDs, queue wiring, read state. Requires a provider: push, SMS, WhatsApp.
+**API impact.** List (filter by category, paginate), unread count, mark one read, mark-all-read (BR-105: only the caller's visible set) for the customer inbox (F-021) and the platform/company/hotel/employee inboxes (F-079, F-092, F-102, F-110). Authorization: ownership-based for customers; organization and property scope for staff inboxes. The category enum matches the filter chips plus visa/eSIM/account; the response carries `read_at`, `created_at`, type and the typed deep-link pair.
 
----
+**Security and tenant isolation impact.** The recipient must be resolved server-side from the event's owning entity, never from a request parameter — a queue job carrying the wrong recipient is the most common cross-tenant leak. Staff inboxes respect organization and property scope under `G0-DEC-05`. E-mail must never include another party's personal data (a hotel must not receive the customer's passport number).
 
-### 5.2 B — Payment gateway abstraction
+**Dependencies.** `G0-DEC-05` (inbox scoping), Phase C (identity) for recipient resolution. Blocks Phase D and every later phase that promises "notify the customer".
 
-**Contract (`PaymentGateway`)**
+**Risks.** Deferring push means BR-104's "prompt" expectation is met in-app only until a provider and the mobile app exist. A duplicate e-mail after a crash is possible by design; it must be stated rather than denied.
+
+**Approval status:** **Recommended — awaiting approval.**
+
+### 5.2 G0.6 — Provider strategy: architecture, then selection
+
+**Current documented situation.**
+`payments`, `refunds`, `checkout_sessions`, `esim_packages`, `esim_orders`, `hotels`/`room_types`/`room_rates` and the booking tables exist; `bookings.provider_reference` holds the upstream reference. No gateway, flight/GDS provider or eSIM provider is approved or contracted, and no SDK is installed. DEC-10 says partner payouts go through the payment gateway "subject to its capabilities" — unverified. Q-31, Q-40 and Q-44 are Blocking-4.
+
+**Recommended architecture (this part is approvable now).**
+Build **adapter contracts plus fake providers**; keep provider choice a configuration decision:
+- `PaymentGateway`: initialise/authorise, capture, refund, fetch transaction, verify + parse webhook. `payments.provider` already discriminates implementations.
+- `FlightProvider`: search, revalidate, book, cancel, refund status.
+- `HotelProvider`: **not required at launch** — hotels, room types and daily rates are first-party Traway inventory, entered through the hotel portal, so hotel search/availability/booking is fully implementable with no external provider.
+- `EsimProvider`: sync catalogue, availability/pricing, purchase, provisioning, activation, status/usage (usage optional, F-043).
+- Fakes for every contract, enabled only in non-production through a config guard; production refuses to boot with a fake provider in a money or inventory slot.
+- Flights and eSIM **without** a provider return `provider_unavailable` (503 + stable code) — never simulated availability or prices, never an empty list pretending to be a result.
+
+**Payment gateway contract detail.**
 
 | Operation | Input | Output | Notes |
 |---|---|---|---|
 | `initialize` | amount, currency, idempotency key, customer ref, return URL | provider intent id, client secret/redirect | Never called twice for the same idempotency key |
 | `confirm`/`capture` | provider intent id | status, captured amount, provider payment id | May be driven by webhook instead of a poll |
-| `refund` | provider payment id, amount, reason | provider refund id, status | Partial refunds must be supported by the adapter contract even if unsupported by a given provider |
+| `refund` | provider payment id, amount, reason | provider refund id, status | Partial refunds must be expressible even if a given provider lacks support |
 | `fetchTransaction` | provider reference | status, amount, fees | Used by reconciliation |
-| `verifyWebhook` | raw body, signature headers | verified event DTO | Signature check is mandatory and adapter-specific |
+| `verifyWebhook` | raw body, signature headers | verified event DTO | Mandatory, adapter-specific, over the raw body (re-serialising breaks HMACs) |
 | `parseWebhook` | verified payload | event type, provider payment/refund id, amount, failure code | Pure mapping, no side effects |
 
-**Payment initialisation.** Create `payments` row first (`status=pending`, `idempotency_key` from the client request, `amount_cents` from the checkout session's revalidated total), then call `initialize`. The row exists before the provider is called so a crash between the two is reconcilable.
+Create the `payments` row first (`status=pending`, `idempotency_key` from the request, `amount_cents` from the revalidated checkout total), then call `initialize`, so a crash between the two is reconcilable. **Only a verified webhook or an authenticated `fetchTransaction` may move a payment to `captured`; a browser redirect is not proof of payment.** Three idempotency layers already exist in the schema: `payments.idempotency_key` unique, `unique(provider, provider_payment_id)`, `partner_ledger_entries.entry_key` unique. Refunds store what the gateway reports (`gateway_fee_cents`) — Traway never computes a cancellation fee (DEC-01). Gateway errors map to a small stable vocabulary (`card_declined`, `insufficient_funds`, `expired_card`, `3ds_required`, `provider_unavailable`, `duplicate_request`) in `payments.failure_code`; raw provider text is never surfaced or logged.
 
-**Confirmation.** Only a verified webhook or an authenticated `fetchTransaction` may move a payment to `captured`. A browser redirect is *not* proof of payment. This is the single most important rule in the payment layer.
-
-**Webhook signature verification.** Per-adapter `verifyWebhook` using the raw request body (not the parsed array — re-serialising changes the bytes and breaks HMACs) and a shared secret from configuration. Unverified requests are rejected with 400 and never touch the database.
-
-**Idempotency.** Three layers, all already supported by the schema: `payments.idempotency_key` unique (client retries), `unique(provider, provider_payment_id)` (duplicate provider events), `partner_ledger_entries.entry_key` unique (duplicate ledger postings).
-
-**Refunds.** `refunds` already models `type` (`policy_automatic|manual_exception`), the full status chain, `gateway_fee_cents`, approver fields and `provider_refund_id`. The gateway decides any cancellation fee (DEC-01) — Traway stores what the gateway reports and never computes a fee.
-
-**Reconciliation.** A scheduled job compares provider transactions for a window against `payments`/`refunds`: missing locally, missing at provider, amount mismatch, status mismatch. Requires provider API access; the comparison logic itself is buildable against a fake.
-
-**Gateway errors.** Map to a small stable vocabulary (`card_declined`, `insufficient_funds`, `expired_card`, `3ds_required`, `provider_unavailable`, `duplicate_request`) stored in `payments.failure_code`; never surface raw provider messages or codes to the client, and never log full PANs (only `card_brand`/`card_last4`, which already exist).
-
-**Provider transaction references.** `payments.provider` + `provider_payment_id` + `refunds.provider_refund_id` + `payout_requests.provider_payout_id` are sufficient. Traway's own references (`PAY-…`) remain separate from provider ids (DEC-04).
-
-**What can be built now vs later.** Buildable now: the contract, the fake gateway, checkout→payment state machine, idempotency, refund workflow, ledger posting, reconciliation logic. Requires a gateway: real tokenisation, capture, webhooks, payouts.
-
-**Do not assume** that the selected gateway supports partner payouts, partial refunds, or the same webhook shape as any documented example — each is a clarification item under G0.6.
-
----
-
-### 5.3 C — Flight and hotel provider integrations
-
-**Shared adapter shape**
+**Flight and hotel adapter shape.**
 
 | Stage | Flight | Hotel |
 |---|---|---|
 | Search | `search(criteria)` → offers with opaque `offer_token`, price, expiry | Not required — first-party inventory |
-| Availability | included in search results; re-checked on revalidate | `room_rates` per room type per date (already exists) |
+| Availability | included in search, re-checked on revalidate | `room_rates` per room type per date (exists) |
 | Price validation | `revalidate(offer_token)` immediately before payment (DEC-05: no fare hold) | recompute from `room_rates` at booking |
 | Booking confirmation | `book(offer, passengers)` → PNR + ticket numbers | internal: decrement availability atomically, create booking |
 | Cancellation | `cancel(provider_reference)` → policy + fee | internal policy from `room_types.cancellation_policy` / `free_cancellation_hours_before` |
 | Refund status | `refundStatus(provider_refund_id)` | internal refund record |
-| Provider references | `bookings.provider_reference` (PNR), `flight_passengers.ticket_number` | none needed |
 
-**Price validation.** `checkout_sessions.quote` already stores the quoted snapshot with `quoted_total_cents`, `revalidated_total_cents`, `price_changed_at` and `price_change_accepted_at`. The flow is: quote → revalidate at payment → if the total differs, set `price_changed` and require explicit consent before charging. Never silently charge a higher amount.
+`checkout_sessions.quote` already stores the snapshot (`quoted_total_cents`, `revalidated_total_cents`, `price_changed_at`, `price_change_accepted_at`): quote → revalidate at payment → if the total differs, set `price_changed` and require explicit consent before charging. Every adapter call gets a bounded timeout, a per-provider circuit breaker and a mapped error (`provider_timeout`, `provider_unavailable`, `sold_out`, `price_changed`). Order of operations: reserve/confirm with the provider → capture → commit the booking; if capture fails after provider confirmation, the cancellation path runs.
 
-**Provider failures and timeouts.** Every adapter call gets a bounded timeout, a per-provider circuit breaker, and a mapped error (`provider_timeout`, `provider_unavailable`, `sold_out`, `price_changed`). A failure never produces a booking, never fabricates availability, and never leaves a `payments` row in `captured` without a booking — the ordering rule is: reserve/confirm with the provider first, then capture, then commit the booking; if capture fails after a provider confirmation, the cancellation path must run.
-
-**The honest split**
-
-| Capability | Without provider credentials | Needs a real provider |
-|---|---|---|
-| Hotel search, detail, availability, booking, voucher, cancellation | **Yes** — `hotels`/`room_types`/`room_rates` are Traway's own inventory | No |
-| Flight search / pricing / ticketing | Structure, DTOs, state machine, fake | **Yes** |
-| eSIM catalogue / purchase | Structure, local catalogue, fake | **Yes** |
-| Payment capture / refund | Structure, fake, ledger | **Yes** |
-
-The important correction to any earlier assumption: **hotels are not a GDS integration**. They are partner-supplied inventory entered through the hotel portal, so the entire hotel shopping and booking flow is implementable and testable with no external provider.
-
-**Never fake availability or price.** The fake providers exist for tests and local development only, must be selected by explicit configuration, and production must refuse to start with a fake provider in the flight/eSIM/payment slot. A flight search with no provider configured returns `provider_unavailable` (503 + stable code), not an empty list and not sample flights.
-
----
-
-### 5.4 D — eSIM provider integration
-
-**Contract (`EsimProvider`)**
+**eSIM provider contract.**
 
 | Operation | Purpose | Schema already available |
 |---|---|---|
 | `listPackages` / `getPackage` | Catalogue synchronisation | `esim_packages` (`provider`, `provider_package_id`, `cost_cents`, `sale_price_cents`, `is_stale`, `synced_at`) |
-| `checkAvailability` | Whether a package can still be sold | `esim_packages.is_active` / `is_stale` |
+| `checkAvailability` | Whether a package can still be sold | `is_active` / `is_stale` |
 | `purchase(package, order)` | Buy the eSIM | `esim_orders.provider_order_id` |
-| `provision(order)` | Obtain the activation payload (LPA string / QR) | `esim_orders.activation_payload` (encrypted) |
+| `provision(order)` | Obtain the activation payload (LPA / QR) | `esim_orders.activation_payload` (encrypted) |
 | `getStatus(order)` | pending/issued/activated/expired | `esim_orders.status`, `activated_at` |
 | `getUsage(order)` | Remaining data | **No source confirmed** — F-043 |
 
-**Catalogue synchronisation.** A scheduled job upserts by (`provider`,`provider_package_id`) — the unique constraint exists. On failure or partial data, keep the last known good catalogue, set `is_stale=true`, and **never silently delist** (Q-32's working assumption, already encoded in the schema). `markup_bp` and `sale_price_cents` are Traway-side; the provider's `cost_cents` must never be exposed to customers.
+Sync upserts by (`provider`,`provider_package_id`); on failure keep the last known good catalogue, set `is_stale=true` and **never silently delist**. Sale price is the stored `sale_price_cents` (BR-008), never recomputed from cost + markup at display time. The activation payload is a secret: never in a list response, never logged, shown only to the owning customer (BR-058 single-use display — an `activation_payload_viewed_at` column may be required; not proposed until BR-058's intent is confirmed).
 
-**Availability and pricing.** Sale price is the stored `sale_price_cents` (BR-008) — never recomputed at display time from cost + markup, which would drift.
+**Database impact.**
+- New table: **one, recommended** — `payment_webhooks` (`id`, `provider`, `provider_event_id` unique per provider, `type`, `payload` json, `received_at`, `processed_at`, `error`). Every gateway delivers at-least-once; without a raw-event record a duplicate capture cannot be diagnosed and `unique(provider, provider_payment_id)` cannot distinguish a replay from a genuine second event.
+- Columns: none mandatory. Existing provider-reference columns cover the adapters.
+- Constraints: new `payment_webhooks` unique (`provider`,`provider_event_id`).
 
-**Purchase and provisioning.** Order → provider purchase → store `provider_order_id` → provision → store the encrypted activation payload. The payload is a secret: never in a list response, never logged, shown only to the owning customer, with a single-use display (BR-058). **Open item:** if "single-use" means "displayed once", an `activation_payload_viewed_at` column is required; this is deliberately not proposed until BR-058's intent is confirmed.
+**API impact.** Checkout initialise/confirm, refund request; flight search and revalidate-and-book; hotel availability and book; eSIM packages and purchase/QR; one unauthenticated webhook receiver per provider prefix with mandatory signature verification. Idempotency key required on every money-writing call; price changes require explicit consent; provider errors mapped to safe codes.
 
-**Activation.** `activated_at` + status `activated`; activation is irreversible and ends the refund window (Q-16).
+**Security and tenant isolation impact.** Credentials stay server-side and out of the browser; webhooks are unauthenticated by nature, so signature verification is the only boundary — a forged webhook that marks a booking paid is a direct financial loss. Fake providers must be impossible to enable in production.
 
-**Usage/status retrieval.** Only if the selected provider exposes it. The contract includes the method so the domain can call it when available; **no usage table or polling is designed** (F-043 deferred).
+**Dependencies.** Blocks Phase G and Phase J. Requires owner clarification on gateway, flight provider, eSIM provider, and gateway partner-payout capability.
 
-**Failure and refund handling.** Provider purchase failure → `esim_orders.status=failed` and no charge captured (or a refund through the normal path). Post-capture failure → refund until activation. A provider outage must not block browsing the local catalogue.
+**Risks.** A gateway without partner payouts invalidates the DEC-10 payout design; a flight provider with no cancellation/refund API makes F-049 unbuildable; a GDS with no seat data makes F-027 impossible. Building against fakes risks discovering late that a real provider cannot express something the fake could.
 
-**Do not assume an API exists.** No eSIM provider is selected and no provider documentation has been verified in this repository. The catalogue may be maintained manually until an API is contracted; the sync job and `platform.esim_catalog.sync` permission then become meaningful.
+**Approval status:** **Architecture recommended — awaiting approval. Provider selection requires clarification.**
 
----
+### 5.3 G0.7 — F-027, F-043, F-071 and multi-city
 
-### 5.5 E — Settlement and payout architecture
+#### F-027 — Seat selection (defer)
 
-**The five layers, kept strictly separate**
+The catalogue marks it `U`: only a confirmation bar with three seats and «مجاناً» is drawn — no seat map, no inventory, no pricing rule, no provider integration. **Recommended:** defer entirely; seats are free and optional at launch (Q-09's working assumption); the passenger step completes without a seat choice; no seat data is stored. Deferring needs nothing; implementing would need seat inventory per segment, seat assignment per passenger and provider seat maps that no approved provider supplies. **Clarification essential? No.**
+
+#### F-043 — eSIM usage and balance (allowance only)
+
+The screen shows «5 GB متبقية» and a progress bar, but there is no usage source, refresh rule or depletion behaviour (Q-17). **Recommended:** display the **purchased allowance** (`esim_packages.data_mb`, `validity_days`) and the order status, never a "remaining" figure, unless the selected provider exposes a usage API — in which case the number and its refresh remain a separate, later approval. Hide the progress bar if no source exists. No usage table, no polling. **Clarification essential? Yes** — whether the product expects a live remaining-data figure (and therefore a provider with a usage API) or an allowance display.
+
+#### F-071 — Tour cancellation and refund (**pending; no policy approved**)
+
+The catalogue marks it `U` with a UI promise «إلغاء مجاني خلال 24 ساعة» and no cancellation screen, deadline calculation or refund rule (Q-24).
+
+**What must not happen.** The 24-hour full-refund rule proposed in the earlier draft of this register was a **recommendation only** and is **not approved**. The platform must not invent a mandatory full-refund rule, and no document may present a 24-hour window, a percentage, a fee schedule or any other refund arithmetic as Traway policy.
+
+**Documented position (approved in principle only as a principle).**
+- Cancellation and refund eligibility follow **the applicable tour company's policy** for that tour — the partner selling the tour, not a platform default.
+- The refund calculation and the cancellation terms must be **explicit and available to the customer before booking**, on the tour detail and again at checkout, with the accepted terms recorded against the booking.
+- Traway does not compute a cancellation fee; any fee the gateway reports is stored, not derived (DEC-01).
+- What remains open: the policy model (a free-text policy plus a structured window and fee basis per tour, or a small set of platform-defined policy presets the partner selects), the deadline reference point (slot start vs booking time), whether the customer self-cancels or requests cancellation, and what happens when the partner cancels a paid slot.
+- Until the owner approves a policy, F-071 stays `U`, the cancellation flow stays unbuilt, and the UI copy must not promise a specific free-cancellation window.
+
+**Implementation note.** `tour_slots` already holds the start time and `bookings`/`refunds`/`status_histories` already exist, so no schema is needed to *record* a policy decision; the open question is what the policy is, not how to store a booking. A per-tour policy field is the likely shape and needs no migration until the model is chosen.
+
+**Clarification essential? Yes** — this is a customer-facing promise and a business decision. **Approval status:** **Pending; no policy approved.**
+
+#### Multi-city flights (C-13 — remove from scope)
+
+F-022 offers multi-city; BR-036 forbids partial implementation; Q-08 defers it; `flight_bookings.trip_type` already constrains `one_way|round_trip`. **Recommended:** remove it from v1 scope and hide the option; the enum already rejects it, so no schema or API change is needed. **Clarification essential? No.**
+
+**Approval status (whole item):** F-027 and multi-city **recommended — awaiting approval**; F-043 **recommended, clarification advisable**; F-071 **pending — policy not approved**.
+
+### 5.4 G0.8 — Settlement schema and lifecycle
+
+**Current documented situation.**
+BR-098–BR-100, BR-114 and DEC-10 require settlement periods with states `pending → processing → transferred` (with `failed`), partner dues reconciling to the cent with the admin view, refunds reducing the next settlement, and on-demand payouts. The schema has `payout_accounts`, `payout_requests` (`requested|processing|transferred|failed|rejected`, `method` manual|gateway) and an append-only `partner_ledger_entries` (`type` ∈ `sale|commission|refund|gateway_fee|chargeback|payout|adjustment`, signed `amount_cents`, unique `entry_key`) — but **no** settlement table, so a period cannot be represented, locked or reconciled. Conflict **C-16**.
+
+**The five layers, kept strictly separate.**
 
 | Layer | What it is | Where it lives | Mutable? |
 |---|---|---|---|
-| 1. Ledger entries | Immutable signed facts: sale, commission, refund, gateway fee, chargeback, payout, adjustment | `partner_ledger_entries` (`entry_key` unique, signed `amount_cents`) | **No** — append-only |
+| 1. Ledger entries | Immutable signed facts | `partner_ledger_entries` (`entry_key` unique) | **No** — append-only |
 | 2. Partner balance | `SUM(amount_cents)` for the organization | **Derived**, never stored | n/a |
-| 3. Settlement calculation | A closed claim over a specific set of ledger entries for a period | `settlement_periods` + `settlement_items` (**proposed**) | Status only |
+| 3. Settlement | A closed claim over a specific set of ledger entries | `settlement_periods` + `settlement_items` (**proposed**) | Status and links only, until transferred |
 | 4. Payout request | The partner asking for money already due | `payout_requests` (exists) | Status only |
 | 5. Payout execution | The actual transfer, manual or via gateway | `payout_requests.method` + `provider_payout_id` + `transferred_at` | Status only |
 
-**Why the separation matters.** Layers 1 and 2 already exist and are correct. Layers 3–5 are where double-counting, double-payment and "the partner saw a different number from the admin" appear. Modelling the settlement as *links to ledger rows* (layer 3) rather than a second money figure makes BR-114 true by construction: the partner's number and the admin's partner-due number are the same `SUM` over the same rows.
+**Recommended schema.**
 
-**Recommended schema** (see §4.5 for full columns and constraints): `settlement_periods` with `unique(organization_id, period_start, period_end)` and `settlement_items` with `unique(partner_ledger_entry_id)`. The second unique constraint is the guarantee that a ledger row is settled exactly once — including a payout that later fails and is re-settled.
+- `settlement_periods`: `id`, `organization_id` (FK restrict), `period_start` (date), `period_end` (date, exclusive), `status` (`pending|processing|transferred|failed`), `sales_cents`, `commission_cents`, `refunds_cents`, `gateway_fees_cents`, `adjustments_cents`, `due_cents`, `payout_request_id` (nullable FK restrict), `computed_at`, `transferred_at`, `failure_reason`, timestamps. **unique (`organization_id`,`period_start`,`period_end`)**; index (`organization_id`,`status`) and (`status`,`period_end`).
+- `settlement_items`: `id`, `settlement_period_id` (FK cascade), `partner_ledger_entry_id` (FK restrict, **globally unique**), `amount_cents`, timestamps.
+- Partner balance remains `SUM(partner_ledger_entries.amount_cents)`. BR-114 holds structurally: the partner's settlement total and the admin's partner-due figure are both `SUM(settlement_items.amount_cents)` over the same period.
 
-**Negative balances.** DEC-10 requires a negative partner balance to reduce the next settlement. With a signed ledger and `settlement_items` including negative rows, this is arithmetic, not a special case. BR-100 ("deducted twice") is prevented by the same unique constraint.
+**Eligibility — which entries may be settled.**
 
-**Refund carry-forward.** A refund after a settlement closed creates new negative ledger entries in the *next* period; a closed, transferred period is never edited.
+- **Eligible `type` values:** `sale`, `commission`, `refund`, `gateway_fee`, `chargeback`, `adjustment`.
+- **Excluded:** `payout`. A payout entry records the execution of a settlement, so claiming it in a settlement would count the same money twice. Payout entries are reconciled against `payout_requests`, not against periods.
+- **Eligibility window:** an entry is eligible for the period whose half-open interval contains its **`created_at` (posting time)**, not the date of the underlying booking or refund. A refund posted in March for a February sale settles in March. This is deliberate: the ledger is the truth and the alternative (allocating entries back to the booking month) requires mutable period totals.
+- **Eligibility state:** the entry exists, belongs to the organization, is not already referenced by any `settlement_items` row, and the period is `pending` or `failed`.
 
-**Payout accounts — explicitly not an approved design.** `payout_accounts` exists (encrypted account number/IBAN, one default per organization via `default_owner_key` unique, `pending|verified|rejected`, `verified_by`/`verified_at`). This register does **not** endorse it as final. Open items: who verifies an account and on what evidence; what happens when an account changes after a payout (re-verification window); whether an account is per-currency (USD only, so currently moot); and whether removal is soft-delete only. Recommendation: treat the existing table as a draft and add change-control semantics (a change requires re-verification and blocks payouts until verified) before Phase J.
+**Period lifecycle.**
 
-**Payout execution.** `method` already distinguishes `manual` from `gateway`. Manual is the only mode that can be guaranteed: platform staff execute the transfer outside Traway and record `transferred_at` + `processed_by`. Gateway payouts depend on a capability the selected gateway may not have (DEC-10's own caveat), so the schema must never *require* `provider_payout_id`.
+| Transition | Allowed from | Rule |
+|---|---|---|
+| compute | — (new) or `pending` | Insert the period, select eligible entries, insert `settlement_items`, set `computed_at`. Runs inside one transaction with a row lock on the period and a per-organization advisory lock. |
+| recompute | `pending`, `failed` | Delete the period's `settlement_items` and re-link from scratch, then recompute the totals. Only legal before `transferred`. |
+| submit | `pending` | Creates or links a `payout_request`, sets `status=processing`, freezes the items. |
+| transfer | `processing` | Sets `transferred` + `transferred_at`. **This is the only closure** (BR-099); the period and its items become immutable. |
+| fail | `processing` | Sets `failed` + `failure_reason`; items are **retained** so the failed numbers stay auditable, and the period may be recomputed or retried. |
 
-**What can be built now vs later.** Buildable now: ledger posting rules, balance query, settlement computation and periods, payout requests, manual execution, reports. Requires a gateway: automated payouts and payout status webhooks.
+**Reopening a closed period.** A `transferred` period is **never** reopened, edited or recomputed. There is no supported path back from `transferred`. `pending` and `failed` periods are the only "open" states, and recompute is the only way to change them. Corrections after transfer are new ledger entries in a later period, never edits to a closed one.
 
----
+**Refunds and chargebacks after closure.** They post new negative ledger entries through the normal path and are claimed by the next open period. They are never written into a closed period. If the negative entries exceed the next period's positives, `due_cents` is negative and the balance carries forward (DEC-10's negative balance → reduce the next settlement), which is arithmetic on a signed ledger rather than a special case.
 
-### 5.6 F — The three unresolved features
+**Failed settlements.** A `failed` period never releases value to the partner. Because the partner balance is derived from the ledger — not from periods — a failed transfer cannot leave the balance wrong; it only means the claim was not executed. Items stay linked (auditable), the period is retryable as-is, and repeating the transfer attempt is safe because the ledger has no new entries until a payout entry is posted.
 
-#### F-027 — "Seat selection"
+**Timezone and cutoffs.** Period boundaries are calendar intervals in a configured **settlement timezone** (`config('traway.settlement_timezone')`, default UTC; the business timezone still to be approved), evaluated as `[period_start 00:00:00, period_end 00:00:00)` — start inclusive, end exclusive, so no entry can fall in two adjacent periods. Timestamps are stored in UTC; the comparison converts to the settlement timezone. The cadence (weekly or monthly) is **not** decided and is part of this approval. Overlapping periods for one organization are prevented by `unique(organization_id, period_start, period_end)` plus an application check that no existing period overlaps the new interval.
 
-> *F-027 | Seat selection | MOB | M-026 (fragment) | P3 | U | Only a confirmation bar is supplied: 3 seats (12A/12B/12C), «مجاناً», «تأكيد المقاعد». No seat map, pricing or availability design. **Not a committed v1 requirement** until `Q-09` is answered.*
+**Preventing a second settlement of the same entry.** Three independent guards: (1) `settlement_items.partner_ledger_entry_id` is **globally unique**, so an entry can be claimed by exactly one period ever; (2) `unique(organization_id, period_start, period_end)` stops two periods covering the same interval; (3) compute runs in one transaction with a row lock on the period and a per-organization lock, so two concurrent computes cannot both claim the same entries. The unique constraint, not careful arithmetic, is what makes BR-100 ("deducted twice") impossible.
 
-**Exact ambiguity.** The screen fragment proves a confirmation control, not a feature: there is no seat map, no seat inventory, no indication whether a seat is free or paid (the bar says «مجاناً» — free — for three specific seats), no rule for who chooses, and no interaction with a provider's seat inventory. Q-09 is open and non-blocking.
+**Payout accounts — explicitly not approved.** `payout_accounts` exists (encrypted account number/IBAN, one default per organization via `default_owner_key` unique, `pending|verified|rejected`, `verified_by`/`verified_at`). **This register does not endorse it.** Open items: who verifies an account and on what evidence; what happens when an account changes after a payout (re-verification window); whether an account is per-currency (USD only, so currently moot); whether removal is soft-delete only. Recommendation: treat the table as a draft and add change-control semantics (a change requires re-verification and blocks payouts until verified) before Phase J. `settlements.accounts.manage` being non-delegable is a catalog decision (§4.1), not an approval of the account model.
 
-**Business impact.** Low if deferred: nothing else depends on it. High if implemented badly: charging for a seat that does not exist, or promising an assigned seat the airline does not honour, creates refund and complaint exposure. Commission accounting would also need a seat line item.
+**Payout execution.** `method` already distinguishes `manual` from `gateway`. Manual is the only mode that can be guaranteed: platform staff transfer outside Traway and record `transferred_at` + `processed_by`. Gateway payouts depend on a capability the selected gateway may not have (DEC-10's own caveat), so the schema must never *require* `provider_payout_id`.
 
-**Database impact.** Deferring requires **nothing**. Implementing would need seat inventory per flight segment (cabin map, seat attributes, price), seat assignment per passenger, and provider seat-map integration — none of which any approved provider supplies yet.
+**API impact.** List periods and their items; compute/recompute a period (platform); request an on-demand payout; mark transferred/failed; export. Authorization: `platform.finance.view`, `platform.finance.settlements.execute`; partner side `settlements.view`/`settlements.manage`; `settlements.accounts.manage` for destination changes (non-delegable). The partner view and the admin partner-dues row must come from the same aggregation code path; amounts in cents, USD only. Gateway payout callbacks reuse the `payment_webhooks` pattern.
 
-**API impact.** None while deferred. Implementing would add a seat-map endpoint and seat selection on the passenger step, plus provider calls.
+**Security and tenant isolation impact.** Settlements are the highest-value cross-tenant risk: a partner must see only its own periods and items, and an organization must never trigger a payout to an account it does not own. Account changes are owner-only and non-delegable; execution is platform-only.
 
-**Recommended interpretation.** Defer entirely. Seats are free and optional at launch (Q-09's working assumption); the confirmation bar is a design artefact, not a requirement. No seat data is stored; the passenger step completes without a seat choice.
+**Dependencies.** Depends on Phase G (payments/refunds produce the entries a period closes) and `G0.6` (gateway payout capability). Blocks Phase J.
 
-**User clarification essential?** **No.** The catalogue already declares it uncommitted; confirming the deferral is sufficient.
+**Risks.** Building settlements before payments/refunds are stable produces unverifiable numbers. A mutable "balance" column would create a second source of truth that drifts. Assuming gateway payouts exist could force a manual-only launch — acceptable, but it must be stated to partners.
 
-#### F-043 — "eSIM usage & balance"
-
-> *F-043 | eSIM usage & balance | MOB | M-037 (partial) | P3 | U | Booking card shows «5 GB متبقية» and a progress bar, but no usage screen, refresh rule or depletion behaviour is drawn. Not a committed v1 requirement (`Q-17`).*
-
-**Exact ambiguity.** Where the remaining-data figure comes from: the provider's live API, a locally decremented counter, or nothing at all. Also unresolved: refresh cadence, what happens at depletion, and whether the progress bar communicates purchased allowance or remaining usage.
-
-**Business impact.** Medium: showing a stale or wrong "remaining" figure is a trust problem, and a live-usage feature implies a provider API that may not exist or may be rate-limited. Nothing financial depends on it.
-
-**Database impact.** Deferring requires **nothing**. Live usage would need periodic usage snapshots (a table plus a polling job and retention), because providers cap historical usage queries.
-
-**API impact.** None while deferred. Live usage would add a usage endpoint plus a background sync per active order — with per-order rate limits that scale with active eSIMs.
-
-**Recommended interpretation.** Display the **purchased allowance** (`esim_packages.data_mb`, `validity_days`) and the order's status, never a "remaining" figure, unless the selected provider exposes a usage API. If no source exists, hide the progress bar. No usage table, no polling.
-
-**User clarification essential?** **Yes** — whether the product expects a live remaining-data figure (and will therefore require a provider with a usage API) or an allowance display. The recommendation is safe either way, but the UI copy depends on the answer.
-
-#### F-071 — "Tour cancellation & refund"
-
-> *F-071 | Tour cancellation & refund | MOB | M-068 (promise only) | P2 | U | «إلغاء مجاني خلال 24 ساعة» is stated but no cancellation UI, deadline calculation or refund rule is drawn. Not committed until `Q-24`.*
-
-**Exact ambiguity.** The deadline's reference point (slot start vs booking date), the refund basis (full vs partial vs gateway-fee-deducted), whether the customer self-cancels or requests cancellation, and what happens to a paid but uncancelled slot when the tour is cancelled by the company.
-
-**Business impact.** High — it is a public promise in the UI. Shipping the promise without the rule is a consumer-protection and chargeback risk; shipping neither is a missing flow for a P2 feature.
-
-**Database impact.** Deferring requires **nothing**. Implementing per-tour variation would eventually need a policy field on `tours`; the launch rule needs none, because `tour_slots` already holds the start time and `bookings`/`refunds` already exist.
-
-**API impact.** A cancel endpoint on the booking (already planned in F-049's pattern) plus an eligibility check: `now <= slot.start − 24h`. After the deadline the only path is a partner/platform decision, not self-service.
-
-**Recommended interpretation.** Full refund when the customer cancels **at least 24 hours before the slot start time**; no self-service cancellation inside 24 hours (support/partner decision). Any fee reported by the gateway is stored, never computed by Traway (DEC-01). No per-tour policy field until a second policy exists.
-
-**User clarification essential?** **Advisable** — the 24-hour rule is quoted from the UI, but the refund basis and the inside-24h behaviour must be confirmed.
-
-#### Multi-city flights (C-13)
-
-`FEATURES-CATALOG.md` F-022 offers multi-city as a trip type; BR-036 forbids partial implementation; Q-08 defers it; `flight_bookings.trip_type` already constrains `one_way|round_trip`.
-
-**Recommended interpretation.** Remove multi-city from scope for v1 and hide the option. The enum already rejects it, so no schema or API change is needed. **User clarification essential? No** — the documents already defer it; only the UI decision needs confirming.
+**Approval status:** **Recommended — awaiting approval**, with the period cadence and settlement timezone explicitly included in the approval.
 
 ---
 
@@ -693,84 +548,108 @@ Every conflict from `IMPLEMENTATION-GAP-ANALYSIS.md` §9, with its status after 
 | ID | Conflict | Status | Resolved by / next step |
 |---|---|---|---|
 | C-01 | Audit required vs permanently removed | **RESOLVED** | `G0-DEC-01` — audit and activity logs permanently excluded; `platform.audit.view` removed |
-| C-02 | Permission counts 83/84/78/80 | **RESOLVED (evidence) / awaiting approval (content)** | `G0-DEC-02` + `PERMISSION-CATALOG-RECONCILIATION.md`; canonical 85 keys needs approval |
+| C-02 | Permission counts 83/84/78/80 | **RESOLVED (evidence) / awaiting approval (content)** | `G0-DEC-02` + `PERMISSION-CATALOG-RECONCILIATION.md`; the 85-key content needs approval (§4.1) |
 | C-03 | `properties.*` vs hotels-as-profile | **RESOLVED** | `G0-DEC-03` — `hotels` is the property entity; `properties.*` canonical; `org.profile.publish` removed |
 | C-04 | Visa transition authority | **RESOLVED** | `G0-DEC-04` — platform-only decision; `update_status` removed; company review retained |
-| C-05 | Role naming/count (`org_owner` vs `company_owner`, R-18/R-19) | **Partially resolved** | Canonical names are the seeded `company_owner`/`hotel_owner`/`service_provider_owner`. Role **count** still differs (docs list 19, seeder creates 5 platform + 11 templates = 16). Tracked as a documentation sub-item under `G0.2`; no code impact |
-| C-06 | `bookings.view` organization scope | **OPEN** | Sub-item P-09 of `G0.2` — recommend `['company','hotel']` until the service-provider catalogue exists |
-| C-07 | Tenant context from `X-Organization-Id` header | **OPEN — not a Gate 0 decision** | Phase A item A3 (remove the header fallback). Docs and `TenantResolver` still disagree |
-| C-08 | Empty scope = all vs none | **RESOLVED** | `G0-DEC-05` — empty means nothing; fail closed |
+| C-05 | Role naming/count (`org_owner` vs `company_owner`, R-18/R-19) | **Partially resolved** | Canonical names are the seeded `company_owner`/`hotel_owner`/`service_provider_owner`. Role **count** still differs (docs list 19, seeder creates 5 platform + 11 templates = 16). Documentation sub-item under Gate 0A; no code impact |
+| C-06 | `bookings.view` organization scope | **OPEN** | P-09 (§4.2) — recommend `['company','hotel']` until the service-provider catalogue exists |
+| C-07 | Tenant context from `X-Organization-Id` header | **OPEN — not a Gate 0 decision** | Phase A item A3 (remove the header fallback) |
+| C-08 | Empty scope = all vs none | **RESOLVED** | `G0-DEC-05` + §4.4 — empty means nothing; fail closed |
 | C-09 | Membership transfer mutates `organization_id` | **OPEN — not a Gate 0 decision** | Phase A item A4 (remove + create, clear scopes) |
 | C-10 | Invitation resend semantics | **OPEN — not a Gate 0 decision** | Phase A item A5 |
 | C-11 | One property vs many per hotel org | **RESOLVED** | `G0-DEC-03` — many properties; Q-49 answered |
 | C-12 | Global NULL-team owner templates | **OPEN — not a Gate 0 decision** | Q-50 remains; recommend accepting copy-on-create (already implemented) and documenting it |
-| C-13 | Multi-city offered vs forbidden | **RECOMMENDED** | §5.6 — remove from v1 scope; awaiting approval under `G0.7` |
-| C-14 | F-027, F-043, F-071 unresolved | **RECOMMENDED** | §5.6 / `G0.7` — defer F-027 and F-043 usage, implement F-071 eligibility |
-| C-15 | Phantom feature references F-113/F-115 | **RESOLVED** | Documentation correction — matrix rows re-pointed to F-101/F-106/F-096/F-108 in the reconciliation (§8 P-11, P-12) |
-| C-16 | Settlement schema absent | **RECOMMENDED** | `G0.8` / §5.5 — `settlement_periods` + `settlement_items`; awaiting approval |
+| C-13 | Multi-city offered vs forbidden | **RECOMMENDED** | §5.3 — remove from v1 scope; awaiting approval |
+| C-14 | F-027, F-043, F-071 unresolved | **RECOMMENDED / PENDING** | §5.3 — defer F-027 and F-043 usage (recommended); F-071 policy **not approved** |
+| C-15 | Phantom feature references F-113/F-115 | **RESOLVED** | Documentation correction — matrix rows re-pointed to F-101/F-106/F-096/F-108 |
+| C-16 | Settlement schema absent | **RECOMMENDED** | §5.4 — `settlement_periods` + `settlement_items` and the full lifecycle; awaiting approval |
 | C-17 | Settings authority missing | **RESOLVED** | `G0-DEC-02` — `platform.settings.manage` added; `platform_settings` table already exists |
-| C-18 | Three legal documents vs generic document table | **OPEN — not a Gate 0 decision** | Requires a document-type enum decision; Phase H.3 (partner onboarding). `BR-081` names tourism licence, commercial registration, tax card |
+| C-18 | Three legal documents vs generic document table | **OPEN — not a Gate 0 decision** | Requires a document-type enum decision; Phase H.3 |
 
-**Summary (18 conflicts total):** **8 resolved** — C-01, C-02 (evidence for the count conflict; catalogue content still needs approval), C-03, C-04, C-08, C-11, C-15, C-17. **3 recommended, awaiting approval** — C-13, C-14, C-16. **1 partially resolved** — C-05 (names settled, 19-vs-16 role count still a documentation sub-item). **6 carried to Phase A or later** because they are implementation decisions rather than Gate 0 contracts — C-06, C-07, C-09, C-10, C-12, C-18. 8 + 3 + 1 + 6 = 18.
+**Summary (18 conflicts total):** **8 resolved** — C-01, C-02 (evidence only; content awaiting approval), C-03, C-04, C-08, C-11, C-15, C-17. **4 recommended, awaiting approval** — C-13, C-14, C-16 (and C-14's F-071 part pending). **1 partially resolved** — C-05. **6 carried to Phase A or later** — C-06, C-07, C-09, C-10, C-12, C-18. 8 + 4 + 1 + 6 = 19 assignments across 18 conflicts, because C-14 has a recommended part (F-027, F-043) and a pending part (F-071).
 
 ---
 
-## 7. Documentation corrections required
+## 7. Documentation corrections
 
-These are documentation-only corrections identified while producing this register. The ones already applied to `IMPLEMENTATION-GAP-ANALYSIS.md` and `phase-02/OPEN-QUESTIONS.md` were made in the same task; the rest belong to the phase-02 documents and must be applied when `G0.2` is approved, because they change the permission catalogue text itself.
+Corrections identified while producing this register. Status is per document; nothing here changes code.
 
 | # | Document | Correction | Status |
 |---|---|---|---|
-| D-01 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3 header and totals | 83 → 85 (37 platform + 48 organization) | **Pending `G0.2` approval** |
-| D-02 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §9 row 1 | 78 (33+45) is stale; must match the approved catalogue | **Pending `G0.2`** |
-| D-03 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §9 note | Remove `platform.audit.view` from the "decision-backed" list; the count is also wrong (more than 5 keys are `D`) | **Pending `G0.2`** |
-| D-04 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3.1 | Remove the `update_status` row; narrow the `review` description | **Pending `G0.2`** |
-| D-05 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3.2 | Add the 4 `properties.*` rows as canonical (already present), add `visa_requests.review`, add `settlements.accounts.manage` to the non-delegable list, remove `org.profile.publish` if it appears | **Pending `G0.2`** |
-| D-06 | `AUTHORIZATION-ARCHITECTURE.md` §7.2 | `org.delete` is an owner-only **action**, not a permission — reword | **Pending** |
-| D-07 | `AUTHORIZATION-ARCHITECTURE.md` §11 | No change required — §11 already states audit is removed, which is now confirmed policy under `G0-DEC-01`. Editing that file was outside the required deliverable list, so the cross-reference lives here instead | **No change required** |
-| D-08 | `FEATURES-CATALOG.md` F-112 | Retitle to "Dynamic roles and permissions"; drop the audit clause (G0-DEC-01) | **Pending** |
-| D-09 | `BUSINESS-LOGIC.md` BR-107, BR-111, BR-124 | Mark as superseded by `G0-DEC-01` (audit permanently excluded); keep the original text | **Pending** |
-| D-10 | `BUSINESS-LOGIC.md` BR-121 | Now consistent with `G0-DEC-05` (empty scope = no access); add a pointer | **Pending** |
-| D-11 | `phase-02/OPEN-QUESTIONS.md` Q-38, Q-46, Q-49 | Q-38 → answered by `G0-DEC-01`; Q-46 → answered by `G0-DEC-04`; Q-49 → answered by `G0-DEC-03` | **Applied** |
-| D-12 | `IMPLEMENTATION-GAP-ANALYSIS.md` §9 | Mark C-01, C-03, C-04, C-08, C-11, C-17 resolved and link to this register | **Applied** |
-| D-13 | `IMPLEMENTATION-STATUS.md` | Record the Gate 0 state and the pending approvals | **Applied** |
+| D-01 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3 header and totals | 83 → **85** (37 platform + 48 organization), labelled proposed pending approval | **Applied** |
+| D-02 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §9 | Row 1 → 85 (37+48); row 2 no longer cites `platform.audit.view`; row 5 → 48/48 | **Applied** |
+| D-03 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3.1 | Remove the `update_status` row; narrow the `review` description; add `assign` and `decide`; correct F-115 → F-096/F-108 | **Applied** |
+| D-04 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3.2 | Add `visa_requests.review`; rename `team_activity.view` → `status_history.view`; correct F-113 → F-101/F-106 | **Applied** |
+| D-05 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §4, §5, §8 | New keys added to the role tables; `status_history.view` renamed in every table; service-provider note for P-09 | **Applied** |
+| D-06 | `AUTHORIZATION-ARCHITECTURE.md` §7.2/§8 | `org.delete` is an owner-only **action**, not a permission — reworded | **Applied** |
+| D-07 | `AUTHORIZATION-ARCHITECTURE.md` §11 | No change required — §11 already states audit is removed, now confirmed policy under `G0-DEC-01` | **No change required** |
+| D-08 | `FEATURES-CATALOG.md` F-112 | Retitled "Dynamic roles and permissions"; audit clause dropped; catalog reference updated to 85 keys | **Applied** |
+| D-09 | `BUSINESS-LOGIC.md` BR-107, BR-111, BR-124 | Marked superseded by `G0-DEC-01`, original text preserved | **Applied** |
+| D-10 | `BUSINESS-LOGIC.md` BR-121 | Consistent with `G0-DEC-05`; pointer added | **Applied** |
+| D-11 | `phase-02/OPEN-QUESTIONS.md` Q-38, Q-46, Q-49 | Answered by `G0-DEC-01`, `G0-DEC-04`, `G0-DEC-03` | **Applied** |
+| D-12 | `IMPLEMENTATION-GAP-ANALYSIS.md` §9 | C-01/03/04/08/11/17 marked resolved and linked here | **Applied** |
+| D-13 | `IMPLEMENTATION-STATUS.md` | Gate 0A/0B state recorded | **Applied** |
+| D-14 | `AUTHORIZATION-ARCHITECTURE.md` §14 | "83 permission keys — 36 platform, 47 organization" → the proposed 85 | **Applied** |
+| D-15 | `FEATURES-CATALOG.md` summary, `DB-DECISION-BRIEF.md` §9.1 | Permission-key totals stated as 78 → the proposed 85, with the draft estimate recorded | **Applied** |
+
+### 7.1 Documentation cleanup review
+
+Every file under `docs/` was reviewed against the deletion criteria (duplicated by a newer canonical document, obsolete, superseded by a decision, contradictory with this register, temporary working notes, misleading about current architecture, unreferenced and redundant).
+
+**No documentation file was deleted.** Each one either remains authoritative for a distinct subject or preserves information no other document carries:
+
+- `UI-SCREENS-INVENTORY.md` and `SCREEN-COVERAGE-REPORT.md` hold the `M-`/`D-` screen IDs that every other document cites, plus the coverage evidence. Not reconstructible.
+- `USER-ROLES-AND-PERMISSIONS.md` is the role narrative (R-01–R-19 with responsibilities per portal); the matrix is the key table. Deleting either loses the other's content.
+- `DB-DECISION-BRIEF.md` records the option analysis behind `DEC-01`–`DEC-10`, which `OPEN-QUESTIONS.md` §2.9 summarises but does not reproduce.
+- `WORKFLOWS.md`, `BUSINESS-LOGIC.md`, `FEATURES-CATALOG.md`, `AUTHORIZATION-ARCHITECTURE.md` each own a distinct requirement namespace (WF-, BR-, F-, L/PE-).
+
+The real duplication risk was subject ownership, not file count: two documents describing the same decision differently. That is now fixed by [`README.md`](./README.md) (one owner per subject plus the rule that a decision is recorded once, in this register, and linked from elsewhere) and by the corrections above, not by deleting history. Any contradiction that remains is marked superseded in place, so the original requirement stays readable.
 
 ---
 
-## 8. Final approval checklist
+## 8. Approval checklist
 
-Approve each line individually. Nothing in Phase A starts until every line the implementation depends on is approved.
+Approve each line individually. Nothing in Phase A starts until Gate 0A is approved in full.
 
-### Already approved — no action needed
+### Gate 0A — Authorization
+
+**Already approved — no action needed**
 
 - [x] **G0-DEC-01** Audit and activity logs permanently excluded; `status_histories` restricted to business status transitions.
+- [x] **G0-DEC-02 (principle)** One centralized authoritative permission catalog.
 - [x] **G0-DEC-03** A hotel organization owns multiple hotel properties; `hotels` is the property entity; `membership_hotel_scopes` scopes staff; bookings carry `hotel_id`.
-- [x] **G0-DEC-04** Only platform staff with `platform.visa_requests.decide` may approve or reject a visa; company users review documents only; the six customer statuses are unchanged.
+- [x] **G0-DEC-04** Only platform staff with `platform.visa_requests.decide` may approve or reject a visa; company users review documents only; the six customer statuses unchanged.
 - [x] **G0-DEC-05** An empty scope grants nothing; every scoped query fails closed.
 
-### Awaiting your approval
+**Awaiting your approval**
 
-- [ ] **G0.2 (content)** — adopt the **85-key** catalog (37 platform + 48 organization) exactly as listed in `PERMISSION-CATALOG-RECONCILIATION.md`: 9 keys added, 3 removed, 0 renamed, 1 description narrowed, `settlements.accounts.manage` added to the non-delegable list.
-- [ ] **G0.2 (P-09)** — keep `bookings.*` and `customers.view` closed to `service_provider` until its service catalogue is defined (a deliberate, documented narrowing of the matrix's "All").
-- [ ] **G0.5** — notifications launch on database + e-mail over the database queue, deterministic notification IDs for dedupe, transactional categories always on, push/SMS/WhatsApp deferred behind adapters.
-- [ ] **G0.6 (architecture)** — gateway/flight/eSIM adapter contracts with fakes; hotels are first-party inventory and need no provider; unconfigured flight/eSIM search returns `provider_unavailable`; add `payment_webhooks`.
-- [ ] **G0.6 (providers)** — *which* payment gateway, flight provider and eSIM provider to integrate, and whether the gateway supports partner payouts (DEC-10's assumption). **Requires your answer.**
-- [ ] **G0.7** — defer F-027 seat selection; defer F-043 live usage (show allowance only); implement F-071 as "full refund when cancelled ≥24h before slot start"; remove multi-city from v1.
-- [ ] **G0.7 (clarification)** — confirm the F-043 display decision (allowance vs live remaining data) and the F-071 refund basis.
-- [ ] **G0.8** — add `settlement_periods` + `settlement_items` keyed uniquely to `partner_ledger_entries`; balance stays derived; `payout_accounts` remains a draft pending change-control design.
+- [ ] **§4.1 Catalog content** — adopt the **85-key** catalog (37 platform + 48 organization) exactly as listed in `PERMISSION-CATALOG-RECONCILIATION.md`. Against the current 80-key seeder: **add 6** (`platform.settings.manage`, `properties.view`, `properties.create`, `properties.update`, `properties.publish`, `settlements.accounts.manage`), **remove 1** (`org.profile.publish`), **rename 1** (`team_activity.view` → `status_history.view`), narrow 1 description, add `settlements.accounts.manage` to the non-delegable list.
+- [ ] **§4.2 P-09** — keep `bookings.*` and `customers.view` closed to `service_provider` for now.
+- [ ] **§4.3 Delegation and owner templates** — family rule, 8 non-delegable keys, 3 owner-only actions, 3 immutable templates, grant ceiling.
+- [ ] **§4.4 Empty-scope enforcement detail** — query-layer filter, ownership as the explicit full-access grant, pre-deploy data check, migration comment correction.
 
-### Carried to Phase A (not Gate 0, listed so nothing is lost)
+### Gate 0B — Business and integration
+
+- [ ] **§5.1 Notifications** — database + e-mail over the database queue; deterministic notification IDs for creation only; `notification_deliveries` per-channel tracking; **at-least-once delivery, no exactly-once e-mail claim**; transactional categories always on; push/SMS/WhatsApp deferred.
+- [ ] **§5.2 Provider architecture** — gateway/flight/eSIM adapter contracts with fakes; hotels are first-party inventory; unconfigured flight/eSIM search returns `provider_unavailable`; add `payment_webhooks`.
+- [ ] **§5.2 Provider selection** — *which* gateway, flight provider and eSIM provider, and whether the gateway supports partner payouts. **Requires your answer.**
+- [ ] **§5.3 F-027** — defer seat selection; free and optional.
+- [ ] **§5.3 F-043** — show purchased allowance only; **confirm** whether a live remaining-data figure is expected.
+- [ ] **§5.3 F-071** — decide the tour cancellation policy. **No policy is approved.** The documented requirement is that eligibility follows the tour company's policy and that terms and refund basis are explicit before booking; the actual rule, deadline semantics and fee basis need your decision.
+- [ ] **§5.3 Multi-city** — remove from v1 scope.
+- [ ] **§5.4 Settlements** — `settlement_periods` + `settlement_items` with the eligibility, lifecycle, closing, reopening, failure, timezone and double-settlement rules in §5.4; **approve the period cadence and settlement timezone**; `payout_accounts` remains a proposal.
+
+### Carried to Phase A (not a gate, listed so nothing is lost)
 
 - [ ] A1 empty-scope semantics (decision approved; implementation pending)
 - [ ] A3 remove the `X-Organization-Id` header fallback
 - [ ] A4 membership transfer as remove + create
 - [ ] A5 invitation resend/rotation
-- [ ] C-06 `bookings.view` scope, C-12 global templates, C-18 legal document types
+- [ ] C-05 role count, C-06 `bookings.view` scope, C-12 global templates, C-18 legal document types
 
-### Explicit non-goals of this task (confirmed)
+### Explicit non-goals
 
-- No Phase A work started.
+- No Phase A work started. No implementation phase started.
 - No application code, migration, model, service, controller, policy, middleware, route, seeder or test modified.
-- No `.env` change, no migration run, no database change.
+- No `.env` change, no migration run, no database change, no dependency change.
 - Nothing committed or pushed.
-
