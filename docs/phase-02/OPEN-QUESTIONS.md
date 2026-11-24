@@ -71,15 +71,14 @@ Rules:
 |---|---|---|---|---|---|---|
 | Q-15 | What does «التحقق الآن» (device compatibility) actually check, and does an incompatible device block purchase? | M-033 | Device check integration, purchase gate | Check `eSIM` support via device model API; incompatible devices can browse but not buy | Product owner | Blocking-4 |
 | Q-16 | What is the exact eSIM refund window and does it end at activation, installation or first data use? | M-035, M-036 | Refund policy engine | Refundable until activation only; activation is irreversible | Operations | Non-blocking |
-| Q-17 | The booking card shows «5 GB متبقية» but there is no usage screen. Is usage tracking in scope? | M-037 | Usage/balance data source, polling | Display only, refreshed on screen open; no dedicated screen in v1 | Product owner | Non-blocking |
-| Q-32 | What happens when the eSIM provider API sync fails or returns partial data? | D-03.10 | Availability integrity, sync job | Keep last known good catalogue; flag as stale; never silently delist | Engineering | Non-blocking |
+| Q-17 | Is live eSIM usage tracking required, or is displaying the purchased allowance sufficient? | M-037 | Usage data source, provider capability, polling and customer display | Show purchased allowance and validity. Show remaining usage only if the selected provider exposes a reliable usage API. No polling or dedicated usage screen in v1 by default. | Product owner | Non-blocking || Q-32 | What happens when the eSIM provider API sync fails or returns partial data? | D-03.10 | Availability integrity, sync job | Keep last known good catalogue; flag as stale; never silently delist | Engineering | Non-blocking |
 
 ### 2.5 Hotels & tours
 
 | ID | Question | Evidence | Impact if unanswered | Working assumption | Owner | Status |
 |---|---|---|---|---|---|---|
 | Q-23 | The hotel search form is missing. What inputs exist — destination, dates, adults, children, rooms, nationality? | M-059 summary only | Hotel search API, occupancy model | Destination + dates + adults + children + rooms | Product owner | **Answered (DEC-08)** |
-| Q-24 | The tour promises free cancellation within 24 h. What is the exact deadline, refund basis (full/partial) and flow? | M-068 | Tour cancellation states, refund rules | Full refund when cancelled ≥24 h before slot start; no cancellation after | Operations | Non-blocking |
+| Q-24 | What cancellation and refund policy applies to each tour, and how are eligibility, deadlines and refund amounts calculated? | M-068 | Tour cancellation workflow, company policy, refund calculation and customer disclosure | Follow the applicable tour company's policy. No universal 24-hour full-refund rule is approved. The applicable terms and refund calculation must be shown before booking. | Operations / Project owner | Non-blocking — policy approval required before implementing F-071 |
 | Q-33 | Who reviews submitted tours, within what SLA, and is a rejection reason mandatory? | D-04.3, D-03.1 | Content moderation workflow | Platform content manager reviews within 2 business days; reason mandatory | Operations | Non-blocking |
 
 ### 2.6 Notifications, search & support
