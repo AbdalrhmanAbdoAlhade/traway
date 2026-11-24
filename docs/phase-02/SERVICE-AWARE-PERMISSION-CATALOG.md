@@ -125,7 +125,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 
 | Key | Domain | Eligible organization types | Service applicability | Scope requirement | Sensitivity | Description |
 |---|---|---|---|---|---|---|
-| `org.profile.view` | profile | All | — | organization | normal | View organization profile and settings |
+| `org.profile.view` | profile | All | — | organization | normal | View organization profile and settings |\n| `org.services.request` | services | All | — | organization | access_control | Request activation of an additional service; owner-only and non-delegable |
 | `org.profile.update` | profile | All | — | organization | sensitive | Edit organization profile and settings |
 | `org.documents.manage` | profile | All | — | organization | sensitive | Upload or replace organization legal documents |
 | `org.notifications.view` | notifications | All | — | organization | normal | View organization notification inbox |
@@ -227,14 +227,14 @@ Organization `customers.view` is not a directory permission. It is a contextual 
 ## 7. Gate 0A approval checklist
 
 - [ ] Approve the 37 platform keys and their platform-only boundaries.
-- [ ] Approve the 48 organization candidate keys and service applicability.
+- [ ] Approve the organization permission candidate keys and service applicability.
 - [ ] Approve organization eligibility metadata for company/hotel/service_provider.
 - [ ] Approve scope requirements, including service-resource and service-assignment enforcement.
 - [x] Service enablement is controlled by Traway and distinct from employee service scopes (Q-54 direction approved; schema/lifecycle details remain).
 - [x] Provider-side eSIM operations excluded: Traway-only business workflow (Q-53); no organization-side eSIM keys/scopes.
 - [x] Unified provider dashboard direction approved (Q-55); detailed screen mapping remains. Hierarchical service/resource scoping approved in principle (Q-56); per-service resource mapping remains.
 
-**No application code, migration, Seeder, authorization config or tests are changed by this catalog proposal.**
+**Implementation note:** the organization service lifecycle, permission seed entry, authorization enablement check and lifecycle tests are now present on `implementation/authorization-core`; this branch still requires local execution and review before merge.
 
 
 ## 8. Implementation metadata gap (do not infer implementation)
@@ -250,7 +250,7 @@ Owner decisions Q-53–Q-56 now establish the product direction. Before implemen
 
 Do not treat `allowed_org_types` as service enablement. Do not use `flights` in organization-side service grants in this release, even though the legacy shared service-scope enum contains that value.
 
-**Existing code review finding:** `Membership::isRestrictedToHotel()` currently treats an empty hotel-scope list as unrestricted (`$ids === [] || ...`), while G0-DEC-03/G0-DEC-05 and the approved authorization design require an empty property scope to grant no access to non-owner staff. This is a code-level authorization gap that must be corrected and covered by negative tests before release. No code was changed in this documentation pass.
+**Existing code review finding:** `Membership::isRestrictedToHotel()` currently treats an empty hotel-scope list as unrestricted (`$ids === [] || ...`), while G0-DEC-03/G0-DEC-05 and the approved authorization design require an empty property scope to grant no access to non-owner staff. This is a code-level authorization gap that must be corrected and covered by negative tests before release. The empty property-scope rule has been corrected in `AuthorizationService` and `Membership` on `implementation/authorization-core`; tests were added, but have not yet been executed locally.
 
 
 ### Owner-approved scope and service boundaries — 2026-11-24
@@ -270,4 +270,4 @@ Do not treat `allowed_org_types` as service enablement. Do not use `flights` in 
 - **Q-55:** the unified provider dashboard is a frontend direction. Backend must expose independently authorized service APIs; it must not rely on hidden navigation or UI checks.
 - **Q-56:** hierarchical scope: organization-enabled service → employee membership service scope → resource/property/assignment scope when meaningful. Owner reach is bounded by enabled services. Empty required scope denies.
 
-The proposed `applicable_services` permission metadata, `organization_services` lifecycle model, resource scope options and enforcement contract are specified in [`AUTHORIZATION-DATA-MODEL-DESIGN.md`](./AUTHORIZATION-DATA-MODEL-DESIGN.md) §10. No implementation is implied by this catalog update.
+The `organization_services` lifecycle model and enabled-service runtime check are implemented on `implementation/authorization-core`. Permission-to-service applicability metadata and deeper resource/assignment enforcement remain separate implementation tasks.
