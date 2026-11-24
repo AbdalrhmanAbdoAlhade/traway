@@ -208,7 +208,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 
 **Alternate flows**
 * A1 — Restricted employee works only assigned requests and can request extra permission from the owner (D-06.1).
-* A2 — Platform admin sees the request in booking/visa oversight and in notifications (D-03.2, D-03.3), with an audited override permission.
+* A2 — Platform admin sees the request in booking/visa oversight and in notifications (D-03.2, D-03.3), with the corresponding platform permission; no general audit entry is written (G0-DEC-01).
 
 **Exceptions**
 * E1 — Document rejected → application returns to `Documents Required`; cannot advance (BR-095).
@@ -470,13 +470,13 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 ## 16. WF-15 — Role, permission & employee administration
 
 **Actors:** Platform admin (R-03), Company owner (R-07), Hotel owner (R-12), Service owner (R-17)
-**Trigger:** create or change a role, invite an employee, adjust access
+**Trigger:** create or change a role, invite an employee, adjust access within the permitted organization, service and resource scopes
 **Preconditions:** actor holds the access-control permissions and an equal-or-broader ceiling
 **Screens:** D-03.15, D-04.7, D-04.8, D-05.5, D-06.1
 
 **Main flow**
-1. Platform admin opens D-03.15 and creates or edits a **platform role** from the platform permission catalog. Tenant roles/permissions may also be assigned through `platform.organization_access.manage`, which is audited.
-2. Owner opens Team (D-04.7 for a company, D-05.5 for a hotel) and invites an employee with a role and, when the organization uses service lines, a service scope.
+1. Platform admin opens D-03.15 and creates or edits a **platform role** from the platform permission catalog. Tenant roles/permissions may also be assigned through `platform.organization_access.manage`, which follows the no-audit rule in G0-DEC-01.
+2. Owner opens Team (D-04.7 for a company, D-05.5 for a hotel) and invites an employee with a role and, when the organization uses service lines, explicit service scopes and, where required, resource scopes.
 3. Owner optionally clones a seeded template into a **custom organization role** (D-04.8) containing only permissions the owner holds.
 4. Owner optionally adds a **bounded direct grant** to one employee for one extra capability, visible as an exception.
 5. The system validates every grant against the grantor's ceiling (BR-084, BR-122) and rejects escalation instead of trimming it silently.
@@ -485,7 +485,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 
 **Alternate flows**
 * A1 — Service owner performs steps 2–4 only inside their service scope; a broader scope or permission is rejected.
-* A2 — Ownership transfer between two active members is atomic and audited (BR-123).
+* A2 — Ownership transfer between two active members is atomic (BR-123); no general audit entry is written (G0-DEC-01).
 * A3 — Suspension or removal revokes the membership's sessions immediately; assigned records are reassigned or flagged (BR-125).
 
 **Exceptions**
