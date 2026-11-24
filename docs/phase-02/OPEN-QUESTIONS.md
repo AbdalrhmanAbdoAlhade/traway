@@ -71,7 +71,8 @@ Rules:
 |---|---|---|---|---|---|---|
 | Q-15 | What does «التحقق الآن» (device compatibility) actually check, and does an incompatible device block purchase? | M-033 | Device check integration, purchase gate | Check `eSIM` support via device model API; incompatible devices can browse but not buy | Product owner | Blocking-4 |
 | Q-16 | What is the exact eSIM refund window and does it end at activation, installation or first data use? | M-035, M-036 | Refund policy engine | Refundable until activation only; activation is irreversible | Operations | Non-blocking |
-| Q-17 | Is live eSIM usage tracking required, or is displaying the purchased allowance sufficient? | M-037 | Usage data source, provider capability, polling and customer display | Show purchased allowance and validity. Show remaining usage only if the selected provider exposes a reliable usage API. No polling or dedicated usage screen in v1 by default. | Product owner | Non-blocking || Q-32 | What happens when the eSIM provider API sync fails or returns partial data? | D-03.10 | Availability integrity, sync job | Keep last known good catalogue; flag as stale; never silently delist | Engineering | Non-blocking |
+| Q-17 | Is live eSIM usage tracking required, or is displaying the purchased allowance sufficient? | M-037 | Usage data source, provider capability, polling and customer display | Show purchased allowance and validity. Show remaining usage only if the selected provider exposes a reliable usage API. No polling or dedicated usage screen in v1 by default. | Product owner | Non-blocking |
+| Q-32 | What happens when the eSIM provider API sync fails or returns partial data? | D-03.10 | Availability integrity, sync job | Keep last known good catalogue; flag as stale; never silently delist | Engineering | Non-blocking |
 
 ### 2.5 Hotels & tours
 
@@ -146,7 +147,7 @@ These questions arise from the recorded decisions and the authorization requirem
 | Q-47 | How long are financial and booking records retained after anonymisation? | DEC-09, BR-109 | Retention/purge configuration, not table shape | Five years for invoices, payments and refunds; legal to confirm before production. | Legal | Non-blocking |
 | Q-48 | Can one person hold both a platform membership and a partner membership, and how is context chosen? | Authorization requirement | Identity/membership model, login context | Allowed; login chooses one active context; roles never mix. | Product owner | Non-blocking |
 | Q-49 | Can a hotel organization own more than one property (hotel group / branches)? | D-05.x, DEC-08 | Adds a branch scope level | One property per hotel organization at launch; branch scope is additive. | Product owner | **Answered (G0-DEC-03)** |
-| Q-50 | Spatie Laravel Permission (teams) plus a custom layer, or fully custom authorization tables? | AUTHORIZATION-ARCHITECTURE §13 | Storage shape only | Spatie + custom layer; tenant isolation, service scope, ceilings and audit stay in application services. | Engineering | Non-blocking |
+| Q-50 | Spatie Laravel Permission (teams) plus a custom layer, or fully custom authorization tables? | AUTHORIZATION-ARCHITECTURE §13 | Storage shape only | Spatie + custom layer; tenant isolation, service scope and delegation ceilings stay in application services. Audit/activity logging is excluded by G0-DEC-01. | Engineering | Non-blocking |
 | Q-51 | DEC-10 requires "an authorized employee" for exceptional refunds. Which family approves — platform finance, or partner staff with `bookings.refund`? | DEC-10; D-03.14, D-04.5 | Refund approval table and permission | Policy refunds auto-execute; exceptional refunds require platform finance approval. Partner staff may request, not approve. | Finance | Blocking-4 |
 | Q-52 | When a discounted booking is cancelled, is the discount returned as cash or only reversed from the refundable amount? | DEC-03, BR-078 | Refund arithmetic, redemption reversal | Refund is based on the amount actually paid; the discount is reversed, never paid in cash. | Finance | Blocking-4 |
 
@@ -166,10 +167,10 @@ These follow the authorization audit in `../IMPLEMENTATION-GAP-ANALYSIS.md`. The
 
 The decisions are now organised into two approval boundaries (see the register §1.3):
 
-- **Gate 0A — authorization.** Blocks Phase A. Contains `G0-DEC-01`–`G0-DEC-05` (the five approved decisions), the **exact 85-key catalog content** (awaiting approval), **P-09** (`bookings.*`/`customers.view` stay closed to service providers — awaiting approval), the delegation and owner-template rules, and the empty-scope enforcement detail. Against the current 80-key seeder the catalog change is add 6, remove 1, rename 1 — not "9 additions and 3 removals", which is the wider union comparison.
+- **Gate 0A — authorization.** Blocks Phase A. Contains `G0-DEC-01`–`G0-DEC-05` (the five approved decisions), the **exact 85-key catalog content** (awaiting approval), **P-09** (`bookings.*`/`customers.view` stay closed to service providers — awaiting approval), implementation of the approved delegation and owner-template rules, and empty-scope enforcement in Phase A. Against the current 80-key seeder the catalog change is add 6, remove 1, rename 1 — not "9 additions and 3 removals", which is the wider union comparison.
 - **Gate 0B — business and integration.** Does **not** block Phase A. Contains notifications (G0.5), provider architecture and selection (G0.6), F-027/F-043/multi-city, **F-071 (no policy approved)**, and settlements (G0.8). Each blocks only the phase that depends on it.
 
-Q-09, Q-17 and Q-24 remain open and are linked to the `G0.7` items; Q-24 (tour cancellation) stays open until the owner approves an F-071 policy.
+Q-09, Q-17 and Q-24 remain open and are linked to the `G0.7` items; Q-24 (tour cancellation) stays open until the owner approves the tour-policy model for F-071.
 
 ---
 
