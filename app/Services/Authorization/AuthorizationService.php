@@ -232,7 +232,9 @@ class AuthorizationService
             return false;
         }
 
-        if (! $this->withinServiceScope($definition, $membership, $context['service'] ?? null)) {
+        $service = $context['service'] ?? null;
+
+        if (! $this->withinServiceScope($definition, $membership, $service)) {
             return false;
         }
 
@@ -247,7 +249,11 @@ class AuthorizationService
             $hotelId ??= $resource->getAttribute('hotel_id');
         }
 
-        if (is_numeric($hotelId) && ! $this->withinHotelScope($membership, (int) $hotelId)) {
+        if ($definition->scope_requirement === 'property') {
+            if (! is_numeric($hotelId) || ! $this->withinHotelScope($membership, (int) $hotelId)) {
+                return false;
+            }
+        } elseif (is_numeric($hotelId) && ! $this->withinHotelScope($membership, (int) $hotelId)) {
             return false;
         }
 
@@ -275,21 +281,25 @@ class AuthorizationService
      */
     private function withinServiceScope(Permission $permission, Membership $membership, ?string $service): bool
     {
-        if ($permission->scope_requirement !== 'service') {
+        $serviceScopedRequirements = ['service', 'property', 'service_resource', 'service_assignment'];
+
+        if (! in_array($permission->scope_requirement, $serviceScopedRequirements, true)) {
+            return true;
+        }
+
+        // Service identity must be supplied by trusted server-side route/resource context.
+        // An empty scope never means unrestricted access for an employee.
+        if ($service === null) {
+            return false;
+        }
+
+        if ($membership->is_owner) {
             return true;
         }
 
         $scoped = $membership->services();
 
-        if ($scoped === []) {
-            return true;
-        }
-
-        if ($service === null) {
-            return false;
-        }
-
-        return in_array($service, $scoped, true);
+        return $scoped !== [] && in_array($service, $scoped, true);
     }
 
     /**
@@ -297,11 +307,23 @@ class AuthorizationService
      */
     private function withinHotelScope(Membership $membership, int $hotelId): bool
     {
-        if ($membership->organization?->type !== Organization::TYPE_HOTEL) {
+        // Property restrictions apply to hotel organizations and multi-service
+        // providers alike. Owners span their organization's properties; employees
+        // need an explicit property scope (empty means no access).
+        if ($membership->is_owner) {
             return true;
         }
 
-        return $membership->isRestrictedToHotel($hotelId);
+        if (! in_array($membership->organization?->type, [
+            Organization::TYPE_HOTEL,
+            Organization::TYPE_SERVICE_PROVIDER,
+        ], true)) {
+            return false;
+        }
+
+        $ids = $membership->hotelIds();
+
+        return $ids !== [] && in_array($hotelId, $ids, true);
     }
 
     /**
