@@ -49,7 +49,7 @@ Gate 0 was a single list. It is now split so that the authorization work is not 
 |---|---|---|
 | Purpose | Everything Phase A (authorization and tenancy repairs) depends on | Everything later phases depend on |
 | Blocks | Phase A, and by consequence every later phase | Only the phase that needs the specific decision |
-| Items | `G0-DEC-01` … `G0-DEC-05`; the 85-key catalog content; P-09 (`bookings.*` / `customers.view` scope); delegation and owner-template rules; empty-scope fail-closed behaviour | Notification architecture and delivery; payment gateway, flight and eSIM provider selection; gateway partner-payout capability; F-027/F-043/F-071 and multi-city; settlement schema and lifecycle; other open feature decisions |
+| Items | `G0-DEC-01` … `G0-DEC-05`; the revised service-aware permission catalog; organization-enabled service and membership/resource scopes; delegation and owner-template rules; empty-scope fail-closed behaviour | Notification architecture and delivery; payment gateway, flight and eSIM provider selection; gateway partner-payout capability; F-027/F-043/F-071 and multi-city; settlement schema and lifecycle; other open feature decisions |
 | Sections | §4 | §5 |
 | Current state | **Ready for owner review** — no item needs information from outside the repository except the owner's yes | **Pending** — provider selection cannot be answered from the repository |
 
@@ -72,7 +72,7 @@ Gate 0A exists because Phase A needs a frozen permission catalog and unambiguous
 | 3 | `G0-DEC-03` | A hotel organization owns many properties; `hotels` is the property entity | **Approved** |
 | 4 | `G0-DEC-04` | Only platform staff holding `platform.visa_requests.decide` decide a visa | **Approved** |
 | 5 | `G0-DEC-05` | An empty scope means access to nothing | **Approved** |
-| 6 | **Catalog content** (§4.1) | 85 keys — 37 platform + 48 organization; vs the seeder: **+6 added, −1 removed, 1 renamed** | **Recommended — awaiting approval** |
+| 6 | **Catalog content** (§4.1) | Previous 85-key draft withdrawn; revised exact catalog and service eligibility matrix required | **Recommended — awaiting approval** |
 | 7 | **P-09** (§4.2) | Replaced by service-aware provider permission eligibility and organization/service/resource scopes | **Owner-approved direction; exact catalog pending** |
 | 8 | **Delegation and owner templates** (§4.3) | Family rule, non-delegable keys, owner-only actions and immutable owner templates (DEC-11–DEC-19) | **Approved — implementation in Phase A** |
 | 9 | **Empty scopes fail closed** (§4.4) | Approved semantics under `G0-DEC-05`; Phase A implements fail-closed query enforcement and pre-deploy checks | **Approved — implementation in Phase A** |
@@ -144,7 +144,7 @@ There is exactly one permission catalog, held in one place: the `permissions` ta
 
 **Dependencies.** Depends on `G0-DEC-01`, `G0-DEC-03`, `G0-DEC-04`. Blocks Phase A entirely, and Phases C–J.
 
-**Risks.** A wrong catalog mis-seeds every tenant at once, silently. Two specific hazards: (a) removing a key later breaks custom roles that reference it, so deletion must be a documented migration, not a seed refresh; (b) widening `bookings.*`/`customers.view` to service providers before their service catalog exists grants access to a business they cannot operate (P-09).
+**Risks.** A wrong catalog mis-seeds every tenant at once, silently. Two specific hazards: (a) removing a key later breaks custom roles that reference it, so deletion must be a documented migration, not a seed refresh; (b) granting a permission without checking the organization's enabled service and the member's service/resource scopes could expose unrelated tenant data.
 
 **Approval status:** **Approved in principle; catalog content recommended — awaiting approval** (§4.1).
 
@@ -319,7 +319,7 @@ Gate 0A needs these frozen because Phase A rewrites the grant paths. The source 
 
 ### 4.5 Gate 0A exit criteria
 
-Gate 0A is approved when the owner has confirmed §4.1 (85-key catalog content) and §4.2 (P-09). §4.3 and §4.4 are already approved decisions; Phase A must implement and test them. At that point Phase A may begin with: A1 empty-scope semantics, A2 assigned-only filters, A3 removal of the `X-Organization-Id` fallback, A4 transfer as remove + create, A5 invitation rotation, A6 grant reconciliation, A7 tenant middleware and policy enforcement, A8 the catalog keys and the `status_history.view` rename.
+Gate 0A is approved when the owner has confirmed the revised exact service-aware catalog, provider service eligibility matrix and the required eSIM provider workflow boundary. §4.3 and §4.4 are already approved decisions; Phase A must implement and test them. At that point Phase A may begin with: A1 empty-scope semantics, A2 assigned-only filters, A3 removal of the `X-Organization-Id` fallback, A4 transfer as remove + create, A5 invitation rotation, A6 grant reconciliation, A7 tenant middleware and policy enforcement, A8 the catalog keys and the `status_history.view` rename.
 
 Gate 0A does **not** include, and must not be delayed by: notification delivery design, provider selection, F-027/F-043/F-071, or settlements. Those are §5.
 
