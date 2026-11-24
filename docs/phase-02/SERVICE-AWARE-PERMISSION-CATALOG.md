@@ -139,7 +139,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `bookings.view` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | sensitive | View hotel/tour bookings and minimum guest context |
 | `bookings.create` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | sensitive | Create an eligible hotel/tour booking on behalf of a customer |
 | `bookings.update` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | sensitive | Modify eligible hotel/tour booking details |
-| `bookings.cancel` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | sensitive | Cancel an eligible hotel/tour booking under applicable policy |
+| `bookings.cancel` | bookings | Company + Hotel + Provider | Hotels | service_resource | sensitive | Cancel an eligible hotel booking under the persisted hotel rate policy |
 | `bookings.refund` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | financial | Request/initiate an eligible refund; platform workflow governs exceptional approvals |
 | `bookings.checkin` | bookings | Hotel + Provider | Hotels | property | normal | Check a hotel guest in |
 | `bookings.checkout` | bookings | Hotel + Provider | Hotels | property | normal | Check a hotel guest out |
