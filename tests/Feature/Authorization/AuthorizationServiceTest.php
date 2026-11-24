@@ -215,7 +215,7 @@ class AuthorizationServiceTest extends TestCase
         $this->assertFalse($this->authz->allows($user, 'rooms.view', $org));
     }
 
-    public function test_unscoped_employees_are_not_limited_by_service(): void
+    public function test_employee_with_empty_service_scope_is_denied(): void
     {
         $org = $this->organization(Organization::TYPE_HOTEL);
         $user = $this->user();
@@ -224,7 +224,7 @@ class AuthorizationServiceTest extends TestCase
         $permission = $this->permission('rooms.view', types: ['hotel'], scope: 'service');
         $this->assignRole($user, $this->role($org, [$permission]), $org);
 
-        $this->assertTrue($this->authz->allows($user, 'rooms.view', $org, ['service' => 'hotels']));
+        $this->assertFalse($this->authz->allows($user, 'rooms.view', $org, ['service' => 'hotels']));
     }
 
     public function test_hotel_property_scope_is_enforced(): void
@@ -240,9 +240,35 @@ class AuthorizationServiceTest extends TestCase
         $hotelB = $org->hotels()->create(['name' => ['en' => 'B'], 'city' => 'Aqaba']);
 
         $membership->hotelScopes()->create(['hotel_id' => $hotelA->id]);
+        MembershipServiceScope::create(['membership_id' => $membership->id, 'service' => 'hotels']);
 
-        $this->assertTrue($this->authz->allows($user, 'rates.update', $org, ['hotel_id' => $hotelA->id]));
-        $this->assertFalse($this->authz->allows($user, 'rates.update', $org, ['hotel_id' => $hotelB->id]));
+        $this->assertTrue($this->authz->allows($user, 'rates.update', $org, [
+            'service' => 'hotels',
+            'hotel_id' => $hotelA->id,
+        ]));
+        $this->assertFalse($this->authz->allows($user, 'rates.update', $org, [
+            'service' => 'hotels',
+            'hotel_id' => $hotelB->id,
+        ]));
+        $this->assertFalse($this->authz->allows($user, 'rates.update', $org, [
+            'service' => 'hotels',
+        ]));
+    }
+
+    public function test_owner_can_access_all_properties_without_employee_scopes(): void
+    {
+        $org = $this->organization(Organization::TYPE_HOTEL);
+        $user = $this->user();
+        $this->membership($user, $org, owner: true);
+
+        $permission = $this->permission('rates.view', types: ['hotel'], scope: 'property');
+        $this->assignRole($user, $this->role($org, [$permission]), $org);
+        $hotel = $org->hotels()->create(['name' => ['en' => 'Owner property'], 'city' => 'Amman']);
+
+        $this->assertTrue($this->authz->allows($user, 'rates.view', $org, [
+            'service' => 'hotels',
+            'hotel_id' => $hotel->id,
+        ]));
     }
 
     public function test_a_resource_from_another_tenant_is_denied(): void
