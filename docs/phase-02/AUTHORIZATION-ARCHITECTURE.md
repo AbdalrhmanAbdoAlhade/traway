@@ -643,3 +643,10 @@ Result: the reconciled catalog is **85 permission keys** — 37 platform, 48 org
 This separation is enforced three times: the role's family (§3.2), the record's owning organization (§4 L2), and the membership's service scope (§4 L3). No single control is trusted alone.
 
 
+
+
+## 15. Multi-service provider model (owner-approved direction)
+
+The authoritative service-provider model, permission-family boundaries, resource rules and Gate 0 consequences are defined in [`MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./MULTI-SERVICE-PROVIDER-AUTHORIZATION.md). This section supersedes any earlier wording that limits a service provider to one service type or treats generic `bookings.*` as the authorization model for every service.
+
+Implementation rule: organization-enabled services and membership service scopes are separate. Every organization-side query must enforce organization ownership, enabled service, membership service scope and applicable resource/property scope. Empty scope remains fail-closed under G0-DEC-05. Flights remain platform-only; visa final decisions remain platform-only under G0-DEC-04.
