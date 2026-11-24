@@ -56,13 +56,13 @@ Tour catalogue lifecycle (`draft`, `in_review`, `published`, `documents_required
 | Existing booking state | View | Fulfilment/status mutation | Provider cancellation | Refund action | Other edits |
 |---|---:|---|---|---|---|
 | `pending_payment` | Allow | Deny | Deny | Deny | Deny |
-| `confirmed` | Allow | **Not yet approved**: no partner booking-completion/attendance permission is currently specified in the catalog | **Allow** with the dedicated `tour_bookings.cancel` permission, only when the persisted tour cancellation policy disclosed at purchase permits cancellation and the booking is in an eligible state (BR-073/BR-077) | **Not approved**; no direct refund execution | Deny |
-| `completed` | Allow | Deny | Deny | **Not yet approved**; platform refund workflow only unless separately authorized | Deny |
+| `confirmed` | Allow | **Allow** with `tour_bookings.attendance` only for the actual scheduled tour session and within the provider's departure/resource scope | **Allow** with `tour_bookings.complete` only after the scheduled tour date/time is reached and the required fulfilment/attendance conditions pass | **Allow** with the dedicated `tour_bookings.cancel` permission, only when the persisted tour cancellation policy disclosed at purchase permits cancellation and the booking is in an eligible state (BR-073/BR-077) | **Not approved**; no direct refund execution | Deny |
+| `completed` | Allow | Deny | Deny | **Not approved**; platform refund workflow only unless separately authorized | Deny |
 | `cancelled` | Allow | Deny | Deny | View existing refund status only | Deny |
 | `refunded` | Allow | Deny | Deny | View only | Deny |
 | `expired` | Allow | Deny | Deny | View only | Deny |
 
-A confirmed tour booking remains readable under the original tour/departure/resource scope. During suspension, the provider may cancel it only through the dedicated `tour_bookings.cancel` action and only when the persisted policy version/terms applicable to that booking permit cancellation. This cancellation permission does not grant attendance, completion, arbitrary status-update or refund-execution rights. Tour fulfilment transitions remain unapproved and require a separate decision.
+A confirmed tour booking remains readable under the original tour/departure/resource scope. During suspension, an authorized provider may record attendance with `tour_bookings.attendance` and mark the booking `completed` with `tour_bookings.complete`, but only for the actual scheduled session, once its scheduled date/time has been reached, and after the configured fulfilment/attendance requirements pass. The provider may cancel it only through `tour_bookings.cancel` when the persisted policy version/terms applicable to that booking permit cancellation. These action-specific permissions do not grant arbitrary status updates, booking-field edits, price/payment changes or refund execution. The server must enforce valid state transitions and prevent attendance/completion before the scheduled session.
 
 ## 5. Visas — proposed allowlist
 
@@ -119,11 +119,10 @@ The server derives service, organization, record state and creation timestamp fr
 
 ## 9. Owner decisions still required
 
-The product direction Q-57 is approved. The owner has additionally approved direct hotel-booking cancellation under §3 and direct tour-booking cancellation under §4. This action matrix remains partially pending for other service actions.
+The product direction Q-57 is approved. The owner has approved direct hotel-booking cancellation under §3, direct tour-booking cancellation under §4, and action-specific tour attendance/completion under §4. This action matrix remains partially pending for other service actions.
 
 The owner must still decide:
 - whether hotel providers may initiate a refund request, and whether that is limited to cancellations/platform-approved cases;
-- whether tour providers may mark attendance/completion, and which booking states permit that transition;
 - whether tour providers may initiate a separate refund request, and under which policy/state conditions;
 - the exact visa partner-review states and any explicit partner-stage transitions before a request enters platform decision.
 
