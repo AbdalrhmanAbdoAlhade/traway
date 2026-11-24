@@ -332,11 +332,11 @@ Gate 0A does **not** include, and must not be delayed by: notification delivery 
 
 **Decision.** A single service-provider organization may operate multiple service lines. Organization-enabled services form the tenant capability boundary; each membership has its own service scope, and each service may have a further resource/property scope. Every check is intersected with explicit permissions and organization ownership. Empty scope means no access under G0-DEC-05.
 
-**Permission consequence.** P-09's previous blanket recommendation to deny all `bookings.*` and `customers.view` to service providers is superseded. Permissions are eligible only for the corresponding enabled service and are still restricted by membership service/resource scopes. `customers.view` is contextual/minimal for records the member may already access, not a customer directory. eSIM provider operations require a defined workflow before adding permission keys.
+**Permission consequence.** P-09's previous blanket recommendation to deny all `bookings.*` and `customers.view` to service providers is superseded. Permissions are eligible only for the corresponding enabled service and are still restricted by membership service/resource scopes. `customers.view` is contextual/minimal for records the member may already access, not a customer directory. eSIM is platform-only under owner decision Q-53; no provider eSIM permission keys or provider eSIM resource scopes are allowed.
 
 **Non-changes.** Flights remain platform-only. Final visa decisions remain restricted to authorized platform staff under G0-DEC-04. The centralized permission-catalog principle remains approved; the exact catalog and its count are not approved and must be recalculated.
 
-**Status.** Owner-approved direction; documentation updated 2026-11-24. Phase A remains blocked on the revised exact catalog, service eligibility matrix and provider eSIM workflow definition. See [`phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md).
+**Status.** Product directions Q-53–Q-56 approved by the owner on 2026-11-24. Phase A remains blocked on translating these directions into the exact catalog, service eligibility matrix, resource model and authorization enforcement; Q-55 remains blocked on detailed dashboard screen mapping. See [`phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md).
 
 ## 5. Gate 0B — Business and integration approval
 
@@ -672,6 +672,16 @@ Approve each line individually. Nothing in Phase A starts until Gate 0A is appro
 
 The active candidate catalog is [`phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`](./phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md). It preserves 37 platform and 48 organization candidate keys while introducing service applicability and scope requirements. The 85-key figure is a candidate count only, not an approved final catalog.
 
-**Gate 0A must now explicitly approve:** organization eligibility, enabled-service applicability, membership service scopes, resource/property scope requirements, owner-template derivation, contextual customer-data projection and the exclusion of provider-side eSIM operations until Q-53 is answered. Q-54 and Q-56 block authorization implementation; Q-55 blocks provider portal implementation.
+**Gate 0A must translate the owner-approved Q-53–Q-56 directions into:** organization eligibility, enabled-service lifecycle, membership service/resource scopes, owner-template derivation, contextual customer-data projection, platform-only eSIM boundaries and the unified dashboard's detailed screen mapping. Q-54 and Q-56 block authorization implementation; Q-55 blocks provider portal implementation.
 
 A code review also found a fail-closed mismatch: `Membership::isRestrictedToHotel()` currently treats no hotel-scope rows as unrestricted, while the approved property-scope rule requires no access for non-owner staff. Correct this before release and add negative tests. No code change is included in this documentation update.
+
+
+### 4.8 Owner decisions Q-53–Q-56 (2026-11-24)
+
+- **Q-53 — eSIM: A, Traway only.** Traway owns catalogue/packages, pricing/margin, customer orders, activation orchestration, failure handling, support, refunds and usage inquiries. No service-provider eSIM permissions, resource scopes, dashboard modules or queues. An external supplier/API is a Traway-controlled technical integration; vendor selection and credentials remain Gate 0B.
+- **Q-54 — service enablement: A, Traway-controlled.** Organization requests service; Platform Admin approves/rejects; only approved services are enabled. Organization owner manages staff within enabled services only. Traway can suspend/disable an individual service without deactivating the organization. Persistence, status transitions and effective-date behavior require Gate 0A design.
+- **Q-55 — provider portal: A, unified dashboard.** One shared shell/navigation exposes only enabled services and only the modules/data authorized for each employee. Home metrics are scoped. Service workflows, queues and reports remain service-specific. Exact screen/widget/action mapping must use supplied dashboard documentation; no invented screen IDs.
+- **Q-56 — scopes: A with support for B.** Hierarchical service-then-resource authorization. Membership service scope is the first boundary; resource/property/assignment scope further narrows access where the service has independently manageable resources. Hotels require property scope; Tours use applicable tour/departure/resource groups; Visas use assigned requests or authorized team queues. Service-only scope is acceptable only where no meaningful narrower resource boundary exists. Owner access remains bounded by organization-enabled services. Empty required scope denies access. eSIM is excluded by Q-53.
+
+These are approved product directions, not approval of a final permission-key count, schema, migration, UI screen inventory or implementation. Those artifacts must be reconciled and presented for review before code changes.
