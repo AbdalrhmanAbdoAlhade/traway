@@ -223,9 +223,9 @@ Organization `customers.view` is not a directory permission. It is a contextual 
 - [ ] Approve the 48 organization candidate keys and service applicability.
 - [ ] Approve organization eligibility metadata for company/hotel/service_provider.
 - [ ] Approve scope requirements, including service-resource and service-assignment enforcement.
-- [ ] Confirm that service enablement is controlled by Traway and is distinct from employee service scopes.
-- [ ] Resolve provider-side eSIM operations before adding eSIM organization permissions.
-- [ ] Confirm provider dashboard workflows and resource types before Phase A implementation.
+- [x] Service enablement is controlled by Traway and distinct from employee service scopes (Q-54 direction approved; schema/lifecycle details remain).
+- [x] Provider-side eSIM operations excluded: Traway-only business workflow (Q-53); no organization-side eSIM keys/scopes.
+- [x] Unified provider dashboard direction approved (Q-55); detailed screen mapping remains. Hierarchical service/resource scoping approved in principle (Q-56); per-service resource mapping remains.
 
 **No application code, migration, Seeder, authorization config or tests are changed by this catalog proposal.**
 
@@ -234,7 +234,7 @@ Organization `customers.view` is not a directory permission. It is a contextual 
 
 The current `permissions` model/Seeder stores `allowed_org_types` and `scope_requirement`, but the catalog's service applicability is not currently represented as a dedicated permission attribute. The existing `membership_service_scopes` relationship and `config/authorization.php` service-scope values do not, by themselves, prove that an organization has a service enabled or that a permission is valid for that service.
 
-Before implementation, the schema/authorization design must explicitly decide how to persist and enforce:
+Owner decisions Q-53–Q-56 now establish the product direction. Before implementation, the schema/authorization design must explicitly decide how to persist and enforce:
 - organization-enabled services (platform-approved capabilities);
 - permission-to-service applicability;
 - membership-to-service scopes;
@@ -244,3 +244,13 @@ Before implementation, the schema/authorization design must explicitly decide ho
 Do not treat `allowed_org_types` as service enablement. Do not use `flights` in organization-side service grants in this release, even though the legacy shared service-scope enum contains that value.
 
 **Existing code review finding:** `Membership::isRestrictedToHotel()` currently treats an empty hotel-scope list as unrestricted (`$ids === [] || ...`), while G0-DEC-03/G0-DEC-05 and the approved authorization design require an empty property scope to grant no access to non-owner staff. This is a code-level authorization gap that must be corrected and covered by negative tests before release. No code was changed in this documentation pass.
+
+
+### Owner-approved scope and service boundaries — 2026-11-24
+
+- Organization service enablement is a Traway-administered approval lifecycle: request → approve/reject → enabled; a single service can be suspended independently of the organization.
+- Membership service scope is the first employee boundary. Resource/property/assignment scope further narrows access where the service has independently manageable resources.
+- Hotel non-owner staff require explicit property scopes. Tour staff are scoped to applicable tours/departures/resource groups. Visa staff are scoped to assigned requests or explicitly authorized team queues. Service-only scope is valid only when no narrower resource boundary is meaningful for that workflow.
+- Protected organization owners can access all resources only inside services enabled for their organization; this is not platform-wide access.
+- eSIM is entirely platform-operated under Q-53 and must not appear in organization-side permission applicability, service scopes, resource scopes or provider dashboard modules.
+- Provider portal direction is one unified dashboard with service-specific modules, queues and reports; exact UI mapping remains a documentation task.
