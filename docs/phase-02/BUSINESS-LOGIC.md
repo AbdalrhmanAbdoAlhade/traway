@@ -232,6 +232,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 | BR-123 | Exactly one active owner exists per organization. Ownership is transferred atomically, the owner role is immutable, and the last active owner cannot be removed or demoted. | D-04.7, D-05.5; authorization requirement | D |
 | BR-124 | Role, permission, membership and service-scope changes take effect on the next request (`permissions_version`, PE-12). They do not create a general audit record; `G0-DEC-01` excludes audit and activity logs. | D-04.8, D-03.15; G0-DEC-01 | D |
 | BR-125 | Deactivating or removing a membership revokes its sessions immediately. Roles, grants and service scopes never carry to another organization. | D-04.2, D-04.7; authorization requirement | D |
+| BR-126 | Organization service availability and membership service access are separate authorization facts. Traway controls which service lines are enabled for an organization; an organization owner cannot self-enable a service. A non-owner may use a service only when it is enabled for the organization and explicitly included in that membership's service scope. Resource/property/assignment scope further narrows access. The exact persistence schema and enable/disable workflow remain open under `Q-54` and `Q-56`. | Owner-confirmed multi-service organization rule; `DASHBOARD-PERMISSION-MAPPING.md`; G0-DEC-05 | D |
 
 ---
 
@@ -239,7 +240,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 
 | Check | Result |
 |---|---|
-| Rules defined | 125 (BR-001 – BR-125) |
+| Rules defined | 126 (BR-001 – BR-126) |
 | Confirmed (`C`) | 63 |
 | Decision-backed (`D`) | 28 |
 | Inferred (`I`) | 31 |
