@@ -243,7 +243,7 @@ An empty property, organization or resource scope grants access to **nothing**. 
 
 Everything Phase A depends on. Gate 0A is independently reviewable: no item below needs information that is not in this repository.
 
-### 4.1 The exact catalog content — 85 keys
+### 4.1 Revised service-aware catalog content
 
 **Current documented situation.**
 The principle is approved (`G0-DEC-02`), but the catalog itself is not: 83 documented, 84 by naive extraction, 78 in a stale self-check, 80 implemented, 88 in the union. Six documented keys are missing from the seeder; four seeded keys are undocumented; `platform.audit.view` exists only as a mention in a validation note; the non-delegable table in `AUTHORIZATION-ARCHITECTURE.md` §7.2 cites a key (`org.delete`) that exists nowhere. Full evidence in `PERMISSION-CATALOG-RECONCILIATION.md`.
@@ -285,13 +285,15 @@ The earlier draft of this register described "9 additions and 3 removals". That 
 
 **Approval status:** **Recommended — awaiting approval.**
 
-### 4.2 P-09 — `bookings.*` and `customers.view` and service providers
+### 4.2 P-09 — service-aware permissions for multi-service providers
 
-The documented matrix gives `bookings.*` and `customers.view` to org type `All`, which includes service providers. The implementation restricts both to `['company','hotel']`. No service-provider service catalogue, offering type or booking flow is defined anywhere, and `service_provider_owner` holds structural keys only with commission at 0 BP.
+The owner confirmed that one service-provider organization may operate multiple service lines. The former blanket restriction of `bookings.*` and `customers.view` to company/hotel organization types is superseded.
 
-**Recommendation.** **Keep both families closed to service providers for now** (`['company','hotel']`), and record the narrowing as deliberate in the matrix. Widening later is additive, needs no migration, and can be approved when the provider service catalogue exists. Opening them now would give a tenant access to a business it cannot operate, including guest data, with no corresponding capability to justify it.
+**Approved direction.** Permission eligibility is service-aware, not a blanket allow/deny by provider type. A provider may use only operations belonging to services enabled for its organization, and each employee is further restricted by explicit membership service scope and resource/property scope. Generic booking permissions do not authorize visa or eSIM workflows. Customer contact is a minimal contextual projection for records already authorized through a service, never directory access.
 
-**Impact.** No schema change; one catalog metadata value (`allowed_org_types`) and the matrix's `All` wording. **Approval status:** **Recommended — awaiting approval.**
+**Non-changes.** Flights remain platform-only. Final visa decisions remain platform-only. eSIM operational permission keys are not added until provider order/activation responsibilities are defined.
+
+**Impact.** The exact catalog, allowed service metadata and scope requirements must be recalculated before Phase A. The old 85-key draft is not a seed target. **Approval status:** owner-approved direction; exact catalog pending.
 
 ### 4.3 Delegation and owner-template rules
 
@@ -324,6 +326,17 @@ Gate 0A is approved when the owner has confirmed the revised exact service-aware
 Gate 0A does **not** include, and must not be delayed by: notification delivery design, provider selection, F-027/F-043/F-071, or settlements. Those are §5.
 
 ---
+
+
+### 4.6 Owner-approved multi-service provider authorization direction (2026-11-24)
+
+**Decision.** A single service-provider organization may operate multiple service lines. Organization-enabled services form the tenant capability boundary; each membership has its own service scope, and each service may have a further resource/property scope. Every check is intersected with explicit permissions and organization ownership. Empty scope means no access under G0-DEC-05.
+
+**Permission consequence.** P-09's previous blanket recommendation to deny all `bookings.*` and `customers.view` to service providers is superseded. Permissions are eligible only for the corresponding enabled service and are still restricted by membership service/resource scopes. `customers.view` is contextual/minimal for records the member may already access, not a customer directory. eSIM provider operations require a defined workflow before adding permission keys.
+
+**Non-changes.** Flights remain platform-only. Final visa decisions remain restricted to authorized platform staff under G0-DEC-04. The centralized permission-catalog principle remains approved; the exact catalog and its count are not approved and must be recalculated.
+
+**Status.** Owner-approved direction; documentation updated 2026-11-24. Phase A remains blocked on the revised exact catalog, service eligibility matrix and provider eSIM workflow definition. See [`phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md).
 
 ## 5. Gate 0B — Business and integration approval
 
@@ -623,8 +636,8 @@ Approve each line individually. Nothing in Phase A starts until Gate 0A is appro
 
 **Awaiting your approval**
 
-- [ ] **§4.1 Catalog content** — adopt the **85-key** catalog (37 platform + 48 organization) exactly as listed in `PERMISSION-CATALOG-RECONCILIATION.md`. Against the current 80-key seeder: **add 6** (`platform.settings.manage`, `properties.view`, `properties.create`, `properties.update`, `properties.publish`, `settlements.accounts.manage`), **remove 1** (`org.profile.publish`), **rename 1** (`team_activity.view` → `status_history.view`), narrow 1 description, add `settlements.accounts.manage` to the non-delegable list.
-- [ ] **§4.2 P-09** — keep `bookings.*` and `customers.view` closed to `service_provider` for now.
+- [ ] **§4.1 Catalog content** — derive and approve the revised exact permission catalog with service-aware eligibility and scope requirements. The former 85-key proposal is withdrawn as a seed target.
+- [ ] **§4.2 Provider service/resource matrix** — approve enabled-service eligibility, employee service scopes, resource/property scopes, contextual customer-data rules and the eSIM operational boundary.
 - [ ] **§4.3 Delegation and owner templates** — family rule, 8 non-delegable keys, 3 owner-only actions, 3 immutable templates, grant ceiling.
 - [ ] **§4.4 Empty-scope enforcement detail** — query-layer filter, ownership as the explicit full-access grant, pre-deploy data check, migration comment correction.
 
@@ -649,18 +662,7 @@ Approve each line individually. Nothing in Phase A starts until Gate 0A is appro
 
 ### Explicit non-goals
 
-- No Phase A work started. No implementation phase started.
-- No application code, migration, model, service, controller, policy, middleware, route, seeder or test modified.
-- No `.env` change, no migration run, no database change, no dependency change.
-- Nothing committed or pushed.
+- No Phase A implementation started.
+- This documentation-only update is committed to `main`; no application code, migration, model, service, controller, policy, middleware, route, seeder or test was modified.
+- No `.env` change, migration run, database change or dependency change.
 
-
-### 4.6 Owner-approved multi-service provider authorization direction (2026-11-24)
-
-**Decision.** A single service-provider organization may operate multiple service lines. Organization-enabled services form the tenant capability boundary; each membership has its own service scope, and each service may have a further resource/property scope. Every check is intersected with explicit permissions and organization ownership. Empty scope means no access under G0-DEC-05.
-
-**Permission consequence.** P-09's previous blanket recommendation to deny all `bookings.*` and `customers.view` to service providers is superseded. Permissions are eligible only for the corresponding enabled service and are still restricted by membership service/resource scopes. `customers.view` is contextual/minimal for records the member may already access, not a customer directory. eSIM provider operations require a defined workflow before adding permission keys.
-
-**Non-changes.** Flights remain platform-only. Final visa decisions remain restricted to authorized platform staff under G0-DEC-04. The centralized permission-catalog principle remains approved; the exact catalog and its count are not approved and must be recalculated.
-
-**Status.** Owner-approved direction; documentation updated 2026-11-24. Phase A remains blocked on the revised exact catalog, service eligibility matrix and provider eSIM workflow definition. See [`phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md).
