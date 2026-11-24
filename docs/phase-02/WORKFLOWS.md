@@ -365,7 +365,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 * E1 — Missing price: the mobile placeholder proves the fee is administered here; Platform Admin or the publishing company sets it (DEC-06).
 * E2 — Provider sync failure: availability must not silently change (Q-32).
 
-**Postconditions:** published catalogue values; audited change (BR-107).
+**Postconditions:** published catalogue values; applicable business status transitions are recorded in `status_histories`; no general audit record is created (G0-DEC-01).
 **Rules:** BR-007, BR-008, BR-054, BR-107.
 **Open:** Q-32.
 
@@ -441,7 +441,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 **Main flow (support)**
 1. Customer opens customer service: WhatsApp, phone callback, working hours (M-055).
 2. Issue resolved externally, or escalated to a refund request (notification type «refund request» on D-03.2).
-3. In-policy refunds execute automatically; exceptional refunds require an authorised approver (platform finance by default, Q-51), are audited, and have no fixed monetary threshold (DEC-10).
+3. In-policy refunds execute automatically; exceptional refunds require an authorised approver (platform finance by default, Q-51), are approved under the configured permission boundary, with no general audit entry (G0-DEC-01), and have no fixed monetary threshold (DEC-10).
 4. Customer sees the refund in payment history with status `processing` → `refunded` (M-051).
 
 **Main flow (deletion)**
@@ -481,7 +481,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 4. Owner optionally adds a **bounded direct grant** to one employee for one extra capability, visible as an exception.
 5. The system validates every grant against the grantor's ceiling (BR-084, BR-122) and rejects escalation instead of trimming it silently.
 6. Invitation is sent; on acceptance the employee receives the resolved permission set for that membership.
-7. Any later change increments the membership version; the new set applies on the next request (BR-124) and the change is audited.
+7. Any later change increments the membership version; the new set applies on the next request (BR-124) and the change creates no general audit entry (G0-DEC-01).
 
 **Alternate flows**
 * A1 — Service owner performs steps 2–4 only inside their service scope; a broader scope or permission is rejected.
@@ -494,7 +494,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 * E3 — Role deleted while members still hold it → blocked until reassignment (RA-07).
 * E4 — Last active owner deactivated, removed or demoted → blocked (BR-123).
 
-**Postconditions:** effective permissions updated, membership version incremented, audit entry written, sessions adjusted.
+**Postconditions:** effective permissions updated, membership version incremented, sessions adjusted; no general audit entry is written (G0-DEC-01).
 **Rules:** BR-084, BR-085, BR-087 – BR-089, BR-111, BR-119 – BR-125.
 **Open:** Q-41, Q-48, Q-49, Q-50 (all non-blocking).
 
