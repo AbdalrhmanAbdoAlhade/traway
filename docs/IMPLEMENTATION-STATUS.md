@@ -27,7 +27,7 @@ Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and
 | P-09 / P-10 | Blanket exclusion of provider bookings/customer context | **Superseded** — use service-specific permission families and contextual customer visibility; do not restore blanket grants |
 | Delegation | Family rule, non-delegable list, owner-only actions, owner templates | **Awaiting final Gate 0A approval** |
 | Empty-scope enforcement | Query-layer filter, ownership as the explicit grant, fail-closed service/property/resource scopes | **Principle approved (`G0-DEC-05`); code enforcement still pending** |
-| Organization service enablement | Request → Platform Admin approve/reject → enable; independent per-service suspension | **Direction approved — Q-54 A; schema/lifecycle design remains** |
+| Organization service enablement | Request → Platform Admin approve/reject → enable; per-service suspension blocks new intake but preserves authorized servicing of existing records (Q-57 B) | **Directions approved — Q-54 A + Q-57 B; lifecycle/action matrix remains** |
 | Resource scope by service | Hierarchical service → property/resource/assignment scope; service-only where no narrower boundary is meaningful | **Direction approved — Q-56 A with B support; per-service mapping remains** |
 | eSIM business ownership | Traway-only catalogue, pricing/margin, orders, activation, failure handling, support, refunds and usage inquiries | **Answered — Q-53 A; no organization-side eSIM permissions/scopes** |
 | Unified provider dashboard | One shell; enabled-service modules; scoped home metrics; service-specific queues/reports | **Direction approved — Q-55 A; detailed screen mapping remains** |
@@ -199,7 +199,7 @@ This section supersedes stale Gate 0A and open-question summaries above where th
 - **Flights:** platform-only in the current product scope.
 - **Visa decisions:** final approve/reject authority remains platform-only under `G0-DEC-04`; partner-side document review remains distinct.
 - **Customer data:** contextual and minimum-necessary; no unrestricted partner customer directory is implied.
-- **Remaining design blockers:** exact permission catalog and metadata; Q-54 persistence/status lifecycle; Q-55 detailed screen mapping; Q-56 per-service resource mapping. Q-53 is answered: eSIM is platform-only.
+- **Remaining design blockers:** exact permission catalog and metadata; Q-54/Q-57 persistence, lifecycle and existing-record action matrix; Q-55 detailed screen mapping; Q-56 per-service resource mapping. Q-53 is answered: eSIM is platform-only.
 - **Implementation state:** no implementation change is recorded by this update. The next work is Gate 0A decision closure and a source-to-source code verification before any migration or policy changes.
 
 The implementation baseline and historical command/test results above are preserved as recorded evidence; they were not rerun during this documentation update.
