@@ -5,6 +5,7 @@ namespace App\Services\Authorization;
 use App\Models\Membership;
 use App\Models\Organization;
 use App\Models\Permission;
+use App\Models\OrganizationService;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -290,6 +291,18 @@ class AuthorizationService
         // Service identity must be supplied by trusted server-side route/resource context.
         // An empty scope never means unrestricted access for an employee.
         if ($service === null) {
+            return false;
+        }
+
+        // Service enablement is a hard capability boundary for owners and employees.
+        // Old membership scopes never reactivate a suspended/disabled service.
+        $enabled = OrganizationService::query()
+            ->where('organization_id', $membership->organization_id)
+            ->where('service', $service)
+            ->where('status', OrganizationService::STATUS_ENABLED)
+            ->exists();
+
+        if (! $enabled) {
             return false;
         }
 
