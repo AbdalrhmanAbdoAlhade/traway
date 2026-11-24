@@ -2,7 +2,7 @@
 
 **Project:** Traway
 **Date:** 2026-11-24
-**Status:** Gate 0A open — **5 architectural decisions approved; the exact catalog and P-09 await owner approval. Delegation, owner-template and empty-scope semantics are already approved; Phase A implements them.** Gate 0B open — **6 business/integration items awaiting approval.**
+**Status:** Gate 0A open — **5 architectural decisions approved; the revised service-aware catalog, service enablement model and resource scopes await approval.** Delegation, owner-template and empty-scope semantics are already approved; Phase A implements them. Gate 0B open — **6 business/integration items awaiting approval.**
 **Source of the blocking list:** `IMPLEMENTATION-GAP-ANALYSIS.md` §11 "Gate 0"
 **Companion documents:** [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md) · [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md) · [`IMPLEMENTATION-STATUS.md`](./IMPLEMENTATION-STATUS.md) · [`phase-02/OPEN-QUESTIONS.md`](./phase-02/OPEN-QUESTIONS.md) · [`README.md`](./README.md)
 
@@ -132,7 +132,7 @@ The deliberate trade-off: after-the-fact reconstruction of *who changed a permis
 Four conflicting counts: 83 (matrix catalog tables), 84 (naive extraction, inflated by the phantom `platform.audit.view`), 78 (matrix §9 stale self-check), 80 (seeder). Six documented keys are missing from the seeder and four seeded keys are undocumented. Full analysis in `PERMISSION-CATALOG-RECONCILIATION.md`. Conflict **C-02**, with C-03, C-04 and C-17 attached.
 
 **Decision (approved in principle).**
-There is exactly one permission catalog, held in one place: the `permissions` table for content and metadata, `config/authorization.php` for delegability, owner templates, families and owner-only actions. **The content of that catalog is not approved by this decision** — it is the 85-key list in §4.1 and `PERMISSION-CATALOG-RECONCILIATION.md` §4–5, and it awaits explicit approval.
+There is exactly one permission catalog, held in one place: the `permissions` table for content and metadata, `config/authorization.php` for delegability, owner templates, families and owner-only actions. **The content of that catalog is not approved by this decision.** The historical 85-key proposal is withdrawn; the active candidate is `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md` and awaits explicit approval of its keys, service applicability and scope metadata.
 
 **Reasoning.** The count cannot be chosen by majority or by seniority of document — it has to be derived from capabilities. The reconciliation unions what the documents require with what the implementation enforces, then removes only what an approved Gate 0 decision makes impossible (`audit.view`, `update_status`) or redundant (`org.profile.publish`). Keeping the split established in Phase 0 (metadata in the table, delegability in config) preserves the single source of truth.
 
@@ -249,7 +249,7 @@ Everything Phase A depends on. Gate 0A is independently reviewable: no item belo
 The principle is approved (`G0-DEC-02`), but the catalog itself is not: 83 documented, 84 by naive extraction, 78 in a stale self-check, 80 implemented, 88 in the union. Six documented keys are missing from the seeder; four seeded keys are undocumented; `platform.audit.view` exists only as a mention in a validation note; the non-delegable table in `AUTHORIZATION-ARCHITECTURE.md` §7.2 cites a key (`org.delete`) that exists nowhere. Full evidence in `PERMISSION-CATALOG-RECONCILIATION.md`.
 
 **Recommended decision.**
-Adopt the **85-key** catalog: **37 platform + 48 organization**, exactly as listed in `PERMISSION-CATALOG-RECONCILIATION.md` §4–5.
+Review and approve the revised service-aware candidate catalog: 37 platform + 48 organization candidate keys, as listed in `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`. The count is provisional until exact keys and metadata are approved.
 
 **Two different baselines — do not mix them.**
 
@@ -565,7 +565,7 @@ Every conflict from `IMPLEMENTATION-GAP-ANALYSIS.md` §9, with its status after 
 | C-03 | `properties.*` vs hotels-as-profile | **RESOLVED** | `G0-DEC-03` — `hotels` is the property entity; `properties.*` canonical; `org.profile.publish` removed |
 | C-04 | Visa transition authority | **RESOLVED** | `G0-DEC-04` — platform-only decision; `update_status` removed; company review retained |
 | C-05 | Role naming/count (`org_owner` vs `company_owner`, R-18/R-19) | **Partially resolved** | Canonical names are the seeded `company_owner`/`hotel_owner`/`service_provider_owner`. Role **count** still differs (docs list 19, seeder creates 5 platform + 11 templates = 16). Documentation sub-item under Gate 0A; no code impact |
-| C-06 | `bookings.view` organization scope | **OPEN** | P-09 (§4.2) — recommend `['company','hotel']` until the service-provider catalogue exists |
+| C-06 | `bookings.view` organization scope | **SUPERSEDED** | Service-aware eligibility and resource scoping in `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`; no blanket provider deny/allow |
 | C-07 | Tenant context from `X-Organization-Id` header | **OPEN — not a Gate 0 decision** | Phase A item A3 (remove the header fallback) |
 | C-08 | Empty scope = all vs none | **RESOLVED** | `G0-DEC-05` + §4.4 — empty means nothing; fail closed |
 | C-09 | Membership transfer mutates `organization_id` | **OPEN — not a Gate 0 decision** | Phase A item A4 (remove + create, clear scopes) |
@@ -593,10 +593,10 @@ Corrections identified while producing this register. Status is per document; no
 | D-02 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §9 | Row 1 → 85 (37+48); row 2 no longer cites `platform.audit.view`; row 5 → 48/48 | **Applied** |
 | D-03 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3.1 | Remove the `update_status` row; narrow the `review` description; add `assign` and `decide`; correct F-115 → F-096/F-108 | **Applied** |
 | D-04 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §3.2 | Add `visa_requests.review`; rename `team_activity.view` → `status_history.view`; correct F-113 → F-101/F-106 | **Applied** |
-| D-05 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §4, §5, §8 | New keys added to the role tables; `status_history.view` renamed in every table; service-provider note for P-09 | **Applied** |
+| D-05 | `ROLE-PERMISSION-SCOPE-MATRIX.md` §4, §5, §8 | New keys added to the role tables; `status_history.view` renamed in every table; service-aware provider eligibility note and catalog link | **Applied** |
 | D-06 | `AUTHORIZATION-ARCHITECTURE.md` §7.2/§8 | `org.delete` is an owner-only **action**, not a permission — reworded | **Applied** |
 | D-07 | `AUTHORIZATION-ARCHITECTURE.md` §11 | No change required — §11 already states audit is removed, now confirmed policy under `G0-DEC-01` | **No change required** |
-| D-08 | `FEATURES-CATALOG.md` F-112 | Retitled "Dynamic roles and permissions"; audit clause dropped; catalog reference updated to 85 keys | **Applied** |
+| D-08 | `FEATURES-CATALOG.md` F-112 | Retitled "Dynamic roles and permissions"; audit clause dropped; catalog reference updated to the service-aware candidate catalog | **Applied** |
 | D-09 | `BUSINESS-LOGIC.md` BR-107, BR-111, BR-124 | Marked superseded by `G0-DEC-01`, original text preserved | **Applied** |
 | D-10 | `BUSINESS-LOGIC.md` BR-121 | Consistent with `G0-DEC-05`; pointer added | **Applied** |
 | D-11 | `phase-02/OPEN-QUESTIONS.md` Q-38, Q-46, Q-49 | Answered by `G0-DEC-01`, `G0-DEC-04`, `G0-DEC-03` | **Applied** |
