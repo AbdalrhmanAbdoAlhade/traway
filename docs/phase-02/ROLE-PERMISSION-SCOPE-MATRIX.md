@@ -55,7 +55,7 @@ Two families are kept separate throughout:
 
 ---
 
-## 3. Permission catalog (85 keys — proposed, pending Gate 0A approval)
+## 3. Permission catalog (85-key historical draft — withdrawn pending service-aware recalculation)
 
 This catalog is the reconciled canonical set from `../PERMISSION-CATALOG-RECONCILIATION.md` (37 platform + 48 organization). The centralized-catalog principle is approved (`G0-DEC-02`); **the exact keys are not yet approved**. Compared with the current 80-key seeder it adds 6 keys, removes 1 (`org.profile.publish`) and renames 1 (`team_activity.view` → `status_history.view`).
 
@@ -294,30 +294,9 @@ Former keys, retained here so no reader mistakes them for active permissions: `p
 
 ### 4.4 Service provider role
 
-P-09 recommendation: Service Providers do not receive booking or customer permissions until their service catalogue, offering model, and booking lifecycle are explicitly defined.
+R-19 is a protected organization-owner template for an organization that may have **multiple enabled service lines**. Its effective service reach is limited to the organization's enabled services; it does not include every platform service.
 
-| Permission | R-19 Provider owner |
-|---|---|
-| `org.profile.view` | ● |
-| `org.profile.update` | ● |
-| `org.documents.manage` | ● |
-| `org.notifications.view` | ● |
-| `employees.view` | ● |
-| `employees.create` | ● |
-| `employees.update` | ● |
-| `employees.deactivate` | ● |
-| `roles.view` | ● |
-| `roles.manage` | ● |
-| `roles.assign` | ● |
-| `reports.view` | ● |
-| `reports.export` | ● |
-| `settlements.view` | ● |
-| `settlements.manage` | ● |
-| `settlements.accounts.manage` | ● |
-
-The R-19 role receives no `bookings.*` or `customers.view` permissions.
-
-This is the proposed assignment pending explicit P-09 approval. It does not authorize access to customer bookings through another permission or an unscoped endpoint.
+The exact permission assignment for R-19 is **withdrawn pending catalog recalculation**. Do not treat the previous structural-only table or blanket denial of `bookings.*` and `customers.view` as current policy. See §10 and `MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`.
 
 ### 4.5 Assignment summary
 
