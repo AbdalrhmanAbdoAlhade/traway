@@ -437,3 +437,20 @@ Separate **new-intake authorization** from **existing-record servicing authoriza
 - Add tests proving that suspension blocks new intake but allows only the allowlisted existing-record actions, denies records created after cutoff, denies cross-tenant/resource/assignment access, and never unlocks unrelated operations.
 
 **Partially defined:** the proposed Hotels/Tours/Visas action matrix is in [SERVICE-SUSPENSION-ACTION-MATRIX.md](./SERVICE-SUSPENSION-ACTION-MATRIX.md). The owner has approved direct cancellation of an existing eligible hotel booking during suspension when the provider holds `bookings.cancel` and the persisted hotel rate policy permits it. The owner has also approved direct cancellation of an existing eligible tour booking with the distinct `tour_bookings.cancel` permission when the persisted tour policy disclosed at purchase permits it. Neither permission grants refund execution. The owner has also approved `tour_bookings.attendance` and `tour_bookings.complete` for existing confirmed tour bookings during suspension, limited to the actual scheduled session and only after its scheduled date/time and configured fulfilment conditions are satisfied. These permissions do not authorize arbitrary booking edits or price/payment changes. Owner approval is still required for visa partner-stage transitions, provider refund actions, settlements, in-progress supplier calls and service reactivation. This matrix must be approved before implementation.
+
+
+### 10.10 Visa partner request for missing/replacement documents — owner-approved Q-57 action (2026-11-24)
+
+The owner approves a distinct organization permission: `visa_requests.request_documents`.
+
+- A partner member may issue a missing/replacement-document request only for a pre-existing visa request that remains within the member's assigned request or explicitly authorized team queue.
+- The action may transition the request to the customer-visible `Documents Required` state only when at least one mandatory document is missing or rejected, as determined from persisted document records and the mandatory-document rules in BR-095.
+- `visa_requests.review` remains a separate permission for validating submitted/re-uploaded documents. Reviewing documents alone does not grant permission to issue a customer request or change the request stage.
+- Do not create a duplicate outstanding request. Do not permit arbitrary stage changes, partner transitions into platform decision, or partner movement of a request back from platform decision to customer-document collection.
+- The action remains subject to organization ownership, enabled/service lifecycle rules, membership Visas scope, assignment/team-queue authorization, record state and the existing-record cutoff during suspension.
+- Final approval/rejection remains platform-only and requires `platform.visa_requests.decide`. This permission does not confer any final decision authority.
+- Any customer notification is a backend side effect of the document-request workflow and must use the established notification mechanism; it is not a separate authorization grant.
+
+This approval defines only the `Documents Required` transition. No other partner-side visa stage transition is approved by implication.
+
+**Implementation status:** design decision only. No application code, migration, Seeder, policy, notification implementation or tests were changed.
