@@ -55,9 +55,9 @@ Two families are kept separate throughout:
 
 ---
 
-## 3. Permission catalog (85-key historical draft — withdrawn pending service-aware recalculation)
+## 3. Permission catalog (historical matrix — superseded for eligibility)
 
-This catalog is the reconciled canonical set from `../PERMISSION-CATALOG-RECONCILIATION.md` (37 platform + 48 organization). The centralized-catalog principle is approved (`G0-DEC-02`); **the exact keys are not yet approved**. Compared with the current 80-key seeder it adds 6 keys, removes 1 (`org.profile.publish`) and renames 1 (`team_activity.view` → `status_history.view`).
+The detailed service-aware candidate catalog is now maintained in [`SERVICE-AWARE-PERMISSION-CATALOG.md`](./SERVICE-AWARE-PERMISSION-CATALOG.md). This document's old 85-key tables and role assignment grids are retained as historical evidence only; their organization-type eligibility and provider assignments must not be used as implementation rules. The centralized-catalog principle is approved (`G0-DEC-02`), but the revised exact keys, service applicability and scope metadata remain pending Gate 0A approval.
 
 ### 3.1 Platform family (37)
 
@@ -101,7 +101,7 @@ This catalog is the reconciled canonical set from `../PERMISSION-CATALOG-RECONCI
 | `platform.organization_access.view` | access | Sensitive | View memberships, roles and grants of any organization | — (D) | F-112 |
 | `platform.organization_access.manage` | access | Access-control | Assign roles and permissions to owners and employees of any organization | — (D) | F-112 |
 
-### 3.2 Organization family (48)
+### 3.2 Organization family (48 — historical eligibility, superseded)
 
 Org type values:
 - Company + Hotel.
@@ -296,7 +296,7 @@ Former keys, retained here so no reader mistakes them for active permissions: `p
 
 R-19 is a protected organization-owner template for an organization that may have **multiple enabled service lines**. Its effective service reach is limited to the organization's enabled services; it does not include every platform service.
 
-The exact permission assignment for R-19 is **withdrawn pending catalog recalculation**. Do not treat the previous structural-only table or blanket denial of `bookings.*` and `customers.view` as current policy. See §10 and `MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`.
+The exact permission assignment for R-19 is defined as a candidate in [`SERVICE-AWARE-PERMISSION-CATALOG.md`](./SERVICE-AWARE-PERMISSION-CATALOG.md) §4 and remains pending Gate 0A approval. Do not treat the previous structural-only table or blanket denial of `bookings.*` and `customers.view` as current policy.
 
 ### 4.5 Assignment summary
 
@@ -451,6 +451,8 @@ These are operational domain records, not an audit log. The system does not reta
 
 
 ## 10. Multi-service provider matrix — authoritative update (2026-11-24)
+
+See [`SERVICE-AWARE-PERMISSION-CATALOG.md`](./SERVICE-AWARE-PERMISSION-CATALOG.md) for the complete 37-platform / 48-organization candidate catalog, service applicability and scope requirements. The old tables in §§3–4 are historical and must not be used to derive Seeder eligibility.
 
 R-19 (`service_provider_owner`) represents an organization that may have **multiple enabled service lines**, not a single provider category. Its organization-wide scope means all services enabled for that organization; it does not mean all platform services. Employees may have multiple explicit service scopes, each intersected with the applicable resource/property scope. Empty service/resource scope grants nothing.
 
