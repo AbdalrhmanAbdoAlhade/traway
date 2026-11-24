@@ -70,7 +70,7 @@ class RolesAndPermissionsSeeder extends Seeder
             return 'platform_global';
         }
 
-        $serviceScoped = ['tours.', 'visa_requests.', 'visa_offerings.', 'rooms.', 'rates.'];
+        $serviceScoped = ['bookings.', 'tours.', 'tour_bookings.', 'visa_requests.', 'visa_offerings.', 'rooms.', 'rates.'];
 
         foreach ($serviceScoped as $prefix) {
             if (str_starts_with($key, $prefix)) {
@@ -167,20 +167,27 @@ class RolesAndPermissionsSeeder extends Seeder
             ['bookings.export', 'bookings', 'sensitive', 'Export booking lists', ['company', 'hotel']],
 
             // ---------------- Organization family: tours ----------------
-            ['tours.view', 'tours', 'normal', 'View tours and programmes', $co],
-            ['tours.create', 'tours', 'sensitive', 'Create a tour', $co],
-            ['tours.update', 'tours', 'sensitive', 'Edit a tour', $co],
-            ['tours.delete', 'tours', 'sensitive', 'Delete or withdraw a tour', $co],
-            ['tours.submit', 'tours', 'sensitive', 'Submit a tour for platform review', $co],
-            ['tours.slots.manage', 'tours', 'sensitive', 'Manage departure slots and seat capacity', $co],
+            ['tours.view', 'tours', 'normal', 'View tours and programmes', $all],
+            ['tours.create', 'tours', 'sensitive', 'Create a tour', $all],
+            ['tours.update', 'tours', 'sensitive', 'Edit a tour', $all],
+            ['tours.delete', 'tours', 'sensitive', 'Delete or withdraw a tour', $all],
+            ['tours.submit', 'tours', 'sensitive', 'Submit a tour for platform review', $all],
+            ['tours.slots.manage', 'tours', 'sensitive', 'Manage departure slots and seat capacity', $all],
+            ['tour_bookings.cancel', 'tours', 'sensitive', 'Cancel an eligible tour booking', $all],
+            ['tour_bookings.attendance', 'tours', 'normal', 'Record customer attendance for a scheduled tour', $all],
+            ['tour_bookings.complete', 'tours', 'normal', 'Complete a fulfilled tour booking', $all],
 
             // ---------------- Organization family: visas ----------------
             // Company staff may view applications and validate documents.
             // Final approval/rejection belongs to platform staff (DEC-07).
-            ['visa_requests.view', 'visas', 'sensitive', 'View own visa applications and documents', $co],
-            ['visa_requests.review', 'visas', 'sensitive', 'Validate visa documents and flag missing items', $co],
-            ['visa_offerings.view', 'visas', 'normal', "View the company's visa offerings", $co],
-            ['visa_offerings.manage', 'visas', 'sensitive', 'Create and update own visa offerings and prices', $co],
+            ['visa_requests.view', 'visas', 'sensitive', 'View own visa applications and documents', $all],
+            ['visa_requests.review', 'visas', 'sensitive', 'Validate visa documents and flag missing items', $all],
+            ['visa_requests.request_documents', 'visas', 'sensitive', 'Request missing or replacement documents from the customer', $all],
+            ['visa_requests.submit_for_platform_review', 'visas', 'sensitive', 'Submit a complete visa request for final platform review', $all],
+            ['visa_requests.record_issuance', 'visas', 'sensitive', 'Record an externally issued visa and attach its details', $all],
+            ['visa_requests.deliver', 'visas', 'sensitive', 'Deliver the issued visa details to the customer', $all],
+            ['visa_offerings.view', 'visas', 'normal', "View the company's visa offerings", $all],
+            ['visa_offerings.manage', 'visas', 'sensitive', 'Create and update own visa offerings and prices', $all],
 
             // ---------------- Organization family: hotel operations ----------------
             ['rooms.view', 'rooms', 'normal', 'View room types and availability', $ho],
