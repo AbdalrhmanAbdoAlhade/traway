@@ -2,8 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,10 +14,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Gate::before(function (User $user, string $ability) {
-            return $user->hasRole('Super Admin', 'web')
-                ? true
-                : null;
-        });
+        Relation::morphMap([
+            'booking' => \App\Models\Booking::class,
+            'visa_application' => \App\Models\VisaApplication::class,
+            'refund' => \App\Models\Refund::class,
+            'payout_request' => \App\Models\PayoutRequest::class,
+            'tour' => \App\Models\Tour::class,
+            'hotel' => \App\Models\Hotel::class,
+            'esim_package' => \App\Models\EsimPackage::class,
+            'visa_offering' => \App\Models\VisaOffering::class,
+        ]);
     }
 }
