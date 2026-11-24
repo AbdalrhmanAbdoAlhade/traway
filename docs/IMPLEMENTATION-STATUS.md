@@ -7,6 +7,36 @@ Last updated: 2026-11-24
 
 ---
 
+## Gate 0 — Decision Alignment
+
+**Status: Documentation complete — 4 decisions approved, 5 awaiting approval**
+
+Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md). Produced by the gap analysis in [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md).
+
+| Item | Subject | Status |
+|---|---|---|
+| G0.1 | Audit and activity logs | **Approved — permanently excluded** (`G0-DEC-01`) |
+| G0.2 | Permission catalog | Principle approved (`G0-DEC-02`); **85-key catalog content awaiting approval** (37 platform + 48 organization) |
+| G0.3 | Hotel properties | **Approved** (`G0-DEC-03`) — one hotel organization, many properties |
+| G0.4 | Visa decision authority | **Approved** (`G0-DEC-04`) — platform staff only |
+| — | Empty scope semantics | **Approved** (`G0-DEC-05`) — empty means no access |
+| G0.5 | Notification strategy | Recommended — awaiting approval |
+| G0.6 | Payment / flight / hotel / eSIM providers | Architecture recommended; provider choice requires clarification |
+| G0.7 | F-027, F-043, F-071, multi-city | Recommended — awaiting approval |
+| G0.8 | Settlement schema | Recommended — awaiting approval |
+
+**No code, migration, seeder or `.env` change was made for Gate 0.** Phase A does not start until the five pending items are approved.
+
+### Effects on the previously recorded state
+
+- **Permission catalogue.** The "80 permissions (36 platform + 44 organization)" figure in Phase 0 below is the *seeded* count, not the canonical one. The canonical catalogue is **85 keys** (37 + 48) pending approval; see the reconciliation document for the 9 retained, 3 removed and 0 renamed keys.
+- **Audit.** The Phase 0 decision to delete the audit architecture is now confirmed as permanent policy (`G0-DEC-01`), not just a repository cleanup.
+- **Visa.** `platform.visa_requests.decide` is confirmed as the only final-decision right (`G0-DEC-04`); the company key `visa_requests.update_status` is permanently removed from the catalogue.
+- **Properties.** `hotels` is confirmed as the hotel-property entity, and `properties.*` becomes the canonical permission family for it (`G0-DEC-03`).
+- **Known defect recorded, not fixed:** the `membership_hotel_scopes` migration comment still says "No rows = every property the organization owns", which contradicts `G0-DEC-05`. To be corrected when Phase A touches the file.
+
+---
+
 ## Phase 0 — Repository Baseline and Architecture Alignment
 
 **Status: Tested**
@@ -103,10 +133,11 @@ php artisan test                                                 # 18 passed (52
   Covers cross-tenant denial, suspended memberships, foreign-team roles, direct grants, non-delegable
   permissions, service scope, hotel property scope, cross-tenant resource access, platform/tenant family
   separation, delegation ceiling and cache invalidation.
-- [ ] Policies for every protected business resource.
-- [ ] Organization management (applications, approval, suspension, ownership lifecycle).
-- [ ] Employee management (invitation, acceptance, roles, direct grants, transfer, removal, token revocation).
+- [x] Policies for every protected business resource — 21 policy classes exist. **Caveat:** no controller calls them yet, so nothing is enforced end-to-end.
+- [x] Organization management (applications, approval, suspension, ownership lifecycle) — `OrganizationService`, `OrganizationApplicationService`, `RoleTemplateService`. **Caveat:** service layer only, no HTTP. Known defects: membership transfer mutates `organization_id` instead of remove + create; invitation resend is rejected rather than rotated.
+- [x] Employee management (invitation, acceptance, roles, direct grants, transfer, removal, token revocation) — `MembershipService`. **Caveat:** service layer only, no HTTP.
 - [ ] Authorization and IDOR test suite.
+- [ ] Phase A repairs (from the gap analysis): empty-scope semantics (`G0-DEC-05`), assigned-only filters, removal of the `X-Organization-Id` tenant fallback, membership transfer, invitation rotation, policy enforcement at the HTTP boundary.
 
 ---
 
@@ -125,9 +156,16 @@ php artisan test                 # 32 passed (79 assertions)
 ## Open questions (blocking nothing yet)
 
 1. Coupon management is granted to `company` organizations only. Hotels sell their own rooms and may need
-   their own coupons; a decision is required before widening `coupons.*`.
+   their own coupons; a decision is required before widening `coupons.*` (Q-41).
 2. Service Provider service catalogue and its permissions are undefined, so `service_provider_owner` holds
-   structural permissions only and commission stays at 0 BP.
+   structural permissions only and commission stays at 0 BP. This is why `bookings.*` and `customers.view`
+   stay closed to service providers in the canonical catalog (reconciliation sub-item P-09).
 3. No payment gateway is approved. Payments/refunds will ship as an adapter contract plus a fake provider
-   until credentials and gateway documentation exist.
-4. No eSIM provider contract exists.
+   until credentials and gateway documentation exist (`G0.6`). Whether the chosen gateway can execute
+   partner payouts is still unverified and DEC-10 depends on it.
+4. No eSIM provider contract exists (`G0.6`). The catalogue can be maintained manually until an API is
+   contracted; no usage API is assumed (`G0.7`, F-043).
+5. No flight provider exists. Flight search must return an explicit `provider_unavailable` state rather than
+   sample availability or prices (gap analysis §11, register §5.3).
+6. Audit and permission-count questions are now closed: see `G0-DEC-01` and the permission reconciliation.
+   The remaining Gate 0 approvals do not change the schema already built.

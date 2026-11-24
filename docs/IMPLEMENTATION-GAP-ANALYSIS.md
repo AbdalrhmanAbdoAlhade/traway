@@ -7,6 +7,8 @@
 
 **Working rules honoured for this audit:** no tests were run, no database or migration command was executed, `.env` was not changed, no existing work was deleted or reset, no Phase 3 work was started, and no implementation was performed. This document is the only artefact produced.
 
+> **Update — 24 Nov 2026 (Gate 0).** The blocking decisions in §11 are now recorded in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md), and the permission catalogue in §6 has been reconciled in [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md). Four conflicts (C-01, C-03, C-04, C-08) and three further items (C-11, C-15, C-17) are resolved; the rest are tracked in §9.1 below. **The findings in this report are preserved as audit history and are not rewritten.** Still no implementation code was changed: the Gate 0 work was documentation and decision-alignment only.
+
 ---
 
 ## 1. Status definitions used
@@ -585,7 +587,7 @@ Status reflects end-to-end enforcement. "Schema" evidence means columns/tables e
 
 ## 9. Documented conflicts and ambiguities (not silently resolved)
 
-These must be decided before the related code is built. Nothing here was changed during the audit.
+These must be decided before the related code is built. Nothing here was changed during the audit. The original findings below are preserved unchanged; §9.1 records what has since been decided and where.
 
 | ID | Conflict | Sources | Consequence / decision needed |
 |---|---|---|---|
@@ -607,6 +609,33 @@ These must be decided before the related code is built. Nothing here was changed
 | C-16 | **Settlements schema.** DEC-10/BR-099/BR-114 require settlement periods/states and partner-due reconciliation; no `settlements`/settlement-items tables exist, only payout requests and the ledger. | DB-DECISION-BRIEF, BUSINESS-LOGIC, implementation | Approve schema design before finance work |
 | C-17 | **Settings authority.** F-112 requires platform settings/global payment rules; `platform.settings.manage` is in docs but missing from implementation; `platform_settings` table exists unused. | FEATURES-CATALOG, MATRIX, implementation | Add key + settings service |
 | C-18 | **Documented 3 legal documents vs schema.** BR-081 requires tourism licence, commercial registration and tax card; `organization_documents` is a generic type table. | BUSINESS-LOGIC, migration | Confirm document type enum/requirements per partner type |
+
+### 9.1 Resolution status (added 24 Nov 2026)
+
+Each conflict above is resolved, recommended, or explicitly carried forward. Decisions live in `GATE-0-DECISION-REGISTER.md`; nothing here was silently reinterpreted.
+
+| Conflict | Status | Resolution |
+|---|---|---|
+| C-01 Audit | **RESOLVED** | `G0-DEC-01` — audit and activity logs permanently excluded; `status_histories` limited to business status transitions |
+| C-02 Permission counts | **RESOLVED (evidence); content awaiting approval** | `G0-DEC-02` + `PERMISSION-CATALOG-RECONCILIATION.md` — canonical catalog is 85 keys (37 platform + 48 organization), replacing 83/84/78/80 |
+| C-03 Properties vs profile | **RESOLVED** | `G0-DEC-03` — `hotels` is the property entity; `properties.*` is canonical; `org.profile.publish` removed |
+| C-04 Visa authority | **RESOLVED** | `G0-DEC-04` — platform-only final decision; `update_status` removed; company `review` retained |
+| C-05 Role names/count | **PARTIAL** | Canonical names settled (`company_owner`, `hotel_owner`, `service_provider_owner`); the 19-vs-16 role count is a documentation sub-item of `G0.2` |
+| C-06 `bookings.view` scope | **OPEN** | Sub-item P-09 of `G0.2` — recommend keeping `['company','hotel']` until the service-provider catalogue exists |
+| C-07 Header tenancy | **OPEN — Phase A (A3)** | Not a Gate 0 contract; remove the `X-Organization-Id` fallback |
+| C-08 Empty scope | **RESOLVED** | `G0-DEC-05` — empty scope grants nothing; fail closed |
+| C-09 Membership transfer | **OPEN — Phase A (A4)** | Remove + create, clear scopes |
+| C-10 Invitation resend | **OPEN — Phase A (A5)** | Rotation semantics |
+| C-11 One property | **RESOLVED** | `G0-DEC-03` — a hotel organization owns many properties; Q-49 answered |
+| C-12 Global templates | **OPEN** | Q-50 still open; recommend documenting copy-on-create as accepted |
+| C-13 Multi-city | **RECOMMENDED** | `G0.7` — remove from v1 scope; the `trip_type` enum already excludes it |
+| C-14 F-027/F-043/F-071 | **RECOMMENDED** | `G0.7` — defer F-027 and F-043 usage; implement F-071 eligibility only |
+| C-15 Phantom features | **RESOLVED** | Documentation correction — F-113/F-115 references re-pointed in the reconciliation (§8 P-11, P-12) |
+| C-16 Settlements schema | **RECOMMENDED** | `G0.8` — `settlement_periods` + `settlement_items` keyed to `partner_ledger_entries` |
+| C-17 Settings authority | **RESOLVED** | `G0-DEC-02` — `platform.settings.manage` added; `platform_settings` table already exists |
+| C-18 Legal document types | **OPEN — Phase H.3** | Requires a document-type enum decision before partner onboarding |
+
+**Net effect on §6:** the eight documented-but-missing permission keys and four undocumented keys are itemised in `PERMISSION-CATALOG-RECONCILIATION.md` §6–7, with 9 retained, 3 removed and 0 renamed.
 
 ---
 
@@ -631,18 +660,20 @@ These are not "nice to have"; documented requirements cannot be implemented with
 
 ## 11. Implementation checklist (proposed order — requires approval)
 
-Nothing below has been started. Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
+No implementation below has been started. Gate 0 has since been recorded as decisions (not code) in `GATE-0-DECISION-REGISTER.md`: four are approved, five still await approval, so **Phase A has not begun**. Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
 
 ### Gate 0 — Decisions before coding (blocking)
 
-- [ ] **G0.1** Resolve C-01 (audit in/out). Determines schema and permission catalog.
-- [ ] **G0.2** Freeze the permission catalog as a single source of truth (C-02, C-03, C-04, C-17). Regenerate docs + seeder together.
-- [ ] **G0.3** Decide property model vs hotels-as-properties (C-03, C-11).
-- [ ] **G0.4** Decide visa transition authority and keys (C-04).
-- [ ] **G0.5** Decide notification channels and provider strategy (BR-104, F-021/079/092/102/110).
-- [ ] **G0.6** Decide payment/refund, flight, hotel, eSIM provider(s) and sandbox credentials.
-- [ ] **G0.7** Decide unresolved features F-027, F-043, F-071 and multi-city (C-13/C-14).
-- [ ] **G0.8** Approve settlement schema design (C-16).
+Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISION-REGISTER.md`.
+
+- [x] **G0.1** Resolve C-01 (audit in/out). → **APPROVED (`G0-DEC-01`)**: audit and activity logs permanently excluded. Determines schema and permission catalog.
+- [ ] **G0.2** Freeze the permission catalog as a single source of truth (C-02, C-03, C-04, C-17). → **Principle approved (`G0-DEC-02`); the 85-key catalogue content awaits approval.** Regenerate docs + seeder together.
+- [x] **G0.3** Decide property model vs hotels-as-properties (C-03, C-11). → **APPROVED (`G0-DEC-03`)**: `hotels` is the property entity, many per hotel organization, staff scoped by `membership_hotel_scopes`.
+- [x] **G0.4** Decide visa transition authority and keys (C-04). → **APPROVED (`G0-DEC-04`)**: platform staff only decide; company users review documents.
+- [ ] **G0.5** Decide notification channels and provider strategy (BR-104, F-021/079/092/102/110). → **RECOMMENDED**: database + e-mail over the database queue; push/SMS/WhatsApp deferred.
+- [ ] **G0.6** Decide payment/refund, flight, hotel, eSIM provider(s) and sandbox credentials. → **ARCHITECTURE RECOMMENDED; PROVIDER CHOICE REQUIRES CLARIFICATION.**
+- [ ] **G0.7** Decide unresolved features F-027, F-043, F-071 and multi-city (C-13/C-14). → **RECOMMENDED**: defer F-027 and F-043 usage, implement F-071 eligibility, drop multi-city.
+- [ ] **G0.8** Approve settlement schema design (C-16). → **RECOMMENDED**: `settlement_periods` + `settlement_items` derived from the ledger.
 
 ### Phase A — Authorization and tenancy repairs (P0 security)
 

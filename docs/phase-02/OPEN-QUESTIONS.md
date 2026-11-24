@@ -19,7 +19,7 @@ Rules:
 3. "Owner" is the decision-maker, not the implementer.
 4. No question is closed by inference alone; it needs an explicit answer from the owner.
 5. Questions Q-01 – Q-34 come from features and rules; Q-35 – Q-39 close the remaining Phase 1 inconsistencies and gaps; Q-40 – Q-52 arise from the ten recorded decisions and the authorization requirement.
-6. When a question is answered, its original text and working assumption are never deleted. The status changes and the answer is recorded in §2.9 (for the ten decisions) or in §2.10 (for the authorization questions).
+6. When a question is answered, its original text and working assumption are never deleted. The status changes and the answer is recorded in §2.9 (for the ten decisions), §2.10 (for the authorization questions) or §2.11 (for the Gate 0 decisions recorded on 2026-11-24).
 
 ### Status legend
 
@@ -108,7 +108,7 @@ Rules:
 |---|---|---|---|---|---|---|
 | Q-29 | Refund requests appear as notifications, and settlements have «transfer» actions, but neither workflow UI is designed. Who approves a refund, and how is a payout executed? | D-03.2, D-03.14, D-04.9 | Refund approval states, settlement execution, audit | Refund approved by super admin; payout executed manually and recorded as transferred | Finance | **Answered (DEC-10)** |
 | Q-36 | The admin board header says «14 شاشات» but 15 full pages (plus 2 modals) are drawn. Which is authoritative? | board header; D-03.1 – D-03.15 | Scope confirmation only | 15 pages are authoritative; header is stale | Design | Non-blocking |
-| Q-38 | Export buttons exist across the dashboards but no dedicated reports or audit-log screen is designed. Is an audit log required, and who can read it? | D-03.1, D-03.14, D-04.9, D-05.7 | Audit storage, reporting module | Audit written from day one, readable by super admin; report screens deferred | Product owner | Non-blocking |
+| Q-38 | Export buttons exist across the dashboards but no dedicated reports or audit-log screen is designed. Is an audit log required, and who can read it? | D-03.1, D-03.14, D-04.9, D-05.7 | Audit storage, reporting module | Audit written from day one, readable by super admin; report screens deferred | Product owner | **Answered (G0-DEC-01)** |
 
 ---
 
@@ -143,13 +143,29 @@ These questions arise from the recorded decisions and the authorization requirem
 | Q-43 | With no fare hold, what replaces the 14:32 countdown on the payment screen? | M-024, DEC-05 | Payment-screen copy and UX only | Remove the countdown; show "price confirmed at payment". Block only if revalidation fails or the price changed and consent is refused. | Design | Non-blocking |
 | Q-44 | If a customer withdraws or cancels a visa application before the authority decides, is the fee refundable? | DEC-06, M-042 | Visa refund policy data | Non-refundable once submitted; refundable before submission. Modelled as a per-offering policy flag. | Product owner | Blocking-4 |
 | Q-45 | What is a "Service Owner" — an organization-level manager of a service line, or a platform-level owner of a service? | Authorization requirement item 7 | Role family and scope | **Answered by the requirement:** organization-level member scoped to one or more service lines (R-17). A platform variant is additive. | Product owner | **Answered (requirement)** |
-| Q-46 | Which actors may move a visa application between the DEC-07 statuses, and are rejection reasons mandatory and customer-visible? | DEC-07; D-04.6, D-06.1 | Transition permissions, reason fields | Company employees with `visa_requests.update_status`; platform staff may override with the platform visa permission, audited. Rejection reason mandatory; customer sees a reason category and note. | Operations | Blocking-4 |
+| Q-46 | Which actors may move a visa application between the DEC-07 statuses, and are rejection reasons mandatory and customer-visible? | DEC-07; D-04.6, D-06.1 | Transition permissions, reason fields | Company employees with `visa_requests.update_status`; platform staff may override with the platform visa permission, audited. Rejection reason mandatory; customer sees a reason category and note. | Operations | **Answered (G0-DEC-04)** |
 | Q-47 | How long are financial and booking records retained after anonymisation? | DEC-09, BR-109 | Retention/purge configuration, not table shape | Five years for invoices, payments and refunds; legal to confirm before production. | Legal | Non-blocking |
 | Q-48 | Can one person hold both a platform membership and a partner membership, and how is context chosen? | Authorization requirement | Identity/membership model, login context | Allowed; login chooses one active context; roles never mix. | Product owner | Non-blocking |
-| Q-49 | Can a hotel organization own more than one property (hotel group / branches)? | D-05.x, DEC-08 | Adds a branch scope level | One property per hotel organization at launch; branch scope is additive. | Product owner | Non-blocking |
+| Q-49 | Can a hotel organization own more than one property (hotel group / branches)? | D-05.x, DEC-08 | Adds a branch scope level | One property per hotel organization at launch; branch scope is additive. | Product owner | **Answered (G0-DEC-03)** |
 | Q-50 | Spatie Laravel Permission (teams) plus a custom layer, or fully custom authorization tables? | AUTHORIZATION-ARCHITECTURE §13 | Storage shape only | Spatie + custom layer; tenant isolation, service scope, ceilings and audit stay in application services. | Engineering | Non-blocking |
 | Q-51 | DEC-10 requires "an authorized employee" for exceptional refunds. Which family approves — platform finance, or partner staff with `bookings.refund`? | DEC-10; D-03.14, D-04.5 | Refund approval table and permission | Policy refunds auto-execute; exceptional refunds require platform finance approval. Partner staff may request, not approve. | Finance | Blocking-4 |
 | Q-52 | When a discounted booking is cancelled, is the discount returned as cash or only reversed from the refundable amount? | DEC-03, BR-078 | Refund arithmetic, redemption reversal | Refund is based on the amount actually paid; the discount is reversed, never paid in cash. | Finance | Blocking-4 |
+
+---
+
+## 2.11 Gate 0 decisions (2026-11-24)
+
+These follow the authorization audit in `../IMPLEMENTATION-GAP-ANALYSIS.md`. They are **Gate 0 decisions** and are deliberately numbered `G0-DEC-xx` so they never collide with the business decisions `DEC-01 – DEC-10` in §2.9. Full reasoning, database/API impact and risks: [`../GATE-0-DECISION-REGISTER.md`](../GATE-0-DECISION-REGISTER.md).
+
+| ID | Decision | Status | Resolves |
+|---|---|---|---|
+| G0-DEC-01 | Audit and general activity logs are permanently excluded. `status_histories` may record business entity status transitions only and must never become a user activity log. | **Approved** | Q-38; BR-107/111/124; F-112 audit clause; permission `platform.audit.view` |
+| G0-DEC-02 | One centralized authoritative permission catalog. Canonical content: 85 keys (37 platform + 48 organization), per `../PERMISSION-CATALOG-RECONCILIATION.md`. | Principle **approved**; catalog content **awaiting approval** | The 83/84/78/80 count conflict |
+| G0-DEC-03 | A hotel organization may own multiple hotel properties; `hotels` is the property entity; `membership_hotel_scopes` scopes staff; bookings reference `hotel_id`; an empty property scope means no access. | **Approved** | Q-49; C-03; C-11 |
+| G0-DEC-04 | Only authorized Traway platform staff may make the final visa approval/rejection decision. Company users may view within scope and review documents, not decide. The six customer-visible statuses are unchanged. | **Approved** | Q-46; C-04 |
+| G0-DEC-05 | An empty scope means access to nothing. No empty array or null scope is implicit global access; every scoped query fails closed. | **Approved** | C-08; BR-121 |
+
+**Still awaiting approval (blocking Phase A and later phases):** the G0.2 catalog content, G0.5 notification strategy, G0.6 provider choice, G0.7 unresolved features (F-027, F-043, F-071, multi-city) and G0.8 settlement schema. Q-09, Q-17 and Q-24 remain open and are now linked to the `G0.7` recommendations.
 
 ---
 
@@ -158,9 +174,9 @@ These questions arise from the recorded decisions and the authorization requirem
 | Phase blocked | Questions |
 |---|---|
 | Phase 3 — data model | **None.** Q-01, Q-11, Q-12, Q-13, Q-14, Q-19, Q-21, Q-23, Q-25 and Q-29 are answered (DEC-01 – DEC-10). |
-| Phase 4 — API contracts | Q-02, Q-03, Q-07, Q-10, Q-15, Q-20, Q-26, Q-31, Q-40, Q-44, Q-46, Q-51, Q-52 (13) |
-| Answered | Q-01, Q-11, Q-12, Q-13, Q-14, Q-19, Q-21, Q-23, Q-25, Q-29, Q-45 (11) |
-| No phase blocked | Q-04, Q-05, Q-06, Q-08, Q-09, Q-16, Q-17, Q-18, Q-22, Q-24, Q-27, Q-28, Q-30, Q-32, Q-33, Q-34, Q-35, Q-36, Q-37, Q-38, Q-39, Q-41, Q-42, Q-43, Q-47, Q-48, Q-49, Q-50 (28) |
+| Phase 4 — API contracts | Q-02, Q-03, Q-07, Q-10, Q-15, Q-20, Q-26, Q-31, Q-40, Q-44, Q-51, Q-52 (12 — Q-46 answered by G0-DEC-04) |
+| Answered | Q-01, Q-11, Q-12, Q-13, Q-14, Q-19, Q-21, Q-23, Q-25, Q-29, Q-38, Q-45, Q-46, Q-49 (14) |
+| No phase blocked | Q-04, Q-05, Q-06, Q-08, Q-09, Q-16, Q-17, Q-18, Q-22, Q-24, Q-27, Q-28, Q-30, Q-32, Q-33, Q-34, Q-35, Q-36, Q-37, Q-39, Q-41, Q-42, Q-43, Q-47, Q-48, Q-50 (26 — Q-38 and Q-49 now answered) |
 
 **No question blocks Phase 3.** The schema may be designed against the recorded decisions; Phase 4 (API contracts) still depends on the 13 open items above, each with a documented default.
 
