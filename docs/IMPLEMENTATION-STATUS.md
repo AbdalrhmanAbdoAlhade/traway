@@ -22,10 +22,15 @@ Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and
 | `G0-DEC-03` | Hotel properties | **Approved** — one hotel organization, many properties |
 | `G0-DEC-04` | Visa decision authority | **Approved** — platform staff only |
 | `G0-DEC-05` | Empty scope semantics | **Approved** — empty means no access |
-| Catalog content | The exact 85 keys (37 platform + 48 organization) | **Awaiting approval** — vs the 80-key seeder: add 6, remove 1 (`org.profile.publish`), rename 1 (`team_activity.view` → `status_history.view`) |
-| P-09 | `bookings.*` / `customers.view` closed to service providers | **Awaiting approval** — recommended |
-| Delegation | Family rule, non-delegable list, owner-only actions, owner templates | **Awaiting approval** — recommended |
-| Empty-scope enforcement | Query-layer filter, ownership as the explicit grant, pre-deploy data check | **Awaiting approval** — recommended |
+| Service-aware permission catalog | Exact keys, service applicability, organization eligibility, scope requirements and delegation metadata | **Awaiting owner approval** — historical 85-key proposal withdrawn as final target; see `SERVICE-AWARE-PERMISSION-CATALOG.md` |
+| Multi-service provider model | One provider organization may operate multiple Traway-enabled services; membership service scopes remain separate | **Product direction confirmed; implementation design pending Gate 0A** |
+| P-09 / P-10 | Blanket exclusion of provider bookings/customer context | **Superseded** — use service-specific permission families and contextual customer visibility; do not restore blanket grants |
+| Delegation | Family rule, non-delegable list, owner-only actions, owner templates | **Awaiting final Gate 0A approval** |
+| Empty-scope enforcement | Query-layer filter, ownership as the explicit grant, fail-closed service/property/resource scopes | **Principle approved (`G0-DEC-05`); code enforcement still pending** |
+| Organization service enablement | Traway-controlled enabled services, distinct from employee membership scopes | **Blocking Gate 0A implementation design; Q-54 open** |
+| Resource scope by service | Hotel property, tour/resource, visa assignment/offering boundaries | **Blocking Gate 0A implementation design; Q-56 open** |
+| Provider eSIM responsibilities | Provider-side package/order/activation/support/refund lifecycle | **No provider permissions approved; Q-53 open** |
+| Unified provider dashboard | Multi-service shell, queues and reports | **Provider UI requirements incomplete; Q-55 open** |
 
 ### Gate 0B — Business and integration (does not block Phase A)
 
@@ -38,7 +43,7 @@ Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and
 | G0.7 | F-071 tour cancellation policy | **Pending — no policy approved** |
 | G0.8 | Settlement schema and lifecycle | Recommended — awaiting approval |
 
-**No code, migration, seeder or `.env` change was made for Gate 0.** **Phase A does not start until Gate 0A is approved in full.** Gate 0B items block only the phases that depend on them.
+**No code, migration, seeder or `.env` change was made for Gate 0.** **Phase A does not start until Gate 0A is approved in full.** The confirmed multi-service provider direction adds service enablement, service applicability and resource-boundary decisions to Gate 0A; it supersedes the old blanket P-09 recommendation and the fixed 85-key target. Gate 0B items block only the phases that depend on them.
 
 ### Effects on the previously recorded state
 
@@ -183,3 +188,18 @@ php artisan test                 # 32 passed (79 assertions)
    sample availability or prices (gap analysis §11, register §5.3).
 6. Audit and permission-count questions are now closed: see `G0-DEC-01` and the permission reconciliation.
    The remaining Gate 0 approvals do not change the schema already built.
+
+
+## Multi-service authorization status update — 2026-11-24
+
+This section supersedes stale Gate 0A and open-question summaries above where they describe the old type-only provider model.
+
+- **Confirmed product direction:** a single `service_provider` organization may operate multiple service lines.
+- **Authorization rule:** effective access is the intersection of organization ownership, Traway-enabled services, membership service scopes, permission applicability, resource/property scope and assignment/workflow constraints.
+- **Flights:** platform-only in the current product scope.
+- **Visa decisions:** final approve/reject authority remains platform-only under `G0-DEC-04`; partner-side document review remains distinct.
+- **Customer data:** contextual and minimum-necessary; no unrestricted partner customer directory is implied.
+- **Open blockers:** Q-53 (provider eSIM lifecycle), Q-54 (organization service enablement workflow), Q-55 (unified provider dashboard), Q-56 (resource scopes by service).
+- **Implementation state:** no implementation change is recorded by this update. The next work is Gate 0A decision closure and a source-to-source code verification before any migration or policy changes.
+
+The implementation baseline and historical command/test results above are preserved as recorded evidence; they were not rerun during this documentation update.
