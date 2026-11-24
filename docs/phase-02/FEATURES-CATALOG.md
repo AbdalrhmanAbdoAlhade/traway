@@ -151,8 +151,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-040 | eSIM package selection | MOB | M-034 | P0 | C | Packages: 3 GB/7 d $9; 5 GB/15 d $14 (best value); 10 GB/30 d $23. Shows coverage notes and total; continue → checkout. Rule: one package per purchase (`BR-056`). |
 | F-041 | eSIM checkout & payment | MOB | M-035 | P0 | C | Plan facts (coverage, 4G/5G, provider, refund policy), payment method (card / e-wallet), promo code, total incl. tax $14, «ادفع بأمان». Refund policy text is visible but its enforcement rule is unresolved (`Q-16`). |
 | F-042 | eSIM QR issuance & activation | MOB | M-036 | P0 | C | Order no. `TW-58210`, QR code, manual `LPA:1$…` string, install-on-this-device, view bookings. Inferred: activation token is single-use and tied to the order (`BR-058`). |
-| F-043 | eSIM usage & balance | MOB | M-037 (partial) | P3 | U | Booking card shows «5 GB متبقية» and a progress bar, but no usage screen, refresh rule or depletion behaviour is drawn. Not a committed v1 requirement (`Q-17`). |
-
+| F-043 | eSIM usage & balance | MOB | M-037 (partial) | P3 | U | The captured booking card shows «5 GB متبقية» and a progress bar, but this is screen evidence, not an approved usage-tracking requirement. Proposed v1 behavior: show purchased data allowance and validity only. Show remaining usage only when the selected provider exposes a reliable usage API. No polling or dedicated usage screen is committed (`Q-17`). |
 ### Domain 7 — Bookings & post-booking
 
 | ID | Feature | App | Screens | Pri | Ev | Notes — inputs, outputs, rules |
@@ -198,8 +197,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-067 | Tours catalogue | MOB | M-065 | P0 | C | Search, category chips (all, day tours, full programmes, family), featured multi-day programme (Maldives 6 nights, $1,160), cards with duration and price. |
 | F-068 | Tour programme detail | MOB | M-066 | P0 | C | Hero, rating 4.8 (612 reviews), duration/guide/languages/group size, day-by-day timeline, participant stepper, total for 2, choose date. Rule: participants ≤ remaining seats and ≤ group max (`BR-071`). |
 | F-069 | Tour booking & payment | MOB | M-067 | P0 | C | Date strip with availability, departure time slots, pickup location, payment card, price for 2, pay. Output: confirmed booking. |
-| F-070 | Tour confirmation & voucher | MOB | M-068 | P0 | C | Success, QR voucher, booking `TR-33107`, pickup instructions, free cancellation 24 h, contact guide, add to calendar, my bookings/home. |
-| F-071 | Tour cancellation & refund | MOB | M-068 (promise only) | P2 | U | «إلغاء مجاني خلال 24 ساعة» is stated but no cancellation UI, deadline calculation or refund rule is drawn. Not committed until `Q-24`. |
+| F-070 | Tour confirmation & voucher | MOB | M-068 | P0 | C | Success, QR voucher, booking `TR-33107`, pickup instructions, the applicable tour company's cancellation terms when available, contact guide, add to calendar, my bookings/home. The screen's 24-hour free-cancellation wording is historical UI evidence only and is not an approved platform policy. || F-071 | Tour cancellation & refund | MOB | M-068 (promise only) | P2 | U | «إلغاء مجاني خلال 24 ساعة» is stated but no cancellation UI, deadline calculation or refund rule is drawn. Not committed until `Q-24`. |
 
 ### Domain 11 — Partner onboarding & portal authentication
 
@@ -399,8 +397,7 @@ Chapter-title strips `MT-01` – `MT-10` and annotation `DL-01` carry no interac
 |---|---|---|
 | F-027 Seat selection | Only a confirmation-bar fragment supplied | Q-09 |
 | F-043 eSIM usage & balance | Balance shown, no usage screen or rules | Q-17 |
-| F-071 Tour cancellation | Promise text only, no flow | Q-24 |
-
+| F-071 | Tour cancellation & refund | MOB | M-068 (promise only) | P2 | U | Cancellation and refund must follow the applicable tour company's policy. No universal 24-hour full-refund rule is approved. The customer must see the applicable cancellation terms and refund calculation before booking. Cancellation workflow, eligibility, deadlines and refund handling remain unresolved pending `Q-24`. |
 All other features are either confirmed (`C`) or confirmed with named inferred mechanics (`C+i`); inferred mechanics are answered by `OPEN-QUESTIONS.md` before Phase 3 schema work.
 
 ---
