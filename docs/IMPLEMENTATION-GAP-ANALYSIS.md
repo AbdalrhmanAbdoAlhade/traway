@@ -871,3 +871,46 @@ This section updates the implementation plan against the owner-confirmed multi-s
 ### 13.4 Status boundary
 
 The current repository remains a backend foundation, not an end-to-end application. This documentation reconciliation does not claim that any authorization defect has been fixed, that Gate 0A is approved, or that tests have been run. No code, migration, Seeder, config or test file was changed by this update.
+
+
+## 14. Source-to-catalog verification — 2026-11-24
+
+The following findings were verified against the current `main` source files during this review. They are implementation gaps, not proposed behavior.
+
+### 14.1 Verified source mismatches
+
+| Area | Current source behavior | Required target |
+|---|---|---|
+| Organization service enablement | `Organization` has no enabled-services relation/table; only `MembershipServiceScope` exists | Persist platform-controlled organization-enabled services separately from membership scopes |
+| Permission applicability | `Permission` stores `allowed_org_types` and `scope_requirement`; no service-applicability metadata is stored | Persist/centrally define service applicability and enforce it for every decision |
+| Scope enforcement | `AuthorizationService::withinServiceScope()` checks only `scope_requirement === 'service'`; empty service list returns `true` | Fail closed for missing/empty required scopes; enforce `service`, `service_resource`, `service_assignment`, and `property` consistently |
+| Hotel property scope | `Membership::isRestrictedToHotel()` returns true when no hotel scope rows exist; migration comment also defines no rows as all properties | Non-owner empty property scope denies all; apply to both `hotel` and `service_provider` organizations |
+| Provider resource scope | `withinHotelScope()` skips all organizations except type `hotel` | Hotel properties owned by a `service_provider` must be scoped identically |
+| Booking service identity | `BookingPolicy` passes the booking resource but no explicit service context; service identity is not normalized/derived in the shown policy call | Derive service from persisted booking/resource server-side; never trust request input |
+| Catalog scope mapping | Seeder `scopeRequirement()` recognizes tours, visa requests/offerings, rooms and rates; it does not map booking or property families to the catalog's `service_resource` / `property` requirements | Use one exhaustive catalog metadata source; reject unknown/missing scope requirements |
+| Permission key drift | Seeder still contains `org.profile.publish` and `team_activity.view`; candidate catalog uses `properties.publish` and `status_history.view` | Reconcile key migrations/aliases and remove obsolete keys only with a safe data migration |
+| Organization eligibility drift | Seeder still limits bookings and `customers.view` to company/hotel; tours and visas to company; hotel operations to hotel only | Align provider eligibility with service-aware catalog, while enforcing actual service enablement and resource boundaries |
+| Delegation scope | `canGrant()` only checks target service scopes against granter when the granter's scope list is non-empty | Empty granter scope must not become an implicit grant ceiling bypass; protected owner behavior must be explicit |
+
+### 14.2 Required catalog corrections before approval
+
+1. The catalog's candidate `service_resource`, `service_assignment` and `property` requirements must be executable definitions, not labels that the current service silently ignores.
+2. `bookings.*` is applicable only to persisted Hotel/Tour booking types; it must never authorize Flights, visa applications or eSIM orders.
+3. `customers.view` is a contextual projection after authorization of the linked service record; it must not act as a standalone customer directory grant.
+4. `visa_requests.view/review` for providers/companies must be limited to their own offering-linked requests and any required assignment; final decisions remain platform-only.
+5. Provider hotel resources must use the same property ownership and membership property-scope checks as hotel organizations.
+6. Owner-wide service reach is bounded by organization-enabled services and platform-only exclusions; it must not be implemented by treating empty employee scopes as unrestricted.
+7. `flights` must be rejected from organization-side grants even though it remains in the legacy shared `authorization.service_scopes` list.
+
+### 14.3 Recommended implementation sequence
+
+1. Approve Q-53–Q-56 and the exact candidate catalog metadata.
+2. Introduce organization-enabled services and service-applicability metadata with constraints and lifecycle behavior.
+3. Replace prefix-based scope inference with explicit metadata-driven checks and server-derived resource service identity.
+4. Correct empty service/property/resource scope semantics, including provider-owned hotel properties.
+5. Reconcile Seeder keys, owner templates, employee templates, existing role assignments and direct grants through a reversible data migration.
+6. Update policies and list/query endpoints so `viewAny`, dashboards, counts, exports and detail routes share the same scoped query boundary.
+7. Add cross-tenant, cross-service, empty-scope, disabled-service, provider-property, assignment and platform-only negative tests.
+8. Run focused Pest tests and the full suite locally; record actual output before changing implementation status.
+
+**No source code, migration, Seeder, authorization config or test file was changed in this review.** This section records verified discrepancies only.
