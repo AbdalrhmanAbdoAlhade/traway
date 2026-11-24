@@ -43,6 +43,7 @@ return [
     |
     */
     'non_delegable' => [
+        'org.services.request',
         'employees.create',
         'employees.update',
         'employees.deactivate',
