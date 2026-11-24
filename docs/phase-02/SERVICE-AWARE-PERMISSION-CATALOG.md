@@ -143,6 +143,9 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `bookings.refund` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | financial | Request/initiate an eligible refund; platform workflow governs exceptional approvals |
 | `bookings.checkin` | bookings | Hotel + Provider | Hotels | property | normal | Check a hotel guest in |
 | `bookings.checkout` | bookings | Hotel + Provider | Hotels | property | normal | Check a hotel guest out |
+| `tour_bookings.attendance` | bookings | Company + Provider | Tours | service_resource | normal | Record attendance for an eligible confirmed tour booking within the scheduled departure/session scope |
+| `tour_bookings.complete` | bookings | Company + Provider | Tours | service_resource | sensitive | Mark an eligible confirmed tour booking completed only after the scheduled session and fulfilment conditions are satisfied |
+| `tour_bookings.cancel` | bookings | Company + Provider | Tours | service_resource | sensitive | Cancel an eligible tour booking under the persisted cancellation policy disclosed at purchase |
 | `bookings.export` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | sensitive | Export only authorized hotel/tour booking records |
 | `tours.view` | tours | Company + Provider | Tours | service_resource | normal | View own tours and programmes |
 | `tours.create` | tours | Company + Provider | Tours | service_resource | sensitive | Create a tour |
@@ -174,7 +177,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `status_history.view` | reports | All | All enabled services | organization | normal | View business status transitions only; never a general activity/audit feed |
 | `customers.view` | customers | Company + Hotel + Provider | Contextual: Hotels/Tours/Visas | service_resource | sensitive | View minimum customer contact fields only on records already authorized through the corresponding service |
 
-**Count: 48 organization candidate keys.** For the booking family, the eligible type set is company + hotel + service_provider; for check-in/check-out it is hotel + service_provider. This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
+**Count: 51 organization candidate keys.** For the booking family, the eligible type set is company + hotel + service_provider; for check-in/check-out it is hotel + service_provider; tour attendance, completion and cancellation are service-provider/company candidates only for Tours and remain subject to membership service/resource scope and the suspension action matrix. This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
 
 ---
 
