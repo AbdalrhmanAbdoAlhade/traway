@@ -256,8 +256,8 @@ Six retained, two removed. The two removed are the two documented keys that the 
 | P-06 | `visa_requests.view` description | Docs: "…no decision" — correct, but the catalogue then offered no company review key at all | `visa_requests.review` added; `view` documented as read-only |
 | P-07 | `org.delete` | `AUTHORIZATION-ARCHITECTURE.md` listed `org.delete` as a non-delegable **key**, but no such permission exists in either catalogue — deletion is an owner-only *action* (`organization.delete` in `config/authorization.php` `owner_only_actions`) | Deletion kept as an owner-only action, not a permission. The architecture table now says "owner-only action, no assignable key" |
 | P-08 | `team_activity.view` | The name reads as a general activity log or user activity tracking, both of which DEC-01 forbids, even though the description says "derived from status histories" | **Renamed `status_history.view`** and the description states the exclusion explicitly. It reads business status transitions of bookings, visa applications, refunds, payout requests and tour reviews — never user actions, logins or reads. Count unchanged |
-| P-09 | `bookings.*` org types | Docs: `All` (including service provider). Code: `['company','hotel']` | **Open sub-item** — see §10. Recommendation: keep the code's restriction |
-| P-10 | `customers.view` org types | Docs: `All`. Code: `['company','hotel']` | Same reasoning as P-09. **Open sub-item** |
+| P-09 | `bookings.*` org types | **Superseded** — provider organizations may operate multiple services; use service-aware eligibility and organization/service/resource scoping. See §11 and the multi-service authorization model. |
+| P-10 | `customers.view` org types | **Superseded** — contextual minimum customer data only for records already authorized through a service; never customer-directory access. See §11.
 | P-11 | `properties.*` feature references | Rows cited F-113, which does not exist (the catalogue ends at F-112) | Corrected to F-101/F-106 |
 | P-12 | `platform.visa_requests.*` feature references | Rows cited F-115, which does not exist | Corrected to F-096/F-108 |
 | P-13 | Prefix families | Platform keys use the `platform.` prefix; every other key has **no** prefix, while `config/authorization.php` `permission_prefixes` declares an `org.` prefix and 4 keys use it | Cosmetic only. **No rename** beyond P-08: renaming 44 keys would invalidate every seeded role, test and future custom role for zero functional gain. The family is decided by the `platform.` prefix, not by the presence of `org.` |
@@ -305,13 +305,13 @@ Counted once per organization type a key may be held in (the pre-P-09 values):
 |---|---:|---|
 | Company | 37 | 16 open to all types + 7 company-or-hotel + 14 company-only |
 | Hotel | 34 | 16 open to all types + 7 company-or-hotel + 11 hotel-only |
-| Service provider | 16 | structural keys only (no provider service catalogue yet — P-09) |
+| Service provider | Recalculate | Depends on enabled service lines and resource-specific permissions; not structural-only |
 
 ### Open sub-items requiring a decision
 
 | ID | Question | Recommendation |
 |---|---|---|
-| P-09 | Should `bookings.*` / `customers.view` be open to `service_provider` at launch? | **No.** Keep the implementation's `['company','hotel']` restriction until the service-provider service catalogue is defined, and record it as a deliberate narrowing in the matrix. Widening later is additive and needs no migration |
+| P-09 | How should booking and customer-context permissions apply to multi-service providers? | Service-aware eligibility only; the provider must have the service enabled and the membership must pass service/resource scope. No blanket allow or blanket deny. |
 | P-14 | Sensitivity value spelling | Normalise `access_control` → `access-control` when the seeder is next touched |
 
 ---
@@ -326,3 +326,19 @@ No code change has been made. When the Gate 0A catalog content is approved, the 
 4. Re-derive the owner templates from the updated catalogue (the seeder already computes `company_owner`/`hotel_owner`/`service_provider_owner` from `organizationKeysFor()`), and re-point any role holding the renamed key.
 
 No migration is required: the `permissions` table already stores `family`, `domain`, `sensitivity`, `description`, `scope_requirement` and `allowed_org_types`.
+
+
+## 11. Owner-approved multi-service provider correction (2026-11-24)
+
+The previous P-09 recommendation (keep `bookings.*` and `customers.view` closed to service providers) is **superseded** by the owner's clarification that one provider organization may operate multiple service lines. Do not implement the old P-09 recommendation.
+
+The correct rule is not to open every permission to every provider. Recalculate the organization catalog using service-aware eligibility:
+
+- actual hotel/tour booking permissions are available only where the organization has the relevant service enabled and the membership has that service scope;
+- hotel operations additionally enforce property scope and ownership-chain checks;
+- visa request view/document review is available only for enabled Visas operations and linked organization offerings/requests; final decisions remain platform-only;
+- eSIM operational permissions require a defined order/activation lifecycle and provider responsibility before keys are added;
+- `customers.view` is a minimal contextual projection for already-authorized records, never access to the platform customer directory or unrelated customer data;
+- Flights remain platform-only.
+
+The former 85-key proposal is not the final catalog and its provider/org-type counts are invalid for implementation planning until the matrix is recalculated. The centralized catalog principle (`G0-DEC-02`) remains approved; the exact key set and eligibility metadata remain pending Gate 0A. See [`phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md).
