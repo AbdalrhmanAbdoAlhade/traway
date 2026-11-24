@@ -27,10 +27,10 @@ Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and
 | P-09 / P-10 | Blanket exclusion of provider bookings/customer context | **Superseded** — use service-specific permission families and contextual customer visibility; do not restore blanket grants |
 | Delegation | Family rule, non-delegable list, owner-only actions, owner templates | **Awaiting final Gate 0A approval** |
 | Empty-scope enforcement | Query-layer filter, ownership as the explicit grant, fail-closed service/property/resource scopes | **Principle approved (`G0-DEC-05`); code enforcement still pending** |
-| Organization service enablement | Traway-controlled enabled services, distinct from employee membership scopes | **Blocking Gate 0A implementation design; Q-54 open** |
-| Resource scope by service | Hotel property, tour/resource, visa assignment/offering boundaries | **Blocking Gate 0A implementation design; Q-56 open** |
-| Provider eSIM responsibilities | Provider-side package/order/activation/support/refund lifecycle | **No provider permissions approved; Q-53 open** |
-| Unified provider dashboard | Multi-service shell, queues and reports | **Provider UI requirements incomplete; Q-55 open** |
+| Organization service enablement | Request → Platform Admin approve/reject → enable; independent per-service suspension | **Direction approved — Q-54 A; schema/lifecycle design remains** |
+| Resource scope by service | Hierarchical service → property/resource/assignment scope; service-only where no narrower boundary is meaningful | **Direction approved — Q-56 A with B support; per-service mapping remains** |
+| eSIM business ownership | Traway-only catalogue, pricing/margin, orders, activation, failure handling, support, refunds and usage inquiries | **Answered — Q-53 A; no organization-side eSIM permissions/scopes** |
+| Unified provider dashboard | One shell; enabled-service modules; scoped home metrics; service-specific queues/reports | **Direction approved — Q-55 A; detailed screen mapping remains** |
 
 ### Gate 0B — Business and integration (does not block Phase A)
 
@@ -43,7 +43,7 @@ Registered in [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) and
 | G0.7 | F-071 tour cancellation policy | **Pending — no policy approved** |
 | G0.8 | Settlement schema and lifecycle | Recommended — awaiting approval |
 
-**No code, migration, seeder or `.env` change was made for Gate 0.** **Phase A does not start until Gate 0A is approved in full.** The confirmed multi-service provider direction adds service enablement, service applicability and resource-boundary decisions to Gate 0A; it supersedes the old blanket P-09 recommendation and the fixed 85-key target. Gate 0B items block only the phases that depend on them.
+**No code, migration, seeder or `.env` change was made for Gate 0.** **Phase A does not start until Gate 0A is approved in full.** The confirmed multi-service provider direction adds service enablement, service applicability and resource-boundary decisions to Gate 0A; it supersedes the old blanket P-09 recommendation and the fixed 85-key target. Q-53–Q-56 product directions were approved on 2026-11-24; detailed schema, catalog and UI mapping remain. Gate 0B items block only the phases that depend on them.
 
 ### Effects on the previously recorded state
 
@@ -199,7 +199,7 @@ This section supersedes stale Gate 0A and open-question summaries above where th
 - **Flights:** platform-only in the current product scope.
 - **Visa decisions:** final approve/reject authority remains platform-only under `G0-DEC-04`; partner-side document review remains distinct.
 - **Customer data:** contextual and minimum-necessary; no unrestricted partner customer directory is implied.
-- **Open blockers:** Q-53 (provider eSIM lifecycle), Q-54 (organization service enablement workflow), Q-55 (unified provider dashboard), Q-56 (resource scopes by service).
+- **Remaining design blockers:** exact permission catalog and metadata; Q-54 persistence/status lifecycle; Q-55 detailed screen mapping; Q-56 per-service resource mapping. Q-53 is answered: eSIM is platform-only.
 - **Implementation state:** no implementation change is recorded by this update. The next work is Gate 0A decision closure and a source-to-source code verification before any migration or policy changes.
 
 The implementation baseline and historical command/test results above are preserved as recorded evidence; they were not rerun during this documentation update.
