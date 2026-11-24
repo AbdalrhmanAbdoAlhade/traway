@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\StatusHistory;
 use App\Models\User;
 use App\Services\Organization\OrganizationServiceLifecycle;
+use App\Services\Authorization\AuthorizationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -154,11 +155,21 @@ class OrganizationServiceLifecycleTest extends TestCase
 
         $service = $lifecycle->request($owner, $organization, 'visas');
         $service = $lifecycle->approve($admin, $service);
+
+        $this->grantRole($owner, $organization, 'visa_requests.view');
+
+        $this->assertTrue(app(AuthorizationService::class)->allows(
+            $owner,
+            'visa_requests.view',
+            $organization,
+            ['service' => 'visas']
+        ));
+
         $service = $lifecycle->disable($admin, $service, 'Service discontinued');
 
         $this->assertSame(OrganizationService::STATUS_DISABLED, $service->status);
         $this->assertNotNull($service->effective_at);
-        $this->assertFalse($this->app['App\\Services\\Authorization\\AuthorizationService']->allows(
+        $this->assertFalse(app(AuthorizationService::class)->allows(
             $owner,
             'visa_requests.view',
             $organization,
