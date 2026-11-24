@@ -370,3 +370,14 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 | R-17 | D-04.7, D-04.8, D-05.5 (service-scoped use of the role editors) |
 
 **Validation:** 17 roles; every role has at least one defining screen; every screen in Phase 1 that requires an actor is covered by at least one role; no role is granted access to a module that its design screens do not show. Role creation, delegation and service scoping are defined in `AUTHORIZATION-ARCHITECTURE.md` §6–§8.
+
+
+## 4. Multi-service provider role clarification (2026-11-24)
+
+R-19 `Service provider owner` may manage one or more service lines enabled for its organization. It is not restricted to a single provider category. Its owner-wide access is limited to that organization's enabled services and resources; it does not include Flights or platform-only actions.
+
+Employees of a multi-service organization may be assigned one or more service scopes (for example Hotels + Tours) and independent resource/property scopes within those services. Their effective access is the intersection of explicit permissions, organization ownership, enabled organization services, membership service scopes, resource/property scopes and any assignment filter. An empty scope grants no access.
+
+The previous statement that service providers have structural permissions only, and the P-09 blanket denial of all bookings/customer-context permissions, are superseded. Exact permission keys and provider eligibility remain pending the revised permission matrix. Customer contact access is limited to the minimum fields on records the employee is already authorized to process; it is not a customer-directory permission.
+
+Flights remain Platform Admin only. Service-provider visa staff may validate documents within their scope but cannot make final visa decisions.
