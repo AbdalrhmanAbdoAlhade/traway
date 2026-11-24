@@ -64,21 +64,26 @@ Tour catalogue lifecycle (`draft`, `in_review`, `published`, `documents_required
 
 A confirmed tour booking remains readable under the original tour/departure/resource scope. During suspension, an authorized provider may record attendance with `tour_bookings.attendance` and mark the booking `completed` with `tour_bookings.complete`, but only for the actual scheduled session, once its scheduled date/time has been reached, and after the configured fulfilment/attendance requirements pass. The provider may cancel it only through `tour_bookings.cancel` when the persisted policy version/terms applicable to that booking permit cancellation. These action-specific permissions do not grant arbitrary status updates, booking-field edits, price/payment changes or refund execution. The server must enforce valid state transitions and prevent attendance/completion before the scheduled session.
 
-## 5. Visas — proposed allowlist
+## 5. Visas — approved partner/platform workflow
 
-Visa application stages are service-specific; the documentation does not yet provide a complete canonical list of persisted application states. Therefore this matrix authorizes only the review actions already established by G0-DEC-04 and BR-095.
+Visa issuance itself happens outside Traway through the embassy/competent authority. Traway records workflow progress and the evidence/details of an externally issued visa; the application must never claim that Traway issued the visa.
 
-| Existing application condition | View application/documents | Review submitted documents | Request missing/replacement documents and enter `Documents Required` | Change other customer application stages | Final approve/reject |
-|---|---:|---:|---:|---:|---:|
-| Submitted / awaiting partner review | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` | Allow with `visa_requests.request_documents` only when a mandatory document is missing/rejected | Deny | Deny — platform only |
-| Partner review in progress | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` | Allow with `visa_requests.request_documents` only when a mandatory document is missing/rejected | Deny | Deny — platform only |
-| Awaiting customer documents | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` after customer resubmission | Allow only for a new, valid missing/replacement-document request; do not duplicate an outstanding request | Deny | Deny — platform only |
-| Submitted to / under platform decision | Allow only if the partner's existing access policy still permits the record | Additional review only if explicitly requested by platform workflow | Deny; partner cannot return a request from platform decision to customer-document collection | Deny | Deny — platform only |
-| Approved / rejected / closed | Allow within existing scope | Deny unless a post-decision document correction workflow is separately approved | Deny | Deny | Deny — platform only |
+| Workflow stage / action | Organization employee | Traway platform staff |
+|---|---|---|
+| View an existing request | Allow within assigned request or explicitly authorized team queue using `visa_requests.view` | Allow using `platform.visa_requests.view` |
+| Review submitted/re-uploaded documents | Allow using `visa_requests.review` | Allow using `platform.visa_requests.review` |
+| Request missing/replacement mandatory documents; enter `Documents Required` | Allow using `visa_requests.request_documents` only when a mandatory document is missing/rejected under BR-095 | Allow using platform visa review workflow |
+| Submit a complete request to Traway for final platform review | Allow using `visa_requests.submit_for_platform_review` only when required documents pass validation and no outstanding customer-document request exists | Receive/review the request |
+| Platform final review / platform workflow decision | No permission to perform this platform action | Platform-only; existing `platform.visa_requests.decide` boundary remains |
+| Record actual external visa issuance | Allow using `visa_requests.record_issuance` only after the embassy/competent authority has actually issued the visa; record issuance details and attach the visa file/evidence | May view the recorded issuance within platform access |
+| Send issued visa/details to the customer | Allow using `visa_requests.deliver` after issuance is recorded and required delivery data/file is present | May view delivery status; no extra platform approval required for the partner's authorized delivery |
+| Arbitrary status changes, fabricated issuance, or platform final decision | Deny | Only through explicit platform permissions and valid transitions |
 
-`visa_requests.request_documents` is a distinct partner permission: it may issue a missing/replacement-document request and transition an eligible pre-existing request to `Documents Required`, but only when at least one mandatory document is missing or rejected under BR-095. It must not be used for arbitrary stage changes or duplicate an outstanding request. The action is limited to an assigned request or explicitly authorized team queue and remains subject to tenant, service, assignment and pre-suspension cutoff checks. Newly uploaded documents are reviewed with `visa_requests.review`. No other partner stage transition is implied.
+Partner actions remain restricted by organization ownership, enabled Visas service, membership service scope, request assignment/authorized team queue, valid state transitions and the existing-record cutoff during service suspension. During suspension, only requests created before the effective suspension time may be serviced; the same explicit permissions and checks continue to apply.
 
-No provider-side visa action may approve or reject an application, override a platform decision, or move an application into a platform-only decision state. The final decision remains restricted to authorized platform staff with `platform.visa_requests.decide`.
+`visa_requests.request_documents`, `visa_requests.submit_for_platform_review`, `visa_requests.record_issuance` and `visa_requests.deliver` are separate permissions. Document review does not itself grant the ability to request documents, submit for platform review, record issuance or deliver a visa. The partner may not record issuance until actual external issuance has occurred. Recording issuance and delivery do not mean that Traway issued or approved the visa.
+
+The final platform review remains distinct from actual issuance by the embassy/competent authority. Do not infer any additional partner-side status transition beyond the explicitly listed actions.
 
 ## 6. Cancellation and refund boundary
 
