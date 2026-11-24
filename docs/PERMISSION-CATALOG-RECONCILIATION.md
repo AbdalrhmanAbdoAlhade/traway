@@ -299,7 +299,7 @@ Two mechanisms, one source of truth (`config/authorization.php`), enforced in th
 | Organization | **48** |
 | **Total** | **85** |
 
-Counted once per organization type a key may be held in (the pre-P-09 values):
+Historical count from the pre-multi-service draft only — **not valid for implementation planning**:
 
 | Org type | Keys available | Composition |
 |---|---:|---|
@@ -311,7 +311,7 @@ Counted once per organization type a key may be held in (the pre-P-09 values):
 
 | ID | Question | Recommendation |
 |---|---|---|
-| P-09 | How should booking and customer-context permissions apply to multi-service providers? | Service-aware eligibility only; the provider must have the service enabled and the membership must pass service/resource scope. No blanket allow or blanket deny. |
+| P-09 | How should booking and customer-context permissions apply to multi-service providers? | Owner-approved service-aware eligibility. Exact keys and metadata must be recalculated before Phase A. |
 | P-14 | Sensitivity value spelling | Normalise `access_control` → `access-control` when the seeder is next touched |
 
 ---
