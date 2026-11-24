@@ -235,6 +235,10 @@ class AuthorizationService
 
         $service = $context['service'] ?? null;
 
+        if (! $this->permissionMatchesService($permission, $service)) {
+            return false;
+        }
+
         if (! $this->withinServiceScope($definition, $membership, $service)) {
             return false;
         }
@@ -275,6 +279,21 @@ class AuthorizationService
         }
 
         return (bool) $membership->is_owner;
+    }
+
+    /**
+     * A service-scoped permission is valid only in its canonical service context.
+     * The mapping is server configuration, never caller-controlled input.
+     */
+    private function permissionMatchesService(string $permission, ?string $service): bool
+    {
+        foreach (config('authorization.permission_service_prefixes', []) as $prefix => $requiredService) {
+            if (str_starts_with($permission, $prefix)) {
+                return $service === $requiredService;
+            }
+        }
+
+        return true;
     }
 
     /**
