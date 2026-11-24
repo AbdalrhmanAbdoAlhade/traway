@@ -322,7 +322,7 @@ Booking states used throughout (BR-076): `pending_payment → confirmed → comp
 2. Company form or hotel form: identity, contact, licence documents, terms (D-02.1/D-02.2).
 3. Submit → acknowledgment with request number `P-2291` and a two-business-day expectation (D-02.3).
 4. Admin receives a join notification and reviews the request: applicant data, requested services, commission terms, document verification (D-03.6).
-5. Accept → partner tenant created; owner account created; activation link e-mailed (inferred mechanics, BR-083).
+5. Accept → partner tenant created; owner account created; activation link e-mailed (inferred mechanics, BR-083). The services approved by Traway are stored as the organization's enabled-service set; this is separate from employee membership service scopes. Exact enable/disable and later-change workflow remains open (`Q-54`).
 6. Owner activates the account and logs into the correct portal (D-01.1 routing rule BR-080).
 7. Owner invites team members, creates organization roles (or clones a template), assigns them, and may grant bounded per-employee permissions (D-04.7/D-04.8 for companies, D-05.5 for hotels; AUTHORIZATION-ARCHITECTURE §6–§7).
 8. Owner completes company/hotel settings and publishes (hotel publication requires approved documents, BR-110).
