@@ -156,6 +156,9 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `visa_requests.view` | visas | Company + Provider | Visas | service_assignment | sensitive | View requests attached to the organization's own visa offerings |
 | `visa_requests.review` | visas | Company + Provider | Visas | service_assignment | sensitive | Validate submitted documents; no final decision or customer-document request transition |
 | `visa_requests.request_documents` | visas | Company + Provider | Visas | service_assignment | sensitive | Request missing/replacement mandatory documents and transition an eligible request to `Documents Required`; no other stage changes or final decision |
+| `visa_requests.submit_for_platform_review` | visas | Company + Provider | Visas | service_assignment | sensitive | Submit a complete request to Traway for final platform review after required-document validation |
+| `visa_requests.record_issuance` | visas | Company + Provider | Visas | service_assignment | sensitive | Record an actually issued external visa, its details and supporting file; does not represent issuance by Traway |
+| `visa_requests.deliver` | visas | Company + Provider | Visas | service_assignment | sensitive | Send recorded issued-visa details/file to the customer; no additional platform approval required |
 | `visa_offerings.view` | visas | Company + Provider | Visas | service_resource | normal | View the organization's own visa offerings |
 | `visa_offerings.manage` | visas | Company + Provider | Visas | service_resource | sensitive | Create/update own visa offerings and prices |
 | `properties.view` | properties | Hotel + Provider | Hotels | service | normal | View hotel properties owned by the organization |
@@ -178,7 +181,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `status_history.view` | reports | All | All enabled services | organization | normal | View business status transitions only; never a general activity/audit feed |
 | `customers.view` | customers | Company + Hotel + Provider | Contextual: Hotels/Tours/Visas | service_resource | sensitive | View minimum customer contact fields only on records already authorized through the corresponding service |
 
-**Count: 52 organization candidate keys.** For the booking family, the eligible type set is company + hotel + service_provider; for check-in/check-out it is hotel + service_provider; tour attendance, completion and cancellation are service-provider/company candidates only for Tours and remain subject to membership service/resource scope and the suspension action matrix. This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
+**Count: 55 organization candidate keys.** For the booking family, the eligible type set is company + hotel + service_provider; for check-in/check-out it is hotel + service_provider; tour attendance, completion and cancellation are service-provider/company candidates only for Tours and remain subject to membership service/resource scope and the suspension action matrix. This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
 
 ---
 
