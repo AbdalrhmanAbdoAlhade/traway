@@ -197,7 +197,8 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 | F-067 | Tours catalogue | MOB | M-065 | P0 | C | Search, category chips (all, day tours, full programmes, family), featured multi-day programme (Maldives 6 nights, $1,160), cards with duration and price. |
 | F-068 | Tour programme detail | MOB | M-066 | P0 | C | Hero, rating 4.8 (612 reviews), duration/guide/languages/group size, day-by-day timeline, participant stepper, total for 2, choose date. Rule: participants ≤ remaining seats and ≤ group max (`BR-071`). |
 | F-069 | Tour booking & payment | MOB | M-067 | P0 | C | Date strip with availability, departure time slots, pickup location, payment card, price for 2, pay. Output: confirmed booking. |
-| F-070 | Tour confirmation & voucher | MOB | M-068 | P0 | C | Success, QR voucher, booking `TR-33107`, pickup instructions, the applicable tour company's cancellation terms when available, contact guide, add to calendar, my bookings/home. The screen's 24-hour free-cancellation wording is historical UI evidence only and is not an approved platform policy. || F-071 | Tour cancellation & refund | MOB | M-068 (promise only) | P2 | U | «إلغاء مجاني خلال 24 ساعة» is stated but no cancellation UI, deadline calculation or refund rule is drawn. Not committed until `Q-24`. |
+| F-070 | Tour confirmation & voucher | MOB | M-068 | P0 | C | Success, QR voucher, booking `TR-33107`, pickup instructions, the applicable tour company's cancellation terms when available, contact guide, add to calendar, my bookings/home. The screen's 24-hour free-cancellation wording is historical UI evidence only and is not an approved platform policy. |
+| F-071 | Tour cancellation & refund | MOB | M-068 (promise only) | P2 | U | Cancellation and refund must follow the applicable tour company's policy. No universal 24-hour full-refund rule is approved. The customer must see the applicable cancellation terms and refund calculation before booking. Cancellation workflow, eligibility, deadlines and refund handling remain unresolved pending `Q-24`. |
 
 ### Domain 11 — Partner onboarding & portal authentication
 
@@ -232,7 +233,7 @@ No feature is tagged `U` and simultaneously treated as a committed requirement.
 
 | ID | Feature | App | Screens | Pri | Ev | Notes — inputs, outputs, rules |
 |---|---|---|---|---|---|---|
-| F-091 | Company overview & today queue | COM | D-04.1 | P0 | C | KPIs (monthly sales $16.8K, bookings 186, visa requests 142, visa approval 96 %), 14-day bookings chart, “required today” queue (14 new visa requests, 5 incomplete docs, 9 new bookings, 3 tours starting), upcoming tours with occupancy, team activity feed, new tour. |
+| F-091 | Company overview & today queue | COM | D-04.1 | P0 | C | KPIs (monthly sales $16.8K, bookings 186, visa requests 142, visa approval 96 %), 14-day bookings chart, “required today” queue (14 new visa requests, 5 incomplete docs, 9 new bookings, 3 tours starting), upcoming tours with occupancy, business status-history updates, new tour. |
 | F-092 | Company notifications | COM | D-04.2 | P1 | C | All/unread; events: new visa request, new booking, passport re-upload, tour approved, employee deactivated, settlement transferred. Mark all read. |
 | F-093 | Tour portfolio management | COM | D-04.3 | P0 | C | Status tabs (7 published, 4 in review, 1 documents, 1 rejected, 1 expired), cards with occupancy/booked, edit, bookings, new tour. Rule: rejected/expired tours are not sold (`BR-090`). |
 | F-094 | Tour editor & review submission | COM | D-04.4 | P0 | C | Pricing (price, child price, single supplement, net after 10 % commission), schedule slots with seats/status, includes checklist, basic info, gallery, day-by-day itinerary, save & submit for review, cancel. Rule: submission requires complete mandatory fields and ≥1 future slot (`BR-091`). |
@@ -361,7 +362,7 @@ Chapter-title strips `MT-01` – `MT-10` and annotation `DL-01` carry no interac
 | Admin role matrix → all portals | ADM → all | D-03.15 | Platform roles and partner roles are two distinct permission families sharing one authorisation model. |
 | Hotel portal ↔ hotel bookings | MOB ↔ HTL | M-063/M-064 ↔ D-05.1/D-05.4 | Rates, stop-sell and availability set in D-05.3 govern what M-059/M-062 can sell. |
 | Coupon scope → mobile checkout | ADM/COM → MOB | D-03.15, D-04.8; M-024, M-057 | One coupon per booking; service scope (flights/hotels/visas) and usage limits are enforced server-side, never by the client. |
-| Role & permission administration → all portals | ADM ↔ COM/HTL | D-03.15, D-04.7, D-04.8, D-05.5 | One authorization model with two permission families; platform staff administer tenants only through an explicit audited permission. |
+| Role & permission administration → all portals | ADM ↔ COM/HTL | D-03.15, D-04.7, D-04.8, D-05.5 | One authorization model with two permission families; platform staff administer tenants only through an explicit permission. |
 
 ---
 
