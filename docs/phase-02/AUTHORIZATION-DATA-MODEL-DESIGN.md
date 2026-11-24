@@ -454,3 +454,22 @@ The owner approves a distinct organization permission: `visa_requests.request_do
 This approval defines only the `Documents Required` transition. No other partner-side visa stage transition is approved by implication.
 
 **Implementation status:** design decision only. No application code, migration, Seeder, policy, notification implementation or tests were changed.
+
+
+### 10.11 Visa submission, external issuance and customer delivery — owner-approved workflow (2026-11-24)
+
+The owner approves three separate organization permissions in addition to `visa_requests.request_documents`:
+
+1. `visa_requests.submit_for_platform_review`: submit a complete request to Traway for final platform review. The request must have passed mandatory-document validation under BR-095 and must not have an outstanding customer-document request. This is a named workflow transition, not generic status editing.
+2. `visa_requests.record_issuance`: after the embassy/competent authority has actually issued the visa outside Traway, the authorized organization employee may record the issuance details and attach the issued visa file/evidence. The backend must not permit a user to mark a visa issued without the required issuance data/evidence and valid prior workflow state.
+3. `visa_requests.deliver`: send the recorded issued-visa details/file to the customer. No additional platform approval is required for this authorized partner delivery. Delivery must be idempotent or otherwise protected against accidental duplicate sends, and its result/status must be persisted.
+
+Business boundary:
+- Traway manages the application workflow, document review, platform review, issuance record and customer communication.
+- The embassy/competent authority issues the visa outside Traway. Traway is not the issuer.
+- Platform final review is distinct from the external authority's actual issuance. The existing platform-only decision permission remains platform-only; it must not be conflated with the external issuance event.
+- Recording issuance and delivering the visa are separate actions and permissions.
+- All actions enforce organization ownership, enabled Visas service, membership service scope, assignment/authorized team queue, valid state transitions and the service-suspension cutoff. During suspension, these actions may service only eligible requests created before the effective suspension time.
+- No generic `visa_requests.update_status` permission is introduced.
+
+**Implementation status:** design decision only. No application code, migration, Seeder, policy, notification implementation or tests were changed.
