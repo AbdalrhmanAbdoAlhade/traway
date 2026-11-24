@@ -209,6 +209,13 @@ class AuthorizationServiceTest extends TestCase
         $this->assignRole($user, $this->role($org, [$permission]), $org);
 
         MembershipServiceScope::create(['membership_id' => $membership->id, 'service' => 'hotels']);
+        \App\Models\OrganizationService::create([
+            'organization_id' => $org->id,
+            'service' => 'hotels',
+            'status' => \App\Models\OrganizationService::STATUS_ENABLED,
+            'requested_at' => now(),
+            'enabled_at' => now(),
+        ]);
 
         $this->assertTrue($this->authz->allows($user, 'rooms.view', $org, ['service' => 'hotels']));
         $this->assertFalse($this->authz->allows($user, 'rooms.view', $org, ['service' => 'tours']));
@@ -242,6 +249,14 @@ class AuthorizationServiceTest extends TestCase
         $membership->hotelScopes()->create(['hotel_id' => $hotelA->id]);
         MembershipServiceScope::create(['membership_id' => $membership->id, 'service' => 'hotels']);
 
+        \App\Models\OrganizationService::create([
+            'organization_id' => $org->id,
+            'service' => 'hotels',
+            'status' => \App\Models\OrganizationService::STATUS_ENABLED,
+            'requested_at' => now(),
+            'enabled_at' => now(),
+        ]);
+
         $this->assertTrue($this->authz->allows($user, 'rates.update', $org, [
             'service' => 'hotels',
             'hotel_id' => $hotelA->id,
@@ -264,6 +279,14 @@ class AuthorizationServiceTest extends TestCase
         $permission = $this->permission('rates.view', types: ['hotel'], scope: 'property');
         $this->assignRole($user, $this->role($org, [$permission]), $org);
         $hotel = $org->hotels()->create(['name' => ['en' => 'Owner property'], 'city' => 'Amman']);
+
+        \App\Models\OrganizationService::create([
+            'organization_id' => $org->id,
+            'service' => 'hotels',
+            'status' => \App\Models\OrganizationService::STATUS_ENABLED,
+            'requested_at' => now(),
+            'enabled_at' => now(),
+        ]);
 
         $this->assertTrue($this->authz->allows($user, 'rates.view', $org, [
             'service' => 'hotels',
