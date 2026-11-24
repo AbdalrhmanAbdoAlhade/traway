@@ -381,3 +381,12 @@ Employees of a multi-service organization may be assigned one or more service sc
 The previous statement that service providers have structural permissions only, and the P-09 blanket denial of all bookings/customer-context permissions, are superseded. Exact permission keys and provider eligibility remain pending the revised permission matrix. Customer contact access is limited to the minimum fields on records the employee is already authorized to process; it is not a customer-directory permission.
 
 Flights remain Platform Admin only. Service-provider visa staff may validate documents within their scope but cannot make final visa decisions.
+
+
+## 8. Multi-service provider roles — catalog alignment (2026-11-24)
+
+R-19 `service_provider_owner` is a protected owner template for an organization that may operate several platform-enabled service lines. Its exact candidate permissions are derived from the service-aware catalog, not from the former structural-only template. The template is limited to the services enabled for that organization; it never includes Flights or platform-only visa decisions.
+
+Provider employee presets must be created only after the provider service workflows and dashboard responsibilities are confirmed. A membership may have multiple service scopes, but each role/direct grant remains intersected with the organization's enabled services and the membership's resource/assignment scope. Empty scope is fail-closed for non-owners.
+
+See [`SERVICE-AWARE-PERMISSION-CATALOG.md`](./SERVICE-AWARE-PERMISSION-CATALOG.md) for the current candidate permission set and [`MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./MULTI-SERVICE-PROVIDER-AUTHORIZATION.md) for the controlling isolation rules. The legacy role list and role matrices do not define a complete provider dashboard or provider employee role set.
