@@ -257,7 +257,7 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 2. Finance can execute a transfer only in `pending`/`failed` state; `transferred` is terminal (BR-099).
 3. Support can never block an account; only super admin can (Q-28).
 4. Content manager cannot change commission or approve partners.
-5. Platform admins may reach tenant role/permission administration only through `platform.organization_access.manage`, and every such action is audited (RA-13, BR-124).
+5. Platform admins may reach tenant role/permission administration only through `platform.organization_access.manage` (RA-13).
 
 ---
 
@@ -333,7 +333,7 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 |---|---|---|
 | RA-01 | A membership belongs to exactly one family context (platform or organization). A user may hold several memberships, but platform and organization roles are never active in the same context; multiple roles inside one context are unioned. | D-03.15; AUTHORIZATION §3 |
 | RA-02 | A tenant must always have at least one active owner; the last owner cannot be removed or demoted. | BR-086, BR-123 |
-| RA-03 | Deactivating an employee revokes access immediately and retains their audit trail. | D-04.2 «employee deactivated»; BR-125 |
+| RA-03 | Deactivating an employee revokes access immediately; no general audit trail is created. | D-04.2 «employee deactivated»; BR-125; G0-DEC-01 |
 | RA-04 | An invited employee cannot log in until the invitation is accepted; resending invalidates the previous token. | D-04.7 invite, D-02.3 activation link |
 | RA-05 | A custom role is a named set of permissions inside one tenant; it cannot exceed the creator's own permissions or scope. | D-04.8; BR-084, BR-122 |
 | RA-06 | Changing a role's permissions affects all members holding that role, immediately (BR-088). | D-04.8 |
@@ -342,8 +342,8 @@ Legend: V view · C create · U update · D delete · X none · `P` publish/appr
 | RA-09 | Service scope is an additional restriction: a service owner or employee sees only the service lines in their scope, even when the role grants a generic key. | D-04.7, D-05.5; BR-121 |
 | RA-10 | Per-employee customisation is supported through role assignment plus bounded direct grants; every direct grant records its grantor and the grantor's ceiling at grant time. | D-04.7, D-04.8 |
 | RA-11 | Moving to another organization ends the old membership and creates a new one; roles, grants and service scopes do not carry over. | D-04.7; BR-125 |
-| RA-12 | Ownership transfer is an atomic, audited operation between two active members of the same organization; it is never an ordinary role assignment. | D-04.7; BR-123 |
-| RA-13 | Platform admins may assign roles and permissions in a tenant only through `platform.organization_access.manage`, and every such action is audited. | D-03.15; DEC-10 audit requirement |
+| RA-12 | Ownership transfer is an atomic operation between two active members of the same organization; it is never an ordinary role assignment. No general audit entry is created. | D-04.7; BR-123; G0-DEC-01 |
+| RA-13 | Platform admins may assign roles and permissions in a tenant only through `platform.organization_access.manage`. No general audit entry is created. | D-03.15; G0-DEC-01 |
 
 ---
 
