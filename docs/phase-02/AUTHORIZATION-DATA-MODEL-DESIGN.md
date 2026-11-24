@@ -473,3 +473,19 @@ Business boundary:
 - No generic `visa_requests.update_status` permission is introduced.
 
 **Implementation status:** design decision only. No application code, migration, Seeder, policy, notification implementation or tests were changed.
+
+
+## 11. Organization service lifecycle — implementation record (2026-11-24)
+
+Implemented on branch `implementation/authorization-core`:
+
+- `organization_services` stores one current capability row per organization/service, with a unique `(organization_id, service)` key.
+- Canonical partner service values are Hotels, Tours and Visas only. Flights and eSIM remain platform-only.
+- `OrganizationServiceLifecycle` supports owner request; platform approve/reject; platform suspend/reactivate/disable.
+- Requests are owner-only through non-delegable `org.services.request`. Platform transitions require `platform.partners.update`.
+- Invalid transitions and duplicate requests are rejected. A rejected/disabled row cannot be silently re-requested; the product must explicitly decide a re-application/history policy before that behavior is added.
+- `effective_at` is written when a service is suspended or disabled. It is the cutoff for the existing-record servicing rules; this first implementation does not yet implement the per-service existing-record action executor.
+- Every lifecycle transition appends to the existing `status_histories` business-state timeline. No general audit/activity log is introduced.
+- Authorization now requires an `enabled` organization-service row for every service-scoped permission, for owners and employees. Employee service scope remains an additional independent restriction.
+
+**Not yet complete:** per-permission service applicability metadata, service/resource derivation from persisted records in every policy, existing-record suspension allowlist enforcement, list/query/report scoping, and local Pest/migration execution. Do not merge to `main` until these are completed and verified.
