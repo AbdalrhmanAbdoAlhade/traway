@@ -650,3 +650,20 @@ This separation is enforced three times: the role's family (§3.2), the record's
 The authoritative service-provider model, permission-family boundaries, resource rules and Gate 0 consequences are defined in [`MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./MULTI-SERVICE-PROVIDER-AUTHORIZATION.md). This section supersedes any earlier wording that limits a service provider to one service type or treats generic `bookings.*` as the authorization model for every service.
 
 Implementation rule: organization-enabled services and membership service scopes are separate. Every organization-side query must enforce organization ownership, enabled service, membership service scope and applicable resource/property scope. Empty scope remains fail-closed under G0-DEC-05. Flights remain platform-only; visa final decisions remain platform-only under G0-DEC-04.
+
+
+## 15. Service-aware authorization update — 2026-11-24
+
+The controlling provider model and catalog are now documented in [`MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./MULTI-SERVICE-PROVIDER-AUTHORIZATION.md) and [`SERVICE-AWARE-PERMISSION-CATALOG.md`](./SERVICE-AWARE-PERMISSION-CATALOG.md).
+
+The following rules supersede any earlier single-service/provider-type assumptions in this document:
+
+1. One `service_provider` organization may operate multiple services enabled by Traway.
+2. Organization-enabled services and a membership's service scopes are separate data concepts. A member can receive multiple service scopes, but cannot be scoped to a service that is not enabled for the organization.
+3. Effective access is the intersection of permission, organization ownership, enabled service, membership service scope, resource/property scope and assignment/workflow rules.
+4. Generic `bookings.*` applies only to actual Hotels/Tours booking records; it does not authorize visa applications or eSIM orders. Visa requests use `visa_requests.*`. Provider-side eSIM operations are not catalogued until their lifecycle is defined.
+5. `customers.view` is a minimal contextual projection on records the member is already authorized to process; it is never the platform customer directory.
+6. Flights remain platform-only. Final visa approval/rejection remains platform-only under G0-DEC-04.
+7. Empty service/resource scope grants no access to non-owner memberships. Owner access is limited to services enabled for that organization.
+
+**Implementation gap requiring correction:** the current `Membership::isRestrictedToHotel()` implementation treats an empty hotel-scope list as unrestricted, which conflicts with the approved fail-closed property-scope rule. The implementation must be corrected and covered by negative tests before release. This documentation update does not change code.
