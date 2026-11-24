@@ -666,3 +666,12 @@ Approve each line individually. Nothing in Phase A starts until Gate 0A is appro
 - This documentation-only update is committed to `main`; no application code, migration, model, service, controller, policy, middleware, route, seeder or test was modified.
 - No `.env` change, migration run, database change or dependency change.
 
+
+
+### 4.7 Service-aware permission catalog — revised candidate
+
+The active candidate catalog is [`phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`](./phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md). It preserves 37 platform and 48 organization candidate keys while introducing service applicability and scope requirements. The 85-key figure is a candidate count only, not an approved final catalog.
+
+**Gate 0A must now explicitly approve:** organization eligibility, enabled-service applicability, membership service scopes, resource/property scope requirements, owner-template derivation, contextual customer-data projection and the exclusion of provider-side eSIM operations until Q-53 is answered. Q-54 and Q-56 block authorization implementation; Q-55 blocks provider portal implementation.
+
+A code review also found a fail-closed mismatch: `Membership::isRestrictedToHotel()` currently treats no hotel-scope rows as unrestricted, while the approved property-scope rule requires no access for non-owner staff. Correct this before release and add negative tests. No code change is included in this documentation update.
