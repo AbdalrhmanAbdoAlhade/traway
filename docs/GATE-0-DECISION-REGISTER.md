@@ -73,7 +73,7 @@ Gate 0A exists because Phase A needs a frozen permission catalog and unambiguous
 | 4 | `G0-DEC-04` | Only platform staff holding `platform.visa_requests.decide` decide a visa | **Approved** |
 | 5 | `G0-DEC-05` | An empty scope means access to nothing | **Approved** |
 | 6 | **Catalog content** (§4.1) | 85 keys — 37 platform + 48 organization; vs the seeder: **+6 added, −1 removed, 1 renamed** | **Recommended — awaiting approval** |
-| 7 | **P-09** (§4.2) | Keep `bookings.*` and `customers.view` closed to service providers for now | **Recommended — awaiting approval** |
+| 7 | **P-09** (§4.2) | Replaced by service-aware provider permission eligibility and organization/service/resource scopes | **Owner-approved direction; exact catalog pending** |
 | 8 | **Delegation and owner templates** (§4.3) | Family rule, non-delegable keys, owner-only actions and immutable owner templates (DEC-11–DEC-19) | **Approved — implementation in Phase A** |
 | 9 | **Empty scopes fail closed** (§4.4) | Approved semantics under `G0-DEC-05`; Phase A implements fail-closed query enforcement and pre-deploy checks | **Approved — implementation in Phase A** |
 
@@ -653,3 +653,14 @@ Approve each line individually. Nothing in Phase A starts until Gate 0A is appro
 - No application code, migration, model, service, controller, policy, middleware, route, seeder or test modified.
 - No `.env` change, no migration run, no database change, no dependency change.
 - Nothing committed or pushed.
+
+
+### 4.6 Owner-approved multi-service provider authorization direction (2026-11-24)
+
+**Decision.** A single service-provider organization may operate multiple service lines. Organization-enabled services form the tenant capability boundary; each membership has its own service scope, and each service may have a further resource/property scope. Every check is intersected with explicit permissions and organization ownership. Empty scope means no access under G0-DEC-05.
+
+**Permission consequence.** P-09's previous blanket recommendation to deny all `bookings.*` and `customers.view` to service providers is superseded. Permissions are eligible only for the corresponding enabled service and are still restricted by membership service/resource scopes. `customers.view` is contextual/minimal for records the member may already access, not a customer directory. eSIM provider operations require a defined workflow before adding permission keys.
+
+**Non-changes.** Flights remain platform-only. Final visa decisions remain restricted to authorized platform staff under G0-DEC-04. The centralized permission-catalog principle remains approved; the exact catalog and its count are not approved and must be recalculated.
+
+**Status.** Owner-approved direction; documentation updated 2026-11-24. Phase A remains blocked on the revised exact catalog, service eligibility matrix and provider eSIM workflow definition. See [`phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md).
