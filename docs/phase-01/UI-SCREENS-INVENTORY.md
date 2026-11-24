@@ -409,6 +409,7 @@ Recorded as gaps, **not** as requirements:
 | Partner document re-upload after rejection | D-03.6, D-04.3 rejected state | Partner-side remediation UI missing |
 | Refund processing UI | D-03.2 refund requests | Approval workflow UI missing |
 | Payout / settlement detail | D-03.14, D-04.9 | Payout execution UI missing |
+| Unified multi-service provider portal | Owner-confirmed organization may operate multiple service lines; current supplied portals are separate APP-COM and APP-HTL | No complete unified provider shell, service switcher, multi-service employee scope editor or cross-service navigation is supplied; do not infer screen IDs or behavior |
 | Empty, error, offline states | all lists | Non-happy-path design absent |
 | English localisation of mobile screens | language toggle M-053 | Only Arabic layouts supplied |
 
@@ -431,3 +432,8 @@ Recorded as gaps, **not** as requirements:
 Phase 1 exit criteria: **met** — every discovered image has an explicit analyzed status, every screen is mapped to an application, module and navigation context, and every gap/inconsistency is documented rather than assumed.
 
 **Awaiting approval: `APPROVE PHASE 1`.**
+
+
+## 10. Authorization mapping companion
+
+The supplied dashboard screens have been mapped to candidate permissions and data boundaries in [`../phase-02/DASHBOARD-PERMISSION-MAPPING.md`](../phase-02/DASHBOARD-PERMISSION-MAPPING.md). That companion preserves the distinction between supplied UI facts and proposed backend authorization. It does not change the Phase 1 screen count or invent a new provider portal screen.
