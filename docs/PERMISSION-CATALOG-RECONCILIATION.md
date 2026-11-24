@@ -210,7 +210,7 @@ Organization keys are never held by platform-role members through an organizatio
 | 48 | `customers.view` | View customer contact for own bookings | All → see P-09 | organization | yes | both | F-095, F-104 | keep |
 | — | ~~`org.profile.publish`~~ | Hotel profile publishing | Hotel | — | — | code only | F-106 | **REMOVED (superseded by `properties.publish`)** |
 
-**Catalog totals: 37 platform + 48 organization = 85 permissions (proposed — awaiting approval).**
+**Historical draft only: 37 platform + 48 organization = 85 permissions. Withdrawn as the implementation target pending service-aware recalculation.****
 
 ---
 
@@ -291,7 +291,7 @@ Two mechanisms, one source of truth (`config/authorization.php`), enforced in th
 
 ---
 
-## 10. Final counts and the two open sub-items
+## 10. Historical counts and remaining catalog work
 
 | Family | Canonical count |
 |---|---:|
@@ -318,7 +318,7 @@ Historical count from the pre-multi-service draft only — **not valid for imple
 
 ## 11. What happens after approval
 
-No code change has been made. When the Gate 0A catalog content is approved, the concrete work is a **seeder-only change** plus documentation corrections:
+No code change has been made. The previous 85-key proposal is withdrawn as a final seed target. Once the revised service-aware catalog and workflows are approved, update the Seeder, authorization configuration, role templates, scope resolver, policies and tests as required; this is not necessarily a seeder-only change.
 
 1. Add the 6 new keys, remove `org.profile.publish`, rename `team_activity.view` → `status_history.view`, and narrow the `platform.visa_requests.review` description.
 2. Add `properties.` to the `scopeRequirement()` prefix list as a `property` scope, alongside `rooms.` and `rates.`.
