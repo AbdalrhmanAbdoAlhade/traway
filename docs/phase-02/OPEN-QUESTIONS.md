@@ -275,3 +275,15 @@ The owner confirmed that one service-provider organization may operate more than
 The replacement rule is service-aware: organization-enabled services are distinct from each employee's service scope; resource/property scope further narrows access; empty scope grants nothing. Hotel/tour bookings, visa requests and eSIM operations must use their own workflow/permission boundaries. Customer contact is contextual and minimal. Flights remain platform-only; final visa decisions remain platform-only.
 
 **New blocking Gate 0A work:** recalculate the exact permission catalog and service eligibility; define provider-side eSIM order/activation responsibilities; document provider dashboard coverage. The 85-key proposal is no longer a final seed target.
+
+
+## 2.13 Multi-service provider catalog and dashboard blockers (2026-11-24)
+
+| ID | Question | Impact | Working rule / next action | Status |
+|---|---|---|---|---|
+| Q-53 | Which partner-side eSIM responsibilities exist at launch (package ownership, order fulfillment, activation, failure handling, support, refunds, usage inquiries), and which party owns each action? | Organization permission keys, eSIM order workflow, provider dashboard and provider API integration | No organization-side eSIM operational permissions until the lifecycle and responsibility split are confirmed. Customer eSIM purchase and platform catalogue screens do not establish provider-side operations. | Blocking for provider eSIM operations |
+| Q-54 | What is the authoritative data model and platform workflow for enabling/disabling service lines on an organization? | Organization capability model, onboarding/partner details, employee scope validation, service availability | Service enablement is controlled by Traway and is separate from membership service scopes. Do not infer enablement from organization type or from a membership scope row. | Blocking before Phase A authorization implementation |
+| Q-55 | What provider dashboard screens and queues are required for a multi-service organization and its service-scoped employees? | UI inventory, feature catalog, API contracts, navigation and reports | Existing COM/HTL screens are evidence for those portals only; no new provider screen IDs or workflows should be invented. Reuse concepts only after the provider UI is supplied/approved. | Blocking for provider portal implementation |
+| Q-56 | Which resource types need explicit membership-level scope per service beyond hotel properties (for example tours, departures, visa offerings, eSIM packages/orders)? | Scope tables, policies, query filters and assignment rules | Every service must declare its resource boundary before implementation. Hotel property scope remains mandatory for non-owner staff; other resource scopes must be defined from confirmed workflows. | Blocking before Phase A authorization implementation |
+
+The candidate permission definitions and current scope gaps are maintained in [`SERVICE-AWARE-PERMISSION-CATALOG.md`](./SERVICE-AWARE-PERMISSION-CATALOG.md). These questions are not permission to seed speculative eSIM or provider-dashboard permissions.
