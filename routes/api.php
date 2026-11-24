@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Organization\InvitationController;
 use App\Http\Controllers\Api\V1\Organization\MembershipController;
 use App\Http\Controllers\Api\V1\Organization\OrganizationApplicationController;
 use App\Http\Controllers\Api\V1\Organization\OrganizationController;
+use App\Http\Controllers\Api\V1\Organization\OrganizationServiceController;
 use App\Http\Controllers\Api\V1\Organization\RoleTemplateController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,33 @@ Route::prefix('v1')->group(function () {
          |  Organizations
          * ------------------------------------------------------ */
         Route::apiResource('organizations', OrganizationController::class);
+
+        // Organization service requests (owner) and platform service lifecycle.
+        Route::post(
+            'organizations/{organization}/services',
+            [OrganizationServiceController::class, 'request']
+        );
+
+        Route::post(
+            'platform/organization-services/{organizationService}/approve',
+            [OrganizationServiceController::class, 'approve']
+        );
+        Route::post(
+            'platform/organization-services/{organizationService}/reject',
+            [OrganizationServiceController::class, 'reject']
+        );
+        Route::post(
+            'platform/organization-services/{organizationService}/suspend',
+            [OrganizationServiceController::class, 'suspend']
+        );
+        Route::post(
+            'platform/organization-services/{organizationService}/reactivate',
+            [OrganizationServiceController::class, 'reactivate']
+        );
+        Route::post(
+            'platform/organization-services/{organizationService}/disable',
+            [OrganizationServiceController::class, 'disable']
+        );
 
         Route::post(
             'organizations/{organization}/transfer-ownership',
