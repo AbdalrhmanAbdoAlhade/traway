@@ -74,3 +74,11 @@ These are the origin of the `M-`/`D-` screen IDs; they are not implementation st
 4. **Superseded text is marked, not deleted.** Keep the original wording and add a "Superseded by …" note, so the history of a requirement stays readable.
 5. **Counts are derived, not chosen.** Any permission count must be reproducible from `PERMISSION-CATALOG-RECONCILIATION.md`, and any statement of a delta must name its baseline (seeder or union).
 6. **No audit, activity or user-tracking capability.** `status_histories` is the only history table and `status_history.view` is the only key that reads it (`G0-DEC-01`).
+
+
+## Phase 2 authorization references
+
+- [Service-aware permission catalog](./phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md) — candidate permission keys, service applicability and scope requirements.
+- [Dashboard permission mapping](./phase-02/DASHBOARD-PERMISSION-MAPPING.md) — supplied dashboard screens mapped to candidate permissions and data boundaries; UI facts are distinguished from proposed enforcement.
+- [Authorization data model design](./phase-02/AUTHORIZATION-DATA-MODEL-DESIGN.md) — proposed persistence model, runtime checks and test matrix.
+- [Multi-service provider authorization](./phase-02/MULTI-SERVICE-PROVIDER-AUTHORIZATION.md) — approved product direction and tenant/service/resource isolation rules.
