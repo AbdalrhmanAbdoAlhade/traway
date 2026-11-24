@@ -59,6 +59,11 @@ class Organization extends Model
         return $this->hasMany(Membership::class);
     }
 
+    public function services(): HasMany
+    {
+        return $this->hasMany(OrganizationServiceRecord::class);
+    }
+
     public function owner(): HasOne
     {
         return $this->hasOne(Membership::class)
