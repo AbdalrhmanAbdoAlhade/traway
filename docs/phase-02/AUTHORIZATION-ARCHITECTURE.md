@@ -472,7 +472,7 @@ Audit logs and general activity logs are **permanently removed** from the approv
 * No permission can read an audit log; `platform.audit.view` is deleted from the catalog.
 * Role, permission, membership and financial changes are **not** recorded in a general history. The current state is authoritative.
 * `status_histories` is retained **only** for entity lifecycle status transitions (booking, visa application, tour, settlement, deletion request, etc.).
-* The Team Activity Feed on D-04.1 may derive status transitions and booking lifecycle updates from `status_histories`. It is a read model, not a general activity log, and must not gain arbitrary user-action rows.
+* No general Team Activity Feed or user-activity timeline is included. A dashboard may show business status transitions from `status_histories` only, never arbitrary user actions.
 
 ### 11.2 `status_histories` fields
 
