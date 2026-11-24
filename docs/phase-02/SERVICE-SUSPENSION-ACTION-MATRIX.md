@@ -56,13 +56,13 @@ Tour catalogue lifecycle (`draft`, `in_review`, `published`, `documents_required
 | Existing booking state | View | Fulfilment/status mutation | Provider cancellation | Refund action | Other edits |
 |---|---:|---|---|---|---|
 | `pending_payment` | Allow | Deny | Deny | Deny | Deny |
-| `confirmed` | Allow | **Not yet approved**: no partner booking-completion/attendance permission is currently specified in the catalog | **Not yet approved**; must follow the exact tour policy disclosed at purchase (BR-073/BR-077) | **Not yet approved**; no direct refund execution | Deny |
+| `confirmed` | Allow | **Not yet approved**: no partner booking-completion/attendance permission is currently specified in the catalog | **Allow** with the dedicated `tour_bookings.cancel` permission, only when the persisted tour cancellation policy disclosed at purchase permits cancellation and the booking is in an eligible state (BR-073/BR-077) | **Not approved**; no direct refund execution | Deny |
 | `completed` | Allow | Deny | Deny | **Not yet approved**; platform refund workflow only unless separately authorized | Deny |
 | `cancelled` | Allow | Deny | Deny | View existing refund status only | Deny |
 | `refunded` | Allow | Deny | Deny | View only | Deny |
 | `expired` | Allow | Deny | Deny | View only | Deny |
 
-A confirmed tour booking remains readable and may be fulfilled under the original tour/departure/resource scope, but the exact partner-side fulfilment transition must not be invented. Until a dedicated permission and state transition are approved, no partner-side booking status mutation is allowed while suspended.
+A confirmed tour booking remains readable under the original tour/departure/resource scope. During suspension, the provider may cancel it only through the dedicated `tour_bookings.cancel` action and only when the persisted policy version/terms applicable to that booking permit cancellation. This cancellation permission does not grant attendance, completion, arbitrary status-update or refund-execution rights. Tour fulfilment transitions remain unapproved and require a separate decision.
 
 ## 5. Visas — proposed allowlist
 
@@ -85,7 +85,7 @@ The current catalog's `bookings.cancel` and `bookings.refund` are too broad to s
 Proposed safe default:
 - A provider may view cancellation/refund status on an existing record.
 - **Owner decision (2026-11-24):** a hotel provider may cancel an existing confirmed booking directly when it holds `bookings.cancel` and the persisted rate policy says cancellation is eligible. The action must be recorded as a cancellation transition; it is not a generic booking update.
-- For Tours, provider cancellation remains unapproved until the tour-specific policy and transition rules are confirmed.
+- **Owner decision (2026-11-24):** a tour provider may directly cancel an existing confirmed booking during suspension with the dedicated `tour_bookings.cancel` permission, only when the persisted tour policy disclosed at purchase permits cancellation and the booking state is eligible. This is a cancellation transition, not a generic update.
 - A provider may submit a refund request only after the owner explicitly approves that action for the service, record state and applicable policy.
 - A provider must not execute a payment refund or mark a booking refunded.
 - Payment capture/refund confirmation and final financial state remain controlled by the platform/payment workflow.
@@ -119,12 +119,12 @@ The server derives service, organization, record state and creation timestamp fr
 
 ## 9. Owner decisions still required
 
-The product direction Q-57 is approved. The owner has additionally approved direct hotel-booking cancellation under the conditions in §3. This action matrix remains partially pending for other service actions.
+The product direction Q-57 is approved. The owner has additionally approved direct hotel-booking cancellation under §3 and direct tour-booking cancellation under §4. This action matrix remains partially pending for other service actions.
 
 The owner must still decide:
 - whether hotel providers may initiate a refund request, and whether that is limited to cancellations/platform-approved cases;
 - whether tour providers may mark attendance/completion, and which booking states permit that transition;
-- whether tour providers may initiate cancellation/refund requests, subject to the policy disclosed at purchase;
+- whether tour providers may initiate a separate refund request, and under which policy/state conditions;
 - the exact visa partner-review states and any explicit partner-stage transitions before a request enters platform decision.
 
 Until those decisions are approved, the conservative defaults in the tables apply: read existing records; permit only already-defined operational actions; deny ambiguous mutations.
