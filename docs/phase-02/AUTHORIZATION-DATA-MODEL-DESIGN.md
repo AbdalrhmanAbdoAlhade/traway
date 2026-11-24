@@ -231,3 +231,55 @@ Before release, tests must prove at least:
 - Approve the exact revised permission catalog and all scope metadata at Gate 0A.
 
 **Implementation status:** no code, migration, Seeder, config, policy or tests were changed by this design document.
+
+
+---
+
+## 9. Existing policy and test-suite review (verified on main)
+
+The review of the existing policy layer and authorization tests exposed additional conflicts that must be resolved as part of the implementation plan.
+
+### 9.1 Policy context is incomplete for service-aware checks
+
+- `TenantPolicy::allows()` forwards the caller-provided context unchanged.
+- `BookingPolicy` passes the booking as `resource`, but does not pass `service`.
+- `TourPolicy` and `VisaApplicationPolicy` also pass resources without an explicit service context.
+- The current authorization service only reads service scope when `scope_requirement === 'service'`; it does not infer the service from the resource.
+
+**Required change:** service identity must be derived from a trusted server-side resource mapping or supplied by a typed policy method from the persisted resource. Never trust a client-provided service string if it can disagree with the persisted record. For bookings, normalize legacy singular values (`hotel`, `tour`, `visa`, `flight`, `esim`) to the canonical service keys (`hotels`, `tours`, `visas`, etc.) through one explicit mapping. A mismatch between supplied context and resource service must deny.
+
+### 9.2 Existing tests currently encode the opposite of approved fail-closed behavior
+
+In `tests/Feature/Authorization/AuthorizationServiceTest.php`:
+- `test_unscoped_employees_are_not_limited_by_service()` explicitly asserts that an employee with no service scope can access a service-scoped permission. This contradicts G0-DEC-05.
+- `test_a_resource_from_another_tenant_is_denied()` uses `Booking::SERVICE_FLIGHT` and a generic organization `bookings.view` permission as the positive control. Flights are platform-only in the current product definition, so this fixture must be replaced with a Hotels/Tours record and a correct tenant-owned resource before the test can validate the intended rule.
+- `test_service_scoped_employees_cannot_act_outside_their_services()` covers only a hotel organization and does not test a multi-service provider organization or organization-level service enablement.
+
+In `tests/Feature/Authorization/PolicyTest.php`:
+- the helper `booking()` creates flight bookings for organization tenants, and several partner booking tests rely on that fixture;
+- no negative test proves that a service-provider employee with Hotels scope but no hotel property scope is denied;
+- existing property-scope coverage is only for an organization of type `hotel`, not `service_provider`.
+
+These tests must be rewritten/extended; do not merely add new tests while leaving contradictory positive expectations in place.
+
+### 9.3 Hotel policy and legacy permission key drift
+
+- `HotelPolicy::publish()` still calls `org.profile.publish`, while the candidate catalog removes that key and introduces `properties.publish`.
+- `HotelPolicy::view/update` use generic `org.profile.*` keys for Hotel property records, while the candidate catalog defines explicit `properties.*` keys.
+- `BookingPolicy::viewAny()` and `export()` have no record context; list/export query services must enforce service and resource filters before returning rows.
+- `BookingPolicy::view()` uses generic `bookings.view` without ensuring the persisted booking service is Hotels or Tours.
+- `VisaApplicationPolicy::viewAny()` has no assignment/resource context; assigned-only employee queues must be filtered at query level, not only at single-record policy checks.
+
+### 9.4 Required implementation sequence
+
+1. Freeze Gate 0A decisions for service enablement, permission applicability, service key normalization, resource scopes and service-disable behavior.
+2. Add the organization-enabled-service persistence model and validation; preserve membership service scopes as employee assignment.
+3. Add permission applicability metadata and update the canonical Seeder/role-template derivation.
+4. Refactor authorization evaluation into explicit tenant, permission, enabled-service, membership-service, resource/property, assignment and workflow checks.
+5. Update policies to derive trusted service/resource context and replace legacy property permissions with canonical keys.
+6. Update query services/controllers for list, dashboard, report, aggregate and export scoping.
+7. Correct empty-scope behavior and ensure owner exception applies only to membership/resource scope, never to service enablement or tenant boundaries.
+8. Rewrite contradictory tests and add the complete negative/positive matrix in §7.
+9. Run the full Pest suite, migration tests and Seeder idempotency checks locally before merge.
+
+**No implementation is performed by this review document.**
