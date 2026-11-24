@@ -122,14 +122,14 @@ Org type values:
 | `roles.view` | access | All | Normal | View roles and their permissions | D-04.7, D-04.8, D-05.5 | F-097, F-098, F-105, F-112 |
 | `roles.manage` | access | All | Access-control | Create/edit/delete custom roles | D-04.8, D-05.5 | F-098, F-105, F-112 |
 | `roles.assign` | access | All | Access-control | Assign roles to employees | D-04.7, D-05.5 | F-097, F-105, F-112 |
-| `bookings.view` | bookings | All | Sensitive | View bookings and guest data | D-04.5, D-05.4, D-06.2 | F-095, F-104, F-109 |
-| `bookings.create` | bookings | All | Sensitive | Create a booking on behalf of a customer | D-04.5, D-05.4 (not drawn) | F-095, F-104 |
-| `bookings.update` | bookings | All | Sensitive | Modify booking details | D-04.5, D-05.4 | F-095, F-104 |
-| `bookings.cancel` | bookings | All | Sensitive | Cancel a booking | D-04.5, D-05.4 | F-095, F-104 |
-| `bookings.refund` | bookings | All | Financial | Initiate an eligible refund | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.view` | bookings | Company + Hotel | Sensitive | View bookings and guest data | D-04.5, D-05.4, D-06.2 | F-095, F-104, F-109 |
+| `bookings.create` | bookings | Company + Hotel | Sensitive | Create a booking on behalf of a customer | D-04.5, D-05.4 (not drawn) | F-095, F-104 |
+| `bookings.update` | bookings | Company + Hotel | Sensitive | Modify booking details | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.cancel` | bookings | Company + Hotel | Sensitive | Cancel a booking | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.refund` | bookings | Company + Hotel | Financial | Initiate an eligible refund | D-04.5, D-05.4 | F-095, F-104 |
 | `bookings.checkin` | bookings | Hotel | Normal | Check a guest in | D-05.4 | F-104 |
 | `bookings.checkout` | bookings | Hotel | Normal | Check a guest out | D-05.4 | F-104 |
-| `bookings.export` | bookings | All | Sensitive | Export booking lists | D-04.5, D-05.4 | F-095, F-104 |
+| `bookings.export` | bookings | Company + Hotel | Sensitive | Export booking lists | D-04.5, D-05.4 | F-095, F-104 |
 | `tours.view` | tours | Company | Normal | View tours and programmes | D-04.3 | F-093 |
 | `tours.create` | tours | Company | Sensitive | Create a tour | D-04.4 | F-094 |
 | `tours.update` | tours | Company | Sensitive | Edit a tour | D-04.4 | F-094 |
@@ -158,7 +158,7 @@ Org type values:
 | `settlements.manage` | settlements | All | Financial | Request an on-demand payout under delegation rules | D-04.9 (D) | F-099 |
 | `settlements.accounts.manage` | settlements | All | Financial | Manage payout accounts; owner-only, non-delegable | — (D) | F-099 |
 | `status_history.view` | reports | Company | Normal | View business status-history records (booking, visa, refund, payout-request and tour-review status transitions). Does **not** authorise a general activity feed or user activity tracking | D-04.1 | F-091 |
-| `customers.view` | customers | All | Sensitive | View customer contact for own bookings | D-04.5, D-05.4 | F-095, F-104 |
+| `customers.view` | customers | Company + Hotel | Sensitive | View customer contact for own bookings | D-04.5, D-05.4 | F-095, F-104 |
 
 **Catalog totals: 37 platform + 48 organization = 85 permissions (proposed — pending approval).**
 
@@ -291,8 +291,6 @@ Former keys, retained here so no reader mistakes them for active permissions: `p
 | `settlements.accounts.manage` | ● | ○ | ○ | ○ |
 | `status_history.view` | ● | ○ | ○ | ○ |
 | `customers.view` | ● | ● | ● | ○ |
-
-### 4.4 Service provider role
 
 ### 4.4 Service provider role
 
