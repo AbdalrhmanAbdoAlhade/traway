@@ -294,6 +294,10 @@ Former keys, retained here so no reader mistakes them for active permissions: `p
 
 ### 4.4 Service provider role
 
+### 4.4 Service provider role
+
+P-09 recommendation: Service Providers do not receive booking or customer permissions until their service catalogue, offering model, and booking lifecycle are explicitly defined.
+
 | Permission | R-19 Provider owner |
 |---|---|
 | `org.profile.view` | ● |
@@ -307,18 +311,15 @@ Former keys, retained here so no reader mistakes them for active permissions: `p
 | `roles.view` | ● |
 | `roles.manage` | ● |
 | `roles.assign` | ● |
-| `bookings.view` | ● |
-| `bookings.create` | ● |
-| `bookings.update` | ● |
-| `bookings.cancel` | ● |
-| `bookings.refund` | ● |
-| `bookings.export` | ● |
 | `reports.view` | ● |
 | `reports.export` | ● |
 | `settlements.view` | ● |
 | `settlements.manage` | ● |
 | `settlements.accounts.manage` | ● |
-| `customers.view` | ● |
+
+The R-19 role receives no `bookings.*` or `customers.view` permissions.
+
+This is the proposed assignment pending explicit P-09 approval. It does not authorize access to customer bookings through another permission or an unscoped endpoint.
 
 ### 4.4 Assignment summary
 
