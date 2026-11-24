@@ -137,6 +137,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // ---------------- Organization family: structural ----------------
             ['org.profile.view', 'profile', 'normal', 'View organization profile and settings', $all],
+            ['org.services.request', 'services', 'access_control', 'Request activation of an additional service for this organization', $all],
             ['org.profile.update', 'profile', 'sensitive', 'Edit organization profile and settings', $all],
             ['org.profile.publish', 'profile', 'sensitive', 'Publish the hotel profile to customers', $ho],
             ['org.documents.manage', 'profile', 'sensitive', 'Upload or replace legal documents', $all],
