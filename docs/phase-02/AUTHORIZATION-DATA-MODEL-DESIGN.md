@@ -89,7 +89,7 @@ Rules:
 - Disabling a service blocks new provider-side operations immediately. Existing records remain owned and readable only through an explicitly defined transition/support policy; do not silently delete scopes or records.
 - The service key is a domain identifier, not a permission.
 - Flights remain platform-only and must not be enabled for partner organizations in this release.
-- Do not enable eSIM provider operations until Q-53 defines the provider lifecycle.
+- eSIM is platform-only under owner-approved Q-53: never create organization-side eSIM permissions, service scopes, resource scopes or provider dashboard workflows. External eSIM suppliers are platform-controlled technical integrations.
 
 ### 3.2 Membership service scopes
 
@@ -139,7 +139,8 @@ For Visas:
 - final decision remains platform-only under G0-DEC-04.
 
 For eSIM:
-- no partner-side resource scope or organization permissions until Q-53 defines package ownership, order fulfillment, activation, support, usage and refund responsibilities.
+- Traway alone owns catalogue/packages, pricing/margin, customer orders, activation orchestration, failure handling, support, refund decisions and usage inquiries under Q-53.
+- no partner-side resource scope, organization permission, provider queue or dashboard module. An external supplier/API is a platform-controlled technical integration.
 
 Avoid a generic polymorphic resource-scope table until the UI and resource lifecycle are confirmed. Explicit service-specific scope relations are easier to constrain with foreign keys and tenant ownership.
 
@@ -179,7 +180,7 @@ Important:
 | Hotels | `bookings.*`, `properties.*`, `rooms.*`, `rates.*`, contextual `customers.view` | Hotel/property and booking organization ownership | explicit service scope + explicit hotel property scope |
 | Tours | `tours.*`, hotel/tour-specific `bookings.*`, contextual `customers.view` | Tour and booking organization ownership | explicit service scope; assignment or tour scope only where confirmed by UI/workflow |
 | Visas | `visa_offerings.*`, `visa_requests.view/review`, contextual `customers.view` | Visa offering/application organization ownership | explicit service scope + assignment for assigned queues; no final decision |
-| eSIM | no organization permission family approved | not yet defined | deny partner-side access until Q-53 |
+| eSIM | platform-only; no organization permission family | Traway/platform integration | no partner membership access, scopes or provider dashboard module |
 | Flights | platform permission family only | platform | no partner membership access |
 
 A provider organization may have several enabled services simultaneously. Each employee can be assigned multiple enabled service scopes, but access remains limited to records owned by that organization and any required resource/assignment scope.
@@ -193,7 +194,7 @@ A provider organization may have several enabled services simultaneously. Each e
 - Employee roles are bundles only. A role assignment never bypasses the employee's service/resource scopes.
 - Direct grants and custom roles must pass the same permission eligibility and delegation validation.
 - A grantor cannot assign a service scope the organization does not have enabled or a scope broader than the grantor's own effective scope.
-- Platform-only permissions, Flights and final visa decisions cannot be delegated to an organization employee.
+- Platform-only permissions, Flights, eSIM operations and final visa decisions cannot be delegated to an organization employee.
 
 ---
 
@@ -221,7 +222,7 @@ Before release, tests must prove at least:
 
 ---
 
-## 8. Decisions still required before implementation
+## 8. Design details still required before implementation
 
 - Confirm the storage form for permission applicability: JSON column or normalized permission-service pivot.
 - Confirm the exact service key vocabulary and whether a company/hotel organization can also be multi-service, or only `service_provider` organizations.
@@ -283,3 +284,138 @@ These tests must be rewritten/extended; do not merely add new tests while leavin
 9. Run the full Pest suite, migration tests and Seeder idempotency checks locally before merge.
 
 **No implementation is performed by this review document.**
+
+
+---
+
+## 10. Backend design reconciliation — owner-approved Q-53–Q-56 (2026-11-24)
+
+This section supersedes conflicting provisional statements in earlier sections of this document. It records backend design consequences only; it does not claim that any schema or code has been implemented.
+
+### 10.1 Service keys and ownership boundaries
+
+Use canonical organization service keys:
+
+- `hotels`
+- `tours`
+- `visas`
+
+The following are explicitly excluded from organization service enablement and membership service scopes in the current release:
+
+- `flights`: platform-only.
+- `esim`: platform-only business workflow under Q-53.
+
+Legacy booking discriminator values are a separate concern: `Booking.service` currently uses singular values such as `hotel`, `tour`, `visa`, `flight`, and `esim`. Do not silently rename persisted booking values as part of authorization. Introduce one server-side mapping from persisted record type/value to canonical authorization service; reject unsupported or inconsistent mappings.
+
+### 10.2 Organization service lifecycle persistence
+
+The approved Q-54 workflow requires a persistent organization/service lifecycle distinct from employee membership scopes. Proposed table: `organization_services`, unique on `(organization_id, service)`.
+
+Proposed columns:
+
+| Column | Purpose |
+|---|---|
+| `id` | Primary key |
+| `organization_id` | Tenant owner |
+| `service` | Canonical key: hotels, tours or visas |
+| `status` | requested, enabled, rejected, suspended, disabled |
+| `requested_at` | When the organization requested the service |
+| `reviewed_by` | Platform staff user who approved/rejected |
+| `reviewed_at` | Review timestamp |
+| `rejection_reason` | Required when rejected, subject to business validation |
+| `enabled_at` | When service became operational |
+| `suspended_at` | When Traway suspended this service |
+| `disabled_at` | When service was disabled |
+| `timestamps` | Standard timestamps |
+
+Rules:
+
+1. Organization owner may create/request a service request, but cannot set `enabled` or `suspended`.
+2. Only an authorized platform staff member may approve/reject, enable, suspend or reactivate a service.
+3. A service becomes usable only in `enabled` status. Requested, rejected, suspended and disabled all deny provider-side operations.
+4. A service can be suspended/disabled without changing `organizations.status`.
+5. Existing memberships/scopes must not be deleted automatically when a service is suspended. Authorization checks the current enabled status on every decision, so stale scopes cannot restore access.
+6. Re-request after rejection/disable and reactivation after suspension need explicit transition rules and concurrency protection before migration implementation.
+7. Status transitions belong in the existing `status_histories` business lifecycle mechanism; this does not introduce a general activity/audit log.
+
+**Open design detail:** whether re-requests reuse the same row or create a separate request-history entity. The unique organization/service capability row should remain the authoritative current state either way.
+
+### 10.3 Membership service scopes
+
+Keep `membership_service_scopes` as employee assignment, not organization capability.
+
+- Allowed values are only the canonical organization services currently enabled for that organization.
+- Scope writes must validate both the service key and the organization's current enabled service row.
+- Runtime authorization must re-check enablement; stale rows after suspension are ineffective.
+- A non-owner with no service-scope row has no access to any service-scoped operation.
+- Owner service reach is all currently enabled services for their own organization; owners are still subject to permission, organization eligibility, resource ownership and workflow rules.
+- Platform staff and customer identities do not use partner membership service scopes.
+
+### 10.4 Permission applicability metadata
+
+The runtime needs a canonical service-applicability field on each organization permission. Preferred v1 proposal: `applicable_services` JSON array on `permissions`, with an explicit cast and validation in the central catalog/Seeder. A normalized pivot is an acceptable alternative only if selected consistently; do not maintain two sources of truth.
+
+Semantics:
+
+- `null`: organization-wide structural permission, not a service operation.
+- `["hotels"]`: Hotels-only operation.
+- `["tours"]`: Tours-only operation.
+- `["visas"]`: Visas-only operation.
+- `["hotels","tours"]`: shared operation such as generic bookings, but the persisted resource must still resolve to exactly one of those services.
+- Platform permissions remain a separate family and cannot carry organization service applicability.
+
+Important: `bookings.*` may apply only to hotel/tour booking records. It must never grant access to flight bookings, visa applications or eSIM orders. `customers.view` is contextual access to customer contact data through an already-authorized service record, not a customer directory permission.
+
+### 10.5 Resource and assignment scopes
+
+Use explicit service-specific relationships; do not introduce a generic polymorphic scope table in v1.
+
+| Service | Baseline tenant/resource check | Narrower non-owner scope |
+|---|---|---|
+| Hotels | Hotel/property belongs to active organization; booking hotel_id resolves to that property | Existing `membership_hotel_scopes`; empty scope denies. Applies to both `hotel` and `service_provider` organization types |
+| Tours | Tour.organization_id equals active organization; slot/departure belongs to that tour | Add `membership_tour_scopes` only if individual tour/resource restriction is required by the confirmed workflow. Until then, service scope + tenant-owned tour is the boundary |
+| Visas | Application and visa offering belong to active organization; offering linkage is validated | Assigned-only access uses existing `assigned_membership_id`. Team queues require an explicit team/queue model and authorization rule; never treat all unassigned requests as implicitly visible |
+
+For all non-owner resource scopes that are required by the operation, missing scope means deny. The organization owner may span all resources owned by that organization, but only within enabled services and granted permissions.
+
+Hotel scope correction is mandatory: `Membership::isRestrictedToHotel()` must no longer interpret zero rows as all hotels; `AuthorizationService` must apply it to service-provider organizations as well as hotel organizations. The database must also prevent a membership from being scoped to a hotel owned by another organization (through transactional validation and, where feasible, composite tenant-aware constraints).
+
+### 10.6 Authorization evaluation contract
+
+The authorization entry point must evaluate, in order:
+
+1. Active user, membership and organization.
+2. Permission exists and belongs to the correct family.
+3. Effective role/direct permission and delegation boundary.
+4. Permission eligibility for organization type.
+5. Trusted service identity derived from the persisted resource/route binding.
+6. Organization service status is `enabled` (for owners and employees alike).
+7. Permission `applicable_services` includes that service.
+8. Non-owner membership has the explicit service scope.
+9. Resource belongs to the active organization.
+10. Required property/resource/assignment scope matches.
+11. Workflow restrictions apply (notably platform-only visa final decisions).
+
+Missing service/resource context for a scoped permission denies. Client-supplied service values cannot override persisted resource identity. Collection endpoints must apply the same constraints in the query before pagination, counts, reports, exports or aggregates.
+
+### 10.7 Owner-approved decisions reflected in backend design
+
+- **Q-53:** eSIM platform-only; no provider permission/scope/queue/dashboard module.
+- **Q-54:** Traway controls service request approval/rejection and independent per-service suspension/disable.
+- **Q-55:** one unified provider portal is a frontend direction; backend exposes service-aware APIs and enforces each endpoint independently. No frontend implementation is in scope here.
+- **Q-56:** hierarchical service then resource/property/assignment scope. Service-only scope is acceptable only where no narrower resource boundary is meaningful.
+
+### 10.8 Required source changes and tests (not yet implemented)
+
+1. Add organization service lifecycle model, migration, constraints, platform approval actions and status-history transitions.
+2. Remove `flights` and `esim` from organization membership service scope values; preserve them only in the appropriate platform/customer domain constants.
+3. Add permission applicability metadata and reconcile the central permission catalog and Seeder.
+4. Make empty service scope deny; require enabled organization service for owners and employees.
+5. Make empty required hotel property scope deny and enforce it for service-provider tenants.
+6. Derive service from persisted Booking/Tour/VisaApplication resource identity; normalize legacy booking service values centrally.
+7. Add tour resource scope only if approved resource granularity requires it; model visa team queues explicitly if they are part of the confirmed workflow.
+8. Apply identical tenant/service/resource constraints to collection queries, reports, exports and dashboard aggregates.
+9. Replace contradictory authorization tests with fail-closed tests for empty scopes, disabled services, stale scopes, provider-owned hotels, multi-service employees, flight/eSIM exclusion and visa assignment/final-decision restrictions.
+10. Run focused Pest tests, full suite, migration rollback/forward checks and Seeder idempotency locally before merge.
+
+**Implementation status:** design-only update. No application code, migration, Seeder, config, policy or test file was changed by this update.
