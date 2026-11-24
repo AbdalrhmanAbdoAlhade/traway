@@ -332,10 +332,12 @@ Rules:
 
 1. Organization owner may create/request a service request, but cannot set `enabled` or `suspended`.
 2. Only an authorized platform staff member may approve/reject, enable, suspend or reactivate a service.
-3. A service becomes usable only in `enabled` status. Requested, rejected, suspended and disabled all deny provider-side operations.
+3. A service in `requested` or `rejected` denies provider operations. `enabled` permits normal operations. Under owner decision B/Q-57, `suspended` or `disabled` blocks new intake/commitments and resource creation/publishing, but permits a narrow existing-record servicing mode for records created before the effective suspension/disable time.
 4. A service can be suspended/disabled without changing `organizations.status`.
-5. Existing memberships/scopes must not be deleted automatically when a service is suspended. Authorization checks the current enabled status on every decision, so stale scopes cannot restore access.
+5. Existing memberships/scopes must not be deleted automatically when a service is suspended. Current service state is checked on every decision: stale scopes never restore new-intake access. Existing-record servicing is a separate, operation-aware authorization path and must not be inferred from the old membership scope alone.
 6. Re-request after rejection/disable and reactivation after suspension need explicit transition rules and concurrency protection before migration implementation.
+7. Persist an effective suspension/disable timestamp so records created before the cutoff can be distinguished from records created afterward. Define behavior for records created concurrently with the transition.
+8. A suspended/disabled service does not grant blanket update rights. Each existing-record action must be explicitly allowlisted by service, record state and permission; normal tenant, resource, assignment and business-transition checks remain mandatory.
 7. Status transitions belong in the existing `status_histories` business lifecycle mechanism; this does not introduce a general activity/audit log.
 
 **Open design detail:** whether re-requests reuse the same row or create a separate request-history entity. The unique organization/service capability row should remain the authoritative current state either way.
@@ -419,3 +421,19 @@ Missing service/resource context for a scoped permission denies. Client-supplied
 10. Run focused Pest tests, full suite, migration rollback/forward checks and Seeder idempotency locally before merge.
 
 **Implementation status:** design-only update. No application code, migration, Seeder, config, policy or test file was changed by this update.
+
+
+### 10.9 Existing-record continuity when a service is suspended/disabled — Q-57 (owner decision B)
+
+Separate **new-intake authorization** from **existing-record servicing authorization**.
+
+- New intake remains denied: no new bookings/orders/applications, new service resources, publishing/availability or new commitments while service status is suspended/disabled.
+- Existing records created before the effective cutoff remain queryable by the organization and staff who already satisfy the relevant permission, tenant, service, resource and assignment boundaries.
+- Only explicitly permitted servicing/resolution actions may proceed on those existing records. Examples may include handling an existing booking/application, but the exact allowed actions must be enumerated per service and state before implementation. Do not infer permission to edit arbitrary fields, change prices, create child resources or accept new commitments.
+- A suspended service must not be treated as globally enabled. The exception is narrow and applies only to a pre-existing record and an allowlisted action.
+- Preserve the original service identity and tenant ownership checks. For hotel bookings, the booking's property must still belong to the organization and match the employee's property scope. For tours, the booking must resolve to an organization-owned tour/departure and match the employee's applicable scope. For visas, the request must remain within the assigned membership or authorized team queue; final approve/reject remains platform-only.
+- Platform staff may intervene only through their own platform permissions and workflow.
+- The authorization API should make intent explicit (e.g. new-intake vs existing-record servicing) and derive the record's service/status/cutoff from persisted server-side data, never from client-supplied flags.
+- Add tests proving that suspension blocks new intake but allows only the allowlisted existing-record actions, denies records created after cutoff, denies cross-tenant/resource/assignment access, and never unlocks unrelated operations.
+
+**Not yet defined:** the exact allowlisted actions and permitted state transitions for Hotels, Tours and Visas, plus handling of cancellations/refunds, settlements, in-progress supplier calls and service reactivation. This matrix is a required design artifact before implementation.
