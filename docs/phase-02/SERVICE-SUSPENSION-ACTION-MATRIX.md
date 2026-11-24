@@ -68,13 +68,15 @@ A confirmed tour booking remains readable under the original tour/departure/reso
 
 Visa application stages are service-specific; the documentation does not yet provide a complete canonical list of persisted application states. Therefore this matrix authorizes only the review actions already established by G0-DEC-04 and BR-095.
 
-| Existing application condition | View application/documents | Review documents / request missing or replacement documents | Change customer application stage | Final approve/reject |
-|---|---:|---:|---:|---:|
-| Submitted / awaiting partner review | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` | Deny unless an explicitly defined partner-review transition exists | Deny — platform only |
-| Partner review in progress | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` | Deny unless an explicitly defined partner-review transition exists | Deny — platform only |
-| Awaiting customer documents | Allow within assigned request or authorized team queue | Allow to review newly submitted documents and request missing/replacement documents | Deny unless an explicitly defined partner-review transition exists | Deny — platform only |
-| Submitted to / under platform decision | Allow only if the partner's existing access policy still permits the record | No partner decision action; additional review only if explicitly requested by platform workflow | Deny | Deny — platform only |
-| Approved / rejected / closed | Allow within existing scope | Deny unless a post-decision document correction workflow is separately approved | Deny | Deny — platform only |
+| Existing application condition | View application/documents | Review submitted documents | Request missing/replacement documents and enter `Documents Required` | Change other customer application stages | Final approve/reject |
+|---|---:|---:|---:|---:|---:|
+| Submitted / awaiting partner review | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` | Allow with `visa_requests.request_documents` only when a mandatory document is missing/rejected | Deny | Deny — platform only |
+| Partner review in progress | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` | Allow with `visa_requests.request_documents` only when a mandatory document is missing/rejected | Deny | Deny — platform only |
+| Awaiting customer documents | Allow within assigned request or authorized team queue | Allow with `visa_requests.review` after customer resubmission | Allow only for a new, valid missing/replacement-document request; do not duplicate an outstanding request | Deny | Deny — platform only |
+| Submitted to / under platform decision | Allow only if the partner's existing access policy still permits the record | Additional review only if explicitly requested by platform workflow | Deny; partner cannot return a request from platform decision to customer-document collection | Deny | Deny — platform only |
+| Approved / rejected / closed | Allow within existing scope | Deny unless a post-decision document correction workflow is separately approved | Deny | Deny | Deny — platform only |
+
+`visa_requests.request_documents` is a distinct partner permission: it may issue a missing/replacement-document request and transition an eligible pre-existing request to `Documents Required`, but only when at least one mandatory document is missing or rejected under BR-095. It must not be used for arbitrary stage changes or duplicate an outstanding request. The action is limited to an assigned request or explicitly authorized team queue and remains subject to tenant, service, assignment and pre-suspension cutoff checks. Newly uploaded documents are reviewed with `visa_requests.review`. No other partner stage transition is implied.
 
 No provider-side visa action may approve or reject an application, override a platform decision, or move an application into a platform-only decision state. The final decision remains restricted to authorized platform staff with `platform.visa_requests.decide`.
 
@@ -124,6 +126,6 @@ The product direction Q-57 is approved. The owner has approved direct hotel-book
 The owner must still decide:
 - whether hotel providers may initiate a refund request, and whether that is limited to cancellations/platform-approved cases;
 - whether tour providers may initiate a separate refund request, and under which policy/state conditions;
-- the exact visa partner-review states and any explicit partner-stage transitions before a request enters platform decision.
+- any partner-stage transition other than the specifically approved `Documents Required` transition.
 
 Until those decisions are approved, the conservative defaults in the tables apply: read existing records; permit only already-defined operational actions; deny ambiguous mutations.
