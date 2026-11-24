@@ -61,7 +61,7 @@ These are the origin of the `M-`/`D-` screen IDs; they are not implementation st
 | `phase-02/BUSINESS-LOGIC.md` | Business rules BR-001–BR-125 with source screens | BR-107/111/124 carry superseded-audit notes |
 | `phase-02/FEATURES-CATALOG.md` | Features F-001–F-112 with priority, source screens and status (`C`/`I`/`U`/`D`) | The feature ID namespace |
 | `phase-02/WORKFLOWS.md` | Workflows WF-01–WF-15 end to end | Process, not authorization |
-| `phase-02/OPEN-QUESTIONS.md` | Question register Q-01–Q-52, recorded business decisions `DEC-01`–`DEC-10`, Gate 0 decisions `G0-DEC-01`–`G0-DEC-05`, blocking summary, assumptions | **Authoritative for open questions** |
+| `phase-02/OPEN-QUESTIONS.md` | Question register Q-01–Q-56, recorded business decisions `DEC-01`–`DEC-10`, Gate 0 decisions `G0-DEC-01`–`G0-DEC-05`, blocking summary, assumptions | **Authoritative for open questions** |
 | `phase-02/DB-DECISION-BRIEF.md` | The ten database-blocking decisions with options, technical recommendation and consequences; §9 records the answers | The reasoning behind `DEC-01`–`DEC-10`; not a second decision register |
 
 ---
