@@ -127,7 +127,9 @@ class OrganizationServiceLifecycle
             [OrganizationServiceRecord::STATUS_ENABLED, OrganizationServiceRecord::STATUS_SUSPENDED],
             OrganizationServiceRecord::STATUS_DISABLED,
             function (OrganizationServiceRecord $record) {
-                $record->effective_at = now();
+                // Preserve the original suspension cutoff when disabling an
+                // already-suspended service; never widen the existing-record window.
+                $record->effective_at ??= now();
                 $record->disabled_at = now();
             },
             trim($reason)
