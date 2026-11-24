@@ -143,7 +143,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `bookings.checkin` | bookings | Hotel + Provider | Hotels | property | normal | Check a hotel guest in |
 | `bookings.checkout` | bookings | Hotel + Provider | Hotels | property | normal | Check a hotel guest out |
 | `bookings.export` | bookings | Company + Hotel + Provider | Hotels + Tours | service_resource | sensitive | Export only authorized hotel/tour booking records |
-| `tours.view` | Company + Provider | tours | Tours | service_resource | normal | View own tours and programmes |
+| `tours.view` | tours | Company + Provider | Tours | service_resource | normal | View own tours and programmes |
 | `tours.create` | tours | Company + Provider | Tours | service_resource | sensitive | Create a tour |
 | `tours.update` | tours | Company + Provider | Tours | service_resource | sensitive | Edit an owned tour |
 | `tours.delete` | tours | Company + Provider | Tours | service_resource | sensitive | Delete or withdraw an owned tour |
@@ -173,7 +173,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `status_history.view` | reports | All | All enabled services | organization | normal | View business status transitions only; never a general activity/audit feed |
 | `customers.view` | customers | Company + Hotel + Provider | Contextual: Hotels/Tours/Visas | service_assignment | sensitive | View minimum customer contact fields only on records already authorized through the corresponding service |
 
-**Count: 48 organization candidate keys.** This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
+**Count: 48 organization candidate keys.** For the booking family, the eligible type set is company + hotel + service_provider; for check-in/check-out it is hotel + service_provider. This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
 
 ---
 
@@ -227,3 +227,19 @@ Organization `customers.view` is not a directory permission. It is a contextual 
 - [ ] Confirm provider dashboard workflows and resource types before Phase A implementation.
 
 **No application code, migration, Seeder, authorization config or tests are changed by this catalog proposal.**
+
+
+## 8. Implementation metadata gap (do not infer implementation)
+
+The current `permissions` model/Seeder stores `allowed_org_types` and `scope_requirement`, but the catalog's service applicability is not currently represented as a dedicated permission attribute. The existing `membership_service_scopes` relationship and `config/authorization.php` service-scope values do not, by themselves, prove that an organization has a service enabled or that a permission is valid for that service.
+
+Before implementation, the schema/authorization design must explicitly decide how to persist and enforce:
+- organization-enabled services (platform-approved capabilities);
+- permission-to-service applicability;
+- membership-to-service scopes;
+- resource scopes for tours and other service resources;
+- the special protected-owner behavior.
+
+Do not treat `allowed_org_types` as service enablement. Do not use `flights` in organization-side service grants in this release, even though the legacy shared service-scope enum contains that value.
+
+**Existing code review finding:** `Membership::isRestrictedToHotel()` currently treats an empty hotel-scope list as unrestricted (`$ids === [] || ...`), while G0-DEC-03/G0-DEC-05 and the approved authorization design require an empty property scope to grant no access to non-owner staff. This is a code-level authorization gap that must be corrected and covered by negative tests before release. No code was changed in this documentation pass.
