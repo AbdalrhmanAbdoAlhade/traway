@@ -88,7 +88,7 @@ return [
     | Only these values are valid in membership_service_scopes.service.
     |
     */
-    'service_scopes' => ['flights', 'hotels', 'tours', 'visas', 'esim'],
+    'service_scopes' => ['hotels', 'tours', 'visas'],
 
     /*
     |--------------------------------------------------------------------------
