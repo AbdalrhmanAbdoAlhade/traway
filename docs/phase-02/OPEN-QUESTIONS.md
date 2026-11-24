@@ -160,14 +160,14 @@ These follow the authorization audit in `../IMPLEMENTATION-GAP-ANALYSIS.md`. The
 | ID | Decision | Status | Resolves |
 |---|---|---|---|
 | G0-DEC-01 | Audit and general activity logs are permanently excluded. `status_histories` may record business entity status transitions only and must never become a user activity log or a user activity feed. The organization read key is therefore `status_history.view`, not `team_activity.view`. | **Approved** | Q-38; BR-107/111/124; F-112 audit clause; permission `platform.audit.view` |
-| G0-DEC-02 | One centralized authoritative permission catalog. Proposed content: 85 keys (37 platform + 48 organization), per `../PERMISSION-CATALOG-RECONCILIATION.md`. | Principle **approved**; catalog content **awaiting approval** | The 83/84/78/80 count conflict |
+| G0-DEC-02 | One centralized authoritative permission catalog. Current candidate: `SERVICE-AWARE-PERMISSION-CATALOG.md` (37 platform + 48 organization candidates, service-aware eligibility). | Principle **approved**; exact catalog metadata **awaiting approval** | The 83/84/78/80 historical count conflict and multi-service provider scopes |
 | G0-DEC-03 | A hotel organization may own multiple hotel properties; `hotels` is the property entity; `membership_hotel_scopes` scopes staff; bookings reference `hotel_id`; an empty property scope means no access. | **Approved** | Q-49; C-03; C-11 |
 | G0-DEC-04 | Only authorized Traway platform staff may make the final visa approval/rejection decision. Company users may view within scope and review documents, not decide. The six customer-visible statuses are unchanged. | **Approved** | Q-46; C-04 |
 | G0-DEC-05 | An empty scope means access to nothing. No empty array or null scope is implicit global access; every scoped query fails closed. | **Approved** | C-08; BR-121 |
 
 The decisions are now organised into two approval boundaries (see the register §1.3):
 
-- **Gate 0A — authorization.** Blocks Phase A. Contains `G0-DEC-01`–`G0-DEC-05` (the five approved decisions), the **exact 85-key catalog content** (awaiting approval), **P-09** (`bookings.*`/`customers.view` stay closed to service providers — awaiting approval), implementation of the approved delegation and owner-template rules, and empty-scope enforcement in Phase A. Against the current 80-key seeder the catalog change is add 6, remove 1, rename 1 — not "9 additions and 3 removals", which is the wider union comparison.
+- **Gate 0A — authorization.** Blocks Phase A. Contains `G0-DEC-01`–`G0-DEC-05` (the five approved decisions), approval of the revised service-aware candidate catalog, organization-enabled service metadata, membership service/resource scopes, delegation and owner-template rules, and empty-scope enforcement. The old blanket P-09 exclusion and the pre-multi-service 85-key implementation proposal are superseded.
 - **Gate 0B — business and integration.** Does **not** block Phase A. Contains notifications (G0.5), provider architecture and selection (G0.6), F-027/F-043/multi-city, **F-071 (no policy approved)**, and settlements (G0.8). Each blocks only the phase that depends on it.
 
 Q-09, Q-17 and Q-24 remain open and are linked to the `G0.7` items; Q-24 (tour cancellation) stays open until the owner approves the tour-policy model for F-071.
