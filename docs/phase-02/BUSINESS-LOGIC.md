@@ -139,7 +139,7 @@ Rules marked `I` are the only place where Phase 2 adds mechanics that the UI doe
 | BR-070 | Each departure date/time slot has its own seat capacity; the tour-level capacity is the sum of its future slots, never a single shared counter. | D-04.4 schedule slots, M-067 date strip | C |
 | BR-071 | Participants per booking must be ≥ 1, ≤ remaining seats on the chosen slot, and ≤ the programme's group-size maximum. | M-066 (group size, stepper), M-067 | C |
 | BR-072 | A pickup location must be selected before payment when the tour offers pickup; the chosen point is stored on the booking and shown on the voucher. | M-067, M-068 | C |
-| BR-073 | Free cancellation is available until 24 hours before the slot start; after that the booking is non-refundable unless the operator cancels. The design states the promise but no cancellation flow (see F-071). | M-068 | C |
+| BR-073 | Tour cancellation and refund eligibility must follow the applicable tour company's published cancellation policy. Traway must not impose a universal 24-hour full-refund or non-refundable rule. The applicable terms and refund calculation must be explicit and visible to the customer before booking. No platform-wide cancellation policy is approved yet (see F-071 and Q-24). | M-068; G0.7 | D |
 | BR-074 | The displayed rating is the average of approved reviews only; the review count must equal the number of approved reviews, and partners cannot edit either value. | M-062, M-066 (4.8 / 612), M-065 | I |
 | BR-075 | A departure slot is offering only if its date is in the future, it has remaining seats, and the tour is published. | M-067, M-066 date choice | I |
 
