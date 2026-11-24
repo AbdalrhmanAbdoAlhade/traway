@@ -38,7 +38,7 @@ The five decisions approved for this task were supplied labelled `DEC-01 – DEC
 Three statuses are kept strictly apart throughout:
 
 1. **The principle** — e.g. "there is one centralized permission catalog". Approved (`G0-DEC-02`).
-2. **The content** — the exact 85 keys. **Not approved.** A principle being approved does not approve a list of keys.
+2. **The content** — the former 85-key draft is withdrawn as an implementation target. The revised service-aware catalog is **not approved yet**.
 3. **Everything in Gate 0B** — business and integration choices. None approved.
 
 ### 1.3 The two approval gates
@@ -281,7 +281,7 @@ The earlier draft of this register described "9 additions and 3 removals". That 
 
 **Dependencies.** `G0-DEC-01`, `G0-DEC-03`, `G0-DEC-04`. Blocks Phase A.
 
-**Risks.** A wrong key set mis-seeds every tenant at once; later removals break custom roles. The exact 85 must be approved before the seeder is touched.
+**Risks.** A wrong key set mis-seeds every tenant at once; later removals break custom roles. The revised exact service-aware catalog and its scope rules must be approved before the seeder or authorization implementation is touched.
 
 **Approval status:** **Recommended — awaiting approval.**
 
