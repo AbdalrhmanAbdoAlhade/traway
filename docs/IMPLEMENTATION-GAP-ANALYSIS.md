@@ -249,7 +249,7 @@ Phase 1 is a screen inventory, so it does not itself define API contracts. Its b
 | F-068 | Tour programme detail | **Partial** | `tour_itinerary_days`, `tour_pickup_points`, `tour_slots` | Detail resource, slot availability endpoint |
 | F-069 | Tour booking & payment | **Partial** | `tour_bookings`, `tour_slots` (capacity/booked_count), pickup point | Atomic seat reservation, capacity/group limits (BR-070/071), pickup requirement (BR-072) |
 | F-070 | Tour confirmation & voucher | **Partial** | Booking reference + snapshot | Voucher generation/delivery |
-| F-071 | Tour cancellation & refund | **Needs Clarification** | — | BR-073 says free until 24h but F-071 says promise only; cancellation policy/refund handling not decided |
+| F-071 | Tour cancellation & refund | **Needs Clarification** | — | Follow each tour company's policy; no universal 24-hour rule. Terms/refund basis must be explicit before booking; workflow remains unresolved (Q-24) |
 ### 5.10 Partner onboarding and portal access (F-072–F-077)
 
 | ID | Requirement | Status | What exists | What is missing / next |
@@ -289,7 +289,7 @@ Phase 1 is a screen inventory, so it does not itself define API contracts. Its b
 | F-094 | Tour editor & review submission | **Partial** | Tour content/itinerary/pickup/slot schema, statuses, rejection reason, `TourPolicy` | Validation (BR-091), submit/review workflow (BR-092/093), endpoints |
 | F-095 | Company bookings | **Partial** | `BookingPolicy`, `bookings.view/update/cancel/export`, `assigned_membership_id` column | Scoped list/detail/actions; assignment rules (BR-087/115) |
 | F-096 | Visa request review workspace | **Partial** | `VisaApplicationPolicy`, application/document schema | Review actions (document accept/reject), notes, status transitions, assignment |
-| F-097 | Team management | **Partial** | `MembershipService`: invite, accept, assign/revoke role, grant/revoke permission, update scopes, suspend/reinstate/remove, transfer; role templates; owner protection | HTTP endpoints, invitation e-mail, resend semantics, audit |
+| F-097 | Team management | **Partial** | `MembershipService`: invite, accept, assign/revoke role, grant/revoke permission, update scopes, suspend/reinstate/remove, transfer; role templates; owner protection | HTTP endpoints, invitation e-mail, resend semantics |
 | F-098 | Custom role editor | **Partial** | `RolePolicy`, `canGrant()`, delegable permission list, permission families | Role CRUD service, permission selection validation, role deletion rules, endpoints |
 | F-099 | Financial reports & settlements | **Partial** | `partner_ledger_entries`, payout tables, finance permissions, policies. **No `settlements` tables** | Period aggregation, settlement states (BR-099), report/export endpoints |
 | F-100 | Company settings | **Partial** | `OrganizationService::update()`, org documents table/policy, org profile permissions | Settings API, document verification, publishing rules |
@@ -319,7 +319,7 @@ Phase 1 is a screen inventory, so it does not itself define API contracts. Its b
 | ID | Requirement | Status | What exists | What is missing / next |
 |---|---|---|---|---|
 | F-111 | Coupon management | **Partial** | `coupons`, `coupon_redemptions` (one per booking, release timestamp), `CouponPolicy`, org coupon permissions | `minimum_spend` column missing; CRUD service, atomic redemption/usage counters, release-on-refund, endpoints |
-| F-112 | Dynamic roles, permissions & audit | **Partial** | Permission catalog and families, role templates, direct grants, versioned permission cache, `canGrant`, policies, 21 policy classes | Role CRUD, permission-change reconciliation/revocation semantics, owner template protection service, audit trail (**explicitly removed, conflicts with docs — see §9**), endpoints |
+| F-112 | Dynamic roles and permissions | **Partial** | Permission catalog and families, role templates, direct grants, versioned permission cache, `canGrant`, policies, 21 policy classes | Role CRUD, permission-change reconciliation/revocation semantics, owner template protection service, endpoints |
 
 ---
 
@@ -339,7 +339,7 @@ The architecture defines seven enforcement layers and an L1–L5 scope model. Cu
 | Scope narrowing | Service scope and property scope narrow, never widen | **Partial/defective** | `withinServiceScope()` treats **empty scopes as unrestricted**; `Membership::isRestrictedToHotel()` returns true when no hotel scope exists. This is the opposite of BR-121/MT-11 |
 | Resource ownership | Cross-tenant access denied via `organization_id` | **Partial** | `ownsResource()` implemented, denies null-org resources; policies use it; no endpoints |
 | Delegation boundary | Cannot grant what you do not hold | **Partial** | `canGrant()` + non-delegable list + role assignment assertions exist; no role/role-permission CRUD service |
-| Auditing | Documented audit trail | **Not Implemented (conflict)** | No audit table/service; architecture §11 says audit logs are permanently removed, while BR-107/111/124 and F-112 require them (§9) |
+| Audit/activity logging | Intentionally excluded | **Out of scope (G0-DEC-01)** | No audit table/service is expected. `status_histories` is limited to business entity status transitions. |
 
 ### 6.2 Protected effects (PE-01–PE-12)
 
@@ -437,7 +437,7 @@ These are code-vs-documentation problems, listed for approval rather than fixed 
 | WF-12 | Tour authoring, review & publication | **Partial** | Tour schema + statuses; policy | Validation, submit/review/republish service and endpoints |
 | WF-13 | Hotel rate, stay & settlement operations | **Partial** | Rates/stop-sell/bookings; ledger/payout tables | Calendar service, check-in/out, settlement computation/execution |
 | WF-14 | Support, refund request & account deletion | **Partial** | Refund/deletion schema, models | Support channel, refund workflow, deletion request/cancel/anonymize |
-| WF-15 | Role, permission & employee administration | **Partial** | Membership/role/grant/scope services; policy layer | HTTP APIs, role CRUD, resend semantics, audit trail (conflict), assignment filters |
+| WF-15 | Role, permission & employee administration | **Partial** | Membership/role/grant/scope services; policy layer | HTTP APIs, role CRUD, resend semantics, assignment filters |
 ---
 
 ## 8. Business rule audit (BR-001–BR-125)
@@ -519,7 +519,7 @@ Status reflects end-to-end enforcement. "Schema" evidence means columns/tables e
 | BR-070 | Per-slot capacity, never shared counter | **Partial** | `tour_slots.capacity/booked_count`; no enforcement |
 | BR-071 | Participant bounds vs seats and group max | **Partial** | Columns; no validation |
 | BR-072 | Pickup required when offered | **Partial** | Pickup tables; no rule |
-| BR-073 | Free cancellation until 24h before slot | **Needs Clarification** | Conflicts with F-071 "promise only" |
+| BR-073 | Tour cancellation follows the applicable tour company's policy; no universal 24-hour rule | **Decision-backed** | Policy and refund basis must be explicit before booking; workflow remains open (Q-24) |
 | BR-074 | Rating = approved reviews only | **Partial** | Rating columns; no reviews table/moderation |
 | BR-075 | Slot offered only if future, seats left, tour published | **Partial** | Columns; no rule |
 | BR-076 | One canonical booking state machine | **Partial** | Status constants; no transitions/service |
@@ -553,11 +553,11 @@ Status reflects end-to-end enforcement. "Schema" evidence means columns/tables e
 | BR-104 | Notifications generated by domain events | **Not Implemented** | No events/listeners/jobs |
 | BR-105 | Per-user read state; mark-all scoped | **Partial** | `notifications.read_at`; no API |
 | BR-106 | Stop-sell blocks new bookings only | **Partial** | `is_stop_sell` column; no enforcement |
-| BR-107 | Audit every price/availability/commission/role/membership change | **Not Implemented (conflict)** | Audit deliberately absent; docs conflict (§9 C-01) |
+| BR-107 | General audit/activity records | **Out of scope (G0-DEC-01)** | Status transitions only in `status_histories`; no audit table/service. |
 | BR-108 | Deletion requests enter a review queue | **Partial** | Table/model; no queue processor |
 | BR-109 | Deletion removes personal data but retains financial records | **Not Implemented** | No anonymization service |
 | BR-110 | Hotel publish requires approved docs/profile | **Not Implemented** | `HotelPolicy` publish ability only |
-| BR-111 | Audit all admin/access-control mutations | **Not Implemented (conflict)** | Same as BR-107 |
+| BR-111 | General audit entries for admin/access-control mutations | **Out of scope (G0-DEC-01)** | No general audit entries are written. |
 | BR-112 | One KPI definition across portals | **Not Implemented** | No KPI service |
 | BR-113 | One customer reference across app/admin/partner; random | **Partial** | Unique `reference` column; no generator |
 | BR-114 | Partner settlement equals admin partner-due to the cent | **Not Implemented** | No settlement computation |
@@ -570,7 +570,7 @@ Status reflects end-to-end enforcement. "Schema" evidence means columns/tables e
 | BR-121 | Scope only narrows; no scope = no service/property access | **Not Implemented** | Implementation does the opposite (D-01) |
 | BR-122 | Grant only held permissions/scopes; families never mix | **Partial** | `canGrant`/non-delegable; no role service |
 | BR-123 | Exactly one active owner; atomic transfer; last owner protected | **Partial** | Unique constraint + service; no endpoint/audit |
-| BR-124 | Changes effective next request and audited with before/after | **Not Implemented (conflict)** | Cache invalidation partial; audit absent |
+| BR-124 | Changes effective next request; no audit record | **Partial** | `permissions_version` supports invalidation; no general audit record is required under G0-DEC-01. |
 | BR-125 | Deactivation revokes sessions; roles/scopes never carry over | **Partial** | Token deletion implemented; transfer carries service scopes (D-04) |
 
 ### 8.1 Business rule totals
@@ -579,7 +579,7 @@ Status reflects end-to-end enforcement. "Schema" evidence means columns/tables e
 |---|---:|
 | Implemented | 5 |
 | Partial | 65 |
-| Not Implemented | 52 (including 3 audit-conflict rules) |
+| Not Implemented | 49 |
 | Needs Clarification | 3 |
 | **Total** | **125** |
 
@@ -662,7 +662,7 @@ These are not "nice to have"; documented requirements cannot be implemented with
 
 ## 11. Implementation checklist (proposed order — requires approval)
 
-No implementation below has been started. Gate 0 has since been recorded as decisions (not code) in `GATE-0-DECISION-REGISTER.md`, split into two independent approval boundaries: **Gate 0A (authorization)** blocks Phase A, **Gate 0B (business and integration)** blocks only the phases that depend on a specific item. Five architectural decisions are approved; nothing else is. **Phase A has not begun.** Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
+No implementation below has been started. Gate 0 is recorded in `GATE-0-DECISION-REGISTER.md`: **Gate 0A (authorization)** blocks Phase A, **Gate 0B (business and integration)** blocks only dependent phases. Five architectural decisions are approved; DEC-11–DEC-19 delegation and owner-template decisions are also already approved. The 85-key catalog content and P-09 remain pending. **Phase A has not begun.** Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
 
 ### Gate 0A — Authorization approval (blocks Phase A)
 
@@ -672,10 +672,10 @@ Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISIO
 - [x] **G0.2 (principle)** One centralized permission catalog (C-02, C-03, C-04, C-17). → **APPROVED (`G0-DEC-02`)** as a principle only.
 - [ ] **G0.2 (content)** Freeze the exact 85-key catalog (37 platform + 48 organization). → **RECOMMENDED, AWAITING APPROVAL.** Against the 80-key seeder: add 6, remove 1 (`org.profile.publish`), rename 1 (`team_activity.view` → `status_history.view`). Regenerate docs + seeder together.
 - [ ] **G0.2 (P-09)** Keep `bookings.*` and `customers.view` closed to service providers until a provider service catalogue exists. → **RECOMMENDED, AWAITING APPROVAL.**
-- [ ] **G0.2 (delegation)** Freeze the family rule, the non-delegable list, owner-only actions and owner-template rules. → **RECOMMENDED, AWAITING APPROVAL.**
+- [x] **G0.2 (delegation)** Apply the already-approved family rule, non-delegable list, owner-only actions and owner-template rules (DEC-11–DEC-19). → **APPROVED; implementation in Phase A.**
 - [x] **G0.3** Decide property model vs hotels-as-properties (C-03, C-11). → **APPROVED (`G0-DEC-03`)**: `hotels` is the property entity, many per hotel organization, staff scoped by `membership_hotel_scopes`.
 - [x] **G0.4** Decide visa transition authority and keys (C-04). → **APPROVED (`G0-DEC-04`)**: platform staff only decide; company users review documents.
-- [x] **G0.5 (empty scope)** Empty scope means access to nothing. → **APPROVED (`G0-DEC-05`)**; enforcement detail in the register §4.4 awaits acknowledgement.
+- [x] **G0.5 (empty scope)** Empty scope means access to nothing. → **APPROVED (`G0-DEC-05`); implementation and verification in Phase A, no additional business approval.**
 
 ### Gate 0B — Business and integration approval (does not block Phase A)
 
@@ -783,7 +783,7 @@ Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISIO
 - H depends on G (bookings) and C (auth/team).
 - I depends on A (permissions), C, E and G.
 - J depends on G's payment/refund events; building it earlier would create unverifiable numbers.
-- Audit (if approved in G0.1) must be designed in A/B, not retrofitted in J.
+- Audit/activity logging is excluded by `G0-DEC-01`; do not add an audit subsystem. `status_histories` remains limited to business status transitions.
 
 ---
 
