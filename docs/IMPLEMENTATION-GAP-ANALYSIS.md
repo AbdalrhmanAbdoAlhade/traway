@@ -360,7 +360,7 @@ The architecture defines seven enforcement layers and an L1–L5 scope model. Cu
 
 ### 6.3 Permission catalogue differences (docs vs seeder)
 
-At the time of this audit the docs stated **83 keys (36 platform + 47 organization)**, but the matrix tables actually contained **84 distinct keys (37 platform + 47 organization)** — the 83/36/47 numbers were themselves inconsistent. `RolesAndPermissionsSeeder` contained **80 keys (36 platform + 44 organization)**. These figures are the audit's evidence, not the current catalog: the reconciled proposal is **85 keys (37 platform + 48 organization)** — see §9.1 and `PERMISSION-CATALOG-RECONCILIATION.md`.
+At the time of this audit the docs stated **83 keys (36 platform + 47 organization)**, but the matrix tables actually contained **84 distinct keys (37 platform + 47 organization)** — the 83/36/47 numbers were themselves inconsistent. `RolesAndPermissionsSeeder` contained **80 keys (36 platform + 44 organization)**. These figures are the audit's evidence, not the current catalog: the historical 85-key proposal has since been withdrawn as an implementation target. The active service-aware candidate is `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md` (37 platform + 48 organization candidate keys, with service/resource metadata still pending approval).
 
 **Documented keys missing from implementation (8):**
 
@@ -617,11 +617,11 @@ Each conflict above is resolved, recommended, or explicitly carried forward. Dec
 | Conflict | Status | Resolution |
 |---|---|---|
 | C-01 Audit | **RESOLVED** | `G0-DEC-01` — audit and activity logs permanently excluded; `status_histories` limited to business status transitions |
-| C-02 Permission counts | **RESOLVED (evidence); content awaiting approval** | `G0-DEC-02` + `PERMISSION-CATALOG-RECONCILIATION.md` — canonical catalog is 85 keys (37 platform + 48 organization), replacing 83/84/78/80 |
+| C-02 Permission counts | **RESOLVED (historical evidence); revised content awaiting approval** | `G0-DEC-02` + `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md` — former 85-key proposal withdrawn; current 37+48 candidate set needs service/resource eligibility approval |
 | C-03 Properties vs profile | **RESOLVED** | `G0-DEC-03` — `hotels` is the property entity; `properties.*` is canonical; `org.profile.publish` removed |
 | C-04 Visa authority | **RESOLVED** | `G0-DEC-04` — platform-only final decision; `update_status` removed; company `review` retained |
 | C-05 Role names/count | **PARTIAL** | Canonical names settled (`company_owner`, `hotel_owner`, `service_provider_owner`); the 19-vs-16 role count is a documentation sub-item of `G0.2` |
-| C-06 `bookings.view` scope | **OPEN** | Sub-item P-09 of `G0.2` — recommend keeping `['company','hotel']` until the service-provider catalogue exists |
+| C-06 `bookings.view` scope | **SUPERSEDED** | Service-aware eligibility in `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`; no blanket provider allow/deny; enforce organization-enabled service + membership/resource scope |
 | C-07 Header tenancy | **OPEN — Phase A (A3)** | Not a Gate 0 contract; remove the `X-Organization-Id` fallback |
 | C-08 Empty scope | **RESOLVED** | `G0-DEC-05` — empty scope grants nothing; fail closed |
 | C-09 Membership transfer | **OPEN — Phase A (A4)** | Remove + create, clear scopes |
@@ -662,7 +662,7 @@ These are not "nice to have"; documented requirements cannot be implemented with
 
 ## 11. Implementation checklist (proposed order — requires approval)
 
-No implementation below has been started. Gate 0 is recorded in `GATE-0-DECISION-REGISTER.md`: **Gate 0A (authorization)** blocks Phase A, **Gate 0B (business and integration)** blocks only dependent phases. Five architectural decisions are approved; DEC-11–DEC-19 delegation and owner-template decisions are also already approved. The 85-key catalog content and P-09 remain pending. **Phase A has not begun.** Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
+No implementation below has been started. Gate 0 is recorded in `GATE-0-DECISION-REGISTER.md`: **Gate 0A (authorization)** blocks Phase A, **Gate 0B (business and integration)** blocks only dependent phases. Five architectural decisions are approved; DEC-11–DEC-19 delegation and owner-template decisions are also already approved. The revised service-aware candidate catalog, organization service enablement model, resource scopes and provider eSIM workflow remain pending. **Phase A has not begun.** Order is dependency-driven: security defects and HTTP foundations first, money/booking engines after contracts exist, portals after domain flows, finance last because it depends on settled booking data.
 
 ### Gate 0A — Authorization approval (blocks Phase A)
 
@@ -670,8 +670,9 @@ Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISIO
 
 - [x] **G0.1** Resolve C-01 (audit in/out). → **APPROVED (`G0-DEC-01`)**: audit and activity logs permanently excluded. Determines schema and permission catalog.
 - [x] **G0.2 (principle)** One centralized permission catalog (C-02, C-03, C-04, C-17). → **APPROVED (`G0-DEC-02`)** as a principle only.
-- [ ] **G0.2 (content)** Freeze the exact 85-key catalog (37 platform + 48 organization). → **RECOMMENDED, AWAITING APPROVAL.** Against the 80-key seeder: add 6, remove 1 (`org.profile.publish`), rename 1 (`team_activity.view` → `status_history.view`). Regenerate docs + seeder together.
-- [ ] **G0.2 (P-09)** Keep `bookings.*` and `customers.view` closed to service providers until a provider service catalogue exists. → **RECOMMENDED, AWAITING APPROVAL.**
+- [ ] **G0.2 (revised catalog)** Approve the exact service-aware catalog, organization eligibility, service applicability and scope metadata in `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`. The former 85-key draft is withdrawn as an implementation target.
+- [ ] **G0.2 (provider authorization)** Approve service-aware eligibility and tenant/service/resource filtering. The old blanket P-09 exclusion is superseded; do not grant all provider permissions by organization type alone.
+- [ ] **G0.2 (service enablement/resources)** Define the platform-controlled enabled-service relationship and non-hotel resource scopes before Phase A.
 - [x] **G0.2 (delegation)** Apply the already-approved family rule, non-delegable list, owner-only actions and owner-template rules (DEC-11–DEC-19). → **APPROVED; implementation in Phase A.**
 - [x] **G0.3** Decide property model vs hotels-as-properties (C-03, C-11). → **APPROVED (`G0-DEC-03`)**: `hotels` is the property entity, many per hotel organization, staff scoped by `membership_hotel_scopes`.
 - [x] **G0.4** Decide visa transition authority and keys (C-04). → **APPROVED (`G0-DEC-04`)**: platform staff only decide; company users review documents.
@@ -815,3 +816,19 @@ Status as of 24 Nov 2026. Detail, database/API impact and risks: `GATE-0-DECISIO
 - Provider choices, gateway behaviour and external API capabilities were not researched; they are treated as open decisions.
 
 **End of report. No implementation has been performed, and none will begin until the gap analysis and proposed order in §11 are approved.**
+
+
+## 12. Multi-service provider authorization update (2026-11-24)
+
+The owner confirmed that a single service-provider organization may operate multiple service lines. The controlling candidate catalog is [`phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`](./phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md); the previous 85-key type-only eligibility proposal and blanket P-09 exclusion are superseded.
+
+### Newly explicit implementation gaps
+
+1. **Organization-enabled services are not yet represented by the existing membership service-scope relation.** The platform-controlled set of services enabled for an organization must be distinct from the services assigned to each membership. An employee cannot be assigned a service the organization does not have enabled.
+2. **Permission-to-service applicability needs authoritative metadata/enforcement.** `allowed_org_types` is not enough to prevent a provider employee with a generic permission from accessing unrelated service records.
+3. **Resource scopes beyond hotel properties need definition.** Tours, departures and visa offerings/requests must have resource ownership and assignment rules grounded in their workflows before implementation.
+4. **eSIM partner operations are not established by the current customer-side purchase/activation screens.** Do not seed provider eSIM permissions until Q-53 defines responsibility.
+5. **Hotel empty-scope enforcement is currently unsafe.** `Membership::isRestrictedToHotel()` returns true when the membership has no hotel-scope rows, which means an empty scope is treated as unrestricted. This conflicts with G0-DEC-03/G0-DEC-05 and must be corrected for non-owner memberships with negative tests.
+6. **Service-scope enforcement must be rechecked against G0-DEC-05.** The earlier audit records that `AuthorizationService::withinServiceScope()` treats an empty service list as unrestricted. The implementation must fail closed for non-owners; verify the current source and add negative tests.
+
+No code, migration, Seeder, authorization config or tests were changed in this documentation update.
