@@ -832,3 +832,42 @@ The owner confirmed that a single service-provider organization may operate mult
 6. **Service-scope enforcement must be rechecked against G0-DEC-05.** The earlier audit records that `AuthorizationService::withinServiceScope()` treats an empty service list as unrestricted. The implementation must fail closed for non-owners; verify the current source and add negative tests.
 
 No code, migration, Seeder, authorization config or tests were changed in this documentation update.
+
+
+## 13. Multi-service authorization — implementation reconciliation (2026-11-24)
+
+This section updates the implementation plan against the owner-confirmed multi-service provider direction. Earlier audit findings remain historical evidence; verify current source before treating any code-level finding as still present.
+
+### 13.1 Current product rules that implementation must enforce
+
+1. One `service_provider` organization may operate multiple service lines enabled by Traway.
+2. Organization-enabled services are distinct from each employee's `membership_service_scopes`.
+3. Effective access is the intersection of permission, tenant ownership, organization-enabled service, membership service scope, applicable resource/property scope and assignment/workflow constraints.
+4. Empty or missing required scope denies access for non-owner memberships (`G0-DEC-05`). Ownership is an explicit bounded grant only within services enabled for that organization; it does not grant platform-only capabilities.
+5. Flights remain platform-only. Final visa approve/reject decisions remain platform-only (`G0-DEC-04`). Customer data is contextual and minimum-necessary.
+6. Do not create provider-side eSIM permissions until Q-53 defines the provider lifecycle and responsibility split.
+
+### 13.2 Gate 0A blockers before implementation
+
+| Blocker | Required decision/design | Blocks |
+|---|---|---|
+| Q-53 | Provider eSIM responsibilities and lifecycle | Provider eSIM operations only |
+| Q-54 | Traway-controlled organization service enablement, persistence and disable behavior | Authorization schema and service assignment validation |
+| Q-55 | Unified multi-service provider dashboard requirements | Provider portal APIs/navigation/reports |
+| Q-56 | Resource boundaries and membership scope rules for each service | Resource policies, scoped queries and assignment flows |
+| Catalog | Exact service-aware permission keys, applicability and delegation metadata | Seeder, role templates and runtime authorization |
+
+### 13.3 Required implementation sequence after Gate 0A approval
+
+1. Re-fetch and verify current `AuthorizationService`, `Membership`, `TenantResolver`, relevant models, policies, migrations, Seeder, configuration and tests. Do not rely on historical defect descriptions without checking current `main`.
+2. Implement Traway-controlled organization service enablement separately from membership service scopes.
+3. Add canonical permission-to-service applicability metadata and validate it during role creation, direct grants, invitations and authorization.
+4. Refactor authorization around a typed server-derived context; derive service identity from persisted resources, never from untrusted client input.
+5. Enforce tenant ownership, enabled service, membership service scope, property/resource scope and assignment at both policy and query/service layers.
+6. Reconcile owner templates and employee roles with the final catalog; preserve grant ceilings and non-delegable permissions.
+7. Add negative tests for empty scopes, disabled services, cross-service access, cross-tenant access, foreign properties/resources, unassigned queues, platform-only flights and visa decisions, and customer-data minimization.
+8. Run migrations, Seeder idempotency, focused authorization tests and the full Pest suite locally; record exact commands and results before updating implementation status.
+
+### 13.4 Status boundary
+
+The current repository remains a backend foundation, not an end-to-end application. This documentation reconciliation does not claim that any authorization defect has been fixed, that Gate 0A is approved, or that tests have been run. No code, migration, Seeder, config or test file was changed by this update.
