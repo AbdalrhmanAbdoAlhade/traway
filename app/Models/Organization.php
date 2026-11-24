@@ -13,13 +13,19 @@ class Organization extends Model
     use SoftDeletes;
 
     public const TYPE_PLATFORM = 'platform';
+
     public const TYPE_COMPANY = 'company';
+
     public const TYPE_HOTEL = 'hotel';
+
     public const TYPE_SERVICE_PROVIDER = 'service_provider';
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_SUSPENDED = 'suspended';
+
     public const STATUS_CLOSED = 'closed';
 
     protected $fillable = [
@@ -98,6 +104,11 @@ class Organization extends Model
     public function ledgerEntries(): HasMany
     {
         return $this->hasMany(PartnerLedgerEntry::class);
+    }
+
+    public function payoutAccounts(): HasMany
+    {
+        return $this->hasMany(PayoutAccount::class);
     }
 
     public function payoutRequests(): HasMany

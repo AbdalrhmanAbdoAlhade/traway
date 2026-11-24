@@ -5,48 +5,37 @@ namespace App\Policies;
 use App\Models\Permission;
 use App\Models\User;
 
-class PermissionPolicy
+/**
+ * The permission catalogue is seeded from code (RolesAndPermissionsSeeder), so
+ * there is deliberately no create/update/delete ability. Viewing it requires the
+ * same access as viewing roles.
+ */
+class PermissionPolicy extends TenantPolicy
 {
-    /**
-     * Determine whether the user can view any permissions.
-     */
     public function viewAny(User $user): bool
     {
-        return $user->can('permissions.view')
-            || $user->can('permissions.manage');
+        return $this->allows($user, 'roles.view')
+            || $this->platform($user, 'platform.roles.view');
     }
 
-    /**
-     * Determine whether the user can view a permission.
-     */
     public function view(User $user, Permission $permission): bool
     {
-        return $user->can('permissions.view')
-            || $user->can('permissions.manage');
+        return $this->viewAny($user);
     }
 
-    /**
-     * Determine whether the user can create permissions.
-     */
     public function create(User $user): bool
     {
-        return $user->can('permissions.manage');
+        return false;
     }
 
-    /**
-     * Determine whether the user can update permissions.
-     */
     public function update(User $user, Permission $permission): bool
     {
-        return $user->can('permissions.manage');
+        return false;
     }
 
-    /**
-     * Determine whether the user can delete permissions.
-     */
     public function delete(User $user, Permission $permission): bool
     {
-        return $user->can('permissions.manage');
+        return false;
     }
 
     public function restore(User $user, Permission $permission): bool

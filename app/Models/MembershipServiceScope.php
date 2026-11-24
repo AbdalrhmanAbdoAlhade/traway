@@ -7,7 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MembershipServiceScope extends Model
 {
-    public const SERVICES = ['flights', 'hotels', 'tours', 'visas', 'esim'];
+    /**
+     * Valid values are defined once in config/authorization.php.
+     *
+     * @return array<int, string>
+     */
+    public static function services(): array
+    {
+        return config('authorization.service_scopes', ['flights', 'hotels', 'tours', 'visas', 'esim']);
+    }
 
     protected $fillable = [
         'membership_id',

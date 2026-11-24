@@ -10,8 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Membership extends Model
 {
     public const STATUS_INVITED = 'invited';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_SUSPENDED = 'suspended';
+
     public const STATUS_REMOVED = 'removed';
 
     // permissions_version and active_owner_org_id are managed by the model / services only.
@@ -22,6 +25,7 @@ class Membership extends Model
         'is_owner',
         'job_title',
         'invited_by',
+        'invitation_token_hash',
         'invitation_expires_at',
         'invited_at',
         'accepted_at',
@@ -75,6 +79,30 @@ class Membership extends Model
     public function serviceScopes(): HasMany
     {
         return $this->hasMany(MembershipServiceScope::class);
+    }
+
+    /**
+     * Hotel properties this employee is restricted to. No rows = all properties
+     * owned by the organization (still subject to the permission itself).
+     */
+    public function hotelScopes(): HasMany
+    {
+        return $this->hasMany(MembershipHotelScope::class);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function hotelIds(): array
+    {
+        return $this->hotelScopes->pluck('hotel_id')->all();
+    }
+
+    public function isRestrictedToHotel(int $hotelId): bool
+    {
+        $ids = $this->hotelIds();
+
+        return $ids === [] || in_array($hotelId, $ids, true);
     }
 
     /**

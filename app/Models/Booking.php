@@ -15,16 +15,25 @@ class Booking extends Model
     use BelongsToOrganization;
 
     public const SERVICE_FLIGHT = 'flight';
+
     public const SERVICE_HOTEL = 'hotel';
+
     public const SERVICE_TOUR = 'tour';
+
     public const SERVICE_ESIM = 'esim';
+
     public const SERVICE_VISA = 'visa';
 
     public const STATUS_PENDING_PAYMENT = 'pending_payment';
+
     public const STATUS_CONFIRMED = 'confirmed';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_REFUNDED = 'refunded';
+
     public const STATUS_EXPIRED = 'expired';
 
     protected $fillable = [
@@ -32,6 +41,7 @@ class Booking extends Model
         'service',
         'user_id',
         'organization_id',
+        'hotel_id',
         'assigned_membership_id',
         'checkout_session_id',
         'status',
@@ -80,6 +90,14 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Hotel property this booking belongs to (hotel service only).
+     */
+    public function hotelProperty(): BelongsTo
+    {
+        return $this->belongsTo(Hotel::class, 'hotel_id');
     }
 
     public function assignedMembership(): BelongsTo

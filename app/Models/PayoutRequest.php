@@ -9,17 +9,23 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class PayoutRequest extends Model
 {
     public const STATUS_REQUESTED = 'requested';
+
     public const STATUS_PROCESSING = 'processing';
+
     public const STATUS_TRANSFERRED = 'transferred';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_REJECTED = 'rejected';
 
     public const METHOD_MANUAL = 'manual';
+
     public const METHOD_GATEWAY = 'gateway';
 
     protected $fillable = [
         'reference',
         'organization_id',
+        'payout_account_id',
         'amount_cents',
         'status',
         'method',
@@ -41,6 +47,11 @@ class PayoutRequest extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function payoutAccount(): BelongsTo
+    {
+        return $this->belongsTo(PayoutAccount::class);
     }
 
     public function requester(): BelongsTo

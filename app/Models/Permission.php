@@ -7,13 +7,13 @@ use Spatie\Permission\Models\Permission as SpatiePermission;
 class Permission extends SpatiePermission
 {
     public const FAMILY_PLATFORM = 'platform';
+
     public const FAMILY_ORGANIZATION = 'organization';
 
     protected function casts(): array
     {
         return array_merge(parent::casts(), [
             'allowed_org_types' => 'array',
-            'is_delegable' => 'boolean',
         ]);
     }
 
@@ -28,5 +28,17 @@ class Permission extends SpatiePermission
     public function allowedForOrganizationType(string $type): bool
     {
         return empty($this->allowed_org_types) || in_array($type, $this->allowed_org_types, true);
+    }
+
+    /**
+     * Delegation is defined once, in config/authorization.php — never stored per row.
+     */
+    public function isDelegable(): bool
+    {
+        if ($this->isPlatform()) {
+            return false;
+        }
+
+        return ! in_array($this->name, config('authorization.non_delegable', []), true);
     }
 }
