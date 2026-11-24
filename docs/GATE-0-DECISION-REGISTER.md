@@ -561,7 +561,7 @@ Every conflict from `IMPLEMENTATION-GAP-ANALYSIS.md` §9, with its status after 
 | ID | Conflict | Status | Resolved by / next step |
 |---|---|---|---|
 | C-01 | Audit required vs permanently removed | **RESOLVED** | `G0-DEC-01` — audit and activity logs permanently excluded; `platform.audit.view` removed |
-| C-02 | Permission counts 83/84/78/80 | **RESOLVED (evidence) / awaiting approval (content)** | `G0-DEC-02` + `PERMISSION-CATALOG-RECONCILIATION.md`; the 85-key content needs approval (§4.1) |
+| C-02 | Permission counts 83/84/78/80 | **RESOLVED (historical evidence) / revised content awaiting approval** | `G0-DEC-02` + `phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`; former 85-key draft withdrawn; approve revised service/resource metadata |
 | C-03 | `properties.*` vs hotels-as-profile | **RESOLVED** | `G0-DEC-03` — `hotels` is the property entity; `properties.*` canonical; `org.profile.publish` removed |
 | C-04 | Visa transition authority | **RESOLVED** | `G0-DEC-04` — platform-only decision; `update_status` removed; company review retained |
 | C-05 | Role naming/count (`org_owner` vs `company_owner`, R-18/R-19) | **Partially resolved** | Canonical names are the seeded `company_owner`/`hotel_owner`/`service_provider_owner`. Role **count** still differs (docs list 19, seeder creates 5 platform + 11 templates = 16). Documentation sub-item under Gate 0A; no code impact |
