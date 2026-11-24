@@ -2,12 +2,14 @@
 
 **Project:** Traway
 **Date:** 2026-11-24
-**Status:** Proposed canonical catalog — awaiting owner approval (**Gate 0A**, §4.1 of the register)
+**Status:** Historical reconciliation — superseded by the service-aware candidate catalog; exact approval pending Gate 0A
 **Companion documents:** [`GATE-0-DECISION-REGISTER.md`](./GATE-0-DECISION-REGISTER.md) · [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md) · [`phase-02/ROLE-PERMISSION-SCOPE-MATRIX.md`](./phase-02/ROLE-PERMISSION-SCOPE-MATRIX.md) · [`phase-02/AUTHORIZATION-ARCHITECTURE.md`](./phase-02/AUTHORIZATION-ARCHITECTURE.md)
 
 ---
 
 ## 1. Purpose and method
+
+**Current authority:** [`phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`](./phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md) is now the active candidate catalog. This file records the earlier code-vs-document reconciliation and is retained for historical traceability only; its old organization-type eligibility and 85-key proposal are not implementation-ready.
 
 The permission key count has been reported as **83**, **84**, **78** and **80** in different places. Every figure is reproducible; none of them is the catalogue. This document inventories every key that exists in the documentation and in the codebase, resolves the discrepancies, and proposes **one canonical catalog** with an explanation for every addition, removal, rename and retention.
 
@@ -329,6 +331,8 @@ No migration is required: the `permissions` table already stores `family`, `doma
 
 
 ## 11. Owner-approved multi-service provider correction (2026-11-24)
+
+The active revised candidate catalog is [`phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md`](./phase-02/SERVICE-AWARE-PERMISSION-CATALOG.md). Use that file for the proposed 48 organization keys, service applicability, scope requirements and owner-template derivation.
 
 The previous P-09 recommendation (keep `bookings.*` and `customers.view` closed to service providers) is **superseded** by the owner's clarification that one provider organization may operate multiple service lines. Do not implement the old P-09 recommendation.
 
