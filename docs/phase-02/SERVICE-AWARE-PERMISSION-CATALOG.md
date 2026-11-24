@@ -28,6 +28,7 @@ The organization type is an eligibility guard, not a substitute for service enab
 | `All` | company, hotel and service_provider organization types; never platform |
 | `Company + Provider` | company and service_provider |
 | `Hotel + Provider` | hotel and service_provider |
+| `Company + Hotel + Provider` | company, hotel and service_provider |
 | `Provider` | service_provider only |
 | `Platform` | platform family only; not valid in organization permission rows |
 
@@ -171,7 +172,7 @@ The applicability and scope columns below are mandatory catalog metadata. Organi
 | `settlements.manage` | settlements | All | — | organization | financial | Request an on-demand payout; no transfer execution |
 | `settlements.accounts.manage` | settlements | All | — | organization | financial | Manage payout accounts; owner-only and non-delegable |
 | `status_history.view` | reports | All | All enabled services | organization | normal | View business status transitions only; never a general activity/audit feed |
-| `customers.view` | customers | Company + Hotel + Provider | Contextual: Hotels/Tours/Visas | service_assignment | sensitive | View minimum customer contact fields only on records already authorized through the corresponding service |
+| `customers.view` | customers | Company + Hotel + Provider | Contextual: Hotels/Tours/Visas | service_resource | sensitive | View minimum customer contact fields only on records already authorized through the corresponding service |
 
 **Count: 48 organization candidate keys.** For the booking family, the eligible type set is company + hotel + service_provider; for check-in/check-out it is hotel + service_provider. This preserves the current candidate key names while replacing the obsolete organization-type-only eligibility model with service-aware eligibility. It does not authorize eSIM provider operations or Flights.
 
