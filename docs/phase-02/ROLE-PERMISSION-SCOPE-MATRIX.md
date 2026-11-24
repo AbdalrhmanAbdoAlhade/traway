@@ -469,3 +469,14 @@ These are operational domain records, not an audit log. The system does not reta
 * **Service-provider scope is narrow by design** — `bookings.*` and `customers.view` stay closed to service providers until a provider service catalogue exists (P-09, pending approval). The `All` org type in §3.2 therefore means company plus hotel for those keys.
 * **`status_history.view`** (formerly `team_activity.view`) reads business status transitions only. No audit log, activity log or user activity tracking exists or is planned (`G0-DEC-01`).
 
+
+
+## 10. Multi-service provider matrix — authoritative update (2026-11-24)
+
+R-19 (`service_provider_owner`) represents an organization that may have **multiple enabled service lines**, not a single provider category. Its organization-wide scope means all services enabled for that organization; it does not mean all platform services. Employees may have multiple explicit service scopes, each intersected with the applicable resource/property scope. Empty service/resource scope grants nothing.
+
+The old `Company + Hotel` restriction and the old blanket P-09 exclusion are not valid for multi-service provider organizations. However, this does **not** mean every organization permission becomes available to every provider. Each permission must declare the service(s) it operates on and the allowed organization capability; actual access is filtered by the organization's enabled services and the member's service/resource scopes.
+
+Use [`MULTI-SERVICE-PROVIDER-AUTHORIZATION.md`](./MULTI-SERVICE-PROVIDER-AUTHORIZATION.md) as the controlling service/resource policy. The 85-key count and exact org-type/service eligibility are now **under recalculation**, not approved. Do not use the old count as a Gate 0A final catalog or seed target.
+
+Flights remain platform-only. Visa request review is provider/company-scoped where the organization has Visas enabled, but final approve/reject remains platform-only.
