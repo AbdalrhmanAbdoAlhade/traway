@@ -2,7 +2,7 @@
 
 **Project:** Traway
 **Date:** 2026-11-24
-**Status:** Gate 0A open — **5 architectural decisions approved; the exact catalog, P-09 and the delegation rules await owner approval.** Gate 0B open — **6 business/integration items awaiting approval.**
+**Status:** Gate 0A open — **5 architectural decisions approved; the exact catalog and P-09 await owner approval. Delegation, owner-template and empty-scope semantics are already approved; Phase A implements them.** Gate 0B open — **6 business/integration items awaiting approval.**
 **Source of the blocking list:** `IMPLEMENTATION-GAP-ANALYSIS.md` §11 "Gate 0"
 **Companion documents:** [`PERMISSION-CATALOG-RECONCILIATION.md`](./PERMISSION-CATALOG-RECONCILIATION.md) · [`IMPLEMENTATION-GAP-ANALYSIS.md`](./IMPLEMENTATION-GAP-ANALYSIS.md) · [`IMPLEMENTATION-STATUS.md`](./IMPLEMENTATION-STATUS.md) · [`phase-02/OPEN-QUESTIONS.md`](./phase-02/OPEN-QUESTIONS.md) · [`README.md`](./README.md)
 
@@ -74,8 +74,8 @@ Gate 0A exists because Phase A needs a frozen permission catalog and unambiguous
 | 5 | `G0-DEC-05` | An empty scope means access to nothing | **Approved** |
 | 6 | **Catalog content** (§4.1) | 85 keys — 37 platform + 48 organization; vs the seeder: **+6 added, −1 removed, 1 renamed** | **Recommended — awaiting approval** |
 | 7 | **P-09** (§4.2) | Keep `bookings.*` and `customers.view` closed to service providers for now | **Recommended — awaiting approval** |
-| 8 | **Delegation and owner templates** (§4.3) | Family rule, 8 non-delegable keys, 3 owner-only actions, 3 immutable owner templates | **Recommended — awaiting approval** |
-| 9 | **Empty scopes fail closed** (§4.4) | Restates `G0-DEC-05` as an enforceable rule and names the data check before deploy | **Approved; enforcement detail awaiting approval** |
+| 8 | **Delegation and owner templates** (§4.3) | Family rule, non-delegable keys, owner-only actions and immutable owner templates (DEC-11–DEC-19) | **Approved — implementation in Phase A** |
+| 9 | **Empty scopes fail closed** (§4.4) | Approved semantics under `G0-DEC-05`; Phase A implements fail-closed query enforcement and pre-deploy checks | **Approved — implementation in Phase A** |
 
 ### 2.2 Gate 0B — Business and integration (does not block Phase A)
 
@@ -303,7 +303,7 @@ Gate 0A needs these frozen because Phase A rewrites the grant paths. The source 
 4. **Owner templates** `company_owner`, `hotel_owner`, `service_provider_owner` are immutable, system-only, derived from the catalog, and never shared with `organization_id = NULL` pending Q-50.
 5. **Grant ceiling.** A grantor may grant only permissions and scopes they currently hold (`PE-01`/`PE-02`), never to themselves (`PE-06`).
 
-**Impact.** No schema change. Phase A enforces all five rules in the service layer and asserts them in tests. **Approval status:** **Recommended — awaiting approval** (rule 3 and 4 are already implemented behaviour and are recorded here so the gate is complete).
+**Impact.** No schema change. Phase A enforces all five rules in the service layer and asserts them in tests. **Approval status:** **Approved under DEC-11–DEC-19; implementation belongs to Phase A.**
 
 ### 4.4 Empty scopes fail closed — enforcement detail
 
@@ -315,11 +315,11 @@ Gate 0A needs these frozen because Phase A rewrites the grant paths. The source 
 - Before deploy, a data check must confirm that every non-owner member who legitimately needs access has explicit scope rows (development data only at present).
 - The `membership_hotel_scopes` migration comment is corrected to "No rows = no property access" when Phase A touches the file.
 
-**Approval status:** **Decision approved; the enforcement detail above needs the owner's acknowledgement as part of Gate 0A.**
+**Approval status:** **Approved under G0-DEC-05; implementation and verification belong to Phase A. No additional business approval is required.**
 
 ### 4.5 Gate 0A exit criteria
 
-Gate 0A is approved when the owner has confirmed §4.1, §4.2, §4.3 and §4.4. At that point Phase A may begin with: A1 empty-scope semantics, A2 assigned-only filters, A3 removal of the `X-Organization-Id` fallback, A4 transfer as remove + create, A5 invitation rotation, A6 grant reconciliation, A7 tenant middleware and policy enforcement, A8 the catalog keys and the `status_history.view` rename.
+Gate 0A is approved when the owner has confirmed §4.1 (85-key catalog content) and §4.2 (P-09). §4.3 and §4.4 are already approved decisions; Phase A must implement and test them. At that point Phase A may begin with: A1 empty-scope semantics, A2 assigned-only filters, A3 removal of the `X-Organization-Id` fallback, A4 transfer as remove + create, A5 invitation rotation, A6 grant reconciliation, A7 tenant middleware and policy enforcement, A8 the catalog keys and the `status_history.view` rename.
 
 Gate 0A does **not** include, and must not be delayed by: notification delivery design, provider selection, F-027/F-043/F-071, or settlements. Those are §5.
 
