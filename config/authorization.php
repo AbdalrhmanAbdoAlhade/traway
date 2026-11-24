@@ -91,6 +91,17 @@ return [
     */
     'service_scopes' => ['hotels', 'tours', 'visas'],
 
+    // Permission namespaces are bound to one service; callers cannot spoof this mapping.
+    'permission_service_prefixes' => [
+        'bookings.' => 'hotels',
+        'rooms.' => 'hotels',
+        'rates.' => 'hotels',
+        'tours.' => 'tours',
+        'tour_bookings.' => 'tours',
+        'visa_requests.' => 'visas',
+        'visa_offerings.' => 'visas',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Coupons (DEC-03)
