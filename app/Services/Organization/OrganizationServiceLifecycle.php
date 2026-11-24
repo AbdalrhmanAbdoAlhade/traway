@@ -55,7 +55,8 @@ class OrganizationServiceLifecycle
             $service,
             [OrganizationServiceRecord::STATUS_REQUESTED],
             OrganizationServiceRecord::STATUS_ENABLED,
-            function (OrganizationServiceRecord $record) {
+            function (OrganizationServiceRecord $record) use ($actor) {
+                $record->reviewed_by_user_id = $actor->getKey();
                 $record->reviewed_at = now();
                 $record->enabled_at = now();
                 $record->effective_at = null;
@@ -76,7 +77,8 @@ class OrganizationServiceLifecycle
             $service,
             [OrganizationServiceRecord::STATUS_REQUESTED],
             OrganizationServiceRecord::STATUS_REJECTED,
-            function (OrganizationServiceRecord $record) use ($reason) {
+            function (OrganizationServiceRecord $record) use ($reason, $actor) {
+                $record->reviewed_by_user_id = $actor->getKey();
                 $record->reviewed_at = now();
                 $record->rejection_reason = trim($reason);
             }
@@ -158,7 +160,6 @@ class OrganizationServiceLifecycle
 
             $from = $record->status;
             $record->status = $to;
-            $record->reviewed_by_user_id = $actor->getKey();
             $mutate($record);
             $record->save();
 
