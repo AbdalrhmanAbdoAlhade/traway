@@ -266,3 +266,12 @@ These are the assumptions Phase 2 used **without** a question (either because th
 | Phase 1 coverage gaps covered | 15 / 15 (4 closed by decision) |
 | Assumptions documented | 10 (2 confirmed by decision) |
 | Unresolved item without a question ID | 0 |
+
+
+## 2.12 Multi-service provider authorization update (2026-11-24)
+
+The owner confirmed that one service-provider organization may operate more than one service line. The previous P-09 recommendation to exclude all `bookings.*` and `customers.view` permissions from service providers is superseded.
+
+The replacement rule is service-aware: organization-enabled services are distinct from each employee's service scope; resource/property scope further narrows access; empty scope grants nothing. Hotel/tour bookings, visa requests and eSIM operations must use their own workflow/permission boundaries. Customer contact is contextual and minimal. Flights remain platform-only; final visa decisions remain platform-only.
+
+**New blocking Gate 0A work:** recalculate the exact permission catalog and service eligibility; define provider-side eSIM order/activation responsibilities; document provider dashboard coverage. The 85-key proposal is no longer a final seed target.
