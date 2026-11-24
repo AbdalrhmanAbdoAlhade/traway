@@ -177,6 +177,25 @@ class OrganizationServiceLifecycleTest extends TestCase
         ));
     }
 
+    public function test_disabling_a_suspended_service_preserves_its_original_cutoff(): void
+    {
+        $organization = $this->organization();
+        $owner = $this->owner($organization, 'owner@example.test');
+        $admin = $this->platformAdmin();
+        $lifecycle = app(OrganizationServiceLifecycle::class);
+
+        $service = $lifecycle->request($owner, $organization, 'hotels');
+        $service = $lifecycle->approve($admin, $service);
+        $service = $lifecycle->suspend($admin, $service, 'Temporary suspension');
+        $originalCutoff = $service->effective_at->toISOString();
+
+        $this->travel(2)->hours();
+        $service = $lifecycle->disable($admin, $service, 'Permanent disable');
+
+        $this->assertSame($originalCutoff, $service->effective_at->toISOString());
+        $this->assertNotNull($service->disabled_at);
+    }
+
     public function test_invalid_duplicate_request_and_invalid_transition_are_rejected(): void
     {
         $organization = $this->organization();
