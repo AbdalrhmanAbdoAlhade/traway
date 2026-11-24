@@ -326,7 +326,7 @@ This is the proposed assignment pending explicit P-09 approval. It does not auth
 | Role | Explicit keys | Notes |
 |---|---|---|
 | R-03 | 37 | All platform permissions |
-| R-04 | 12 | Financial + read operations + audit |
+| R-04 | 12 | Financial + read operations |
 | R-05 | 10 | Catalogues, coupons, notifications |
 | R-06 | 11 | Read/assist + deletion processing (includes one partial export) |
 | R-07 | 37 | All company-applicable organization permissions |
@@ -351,7 +351,7 @@ R-01/R-02 have no catalog keys.
 |---|---|---|---|---|---|
 | R-01 Traveller | Self | n/a | Own rows only | None | None |
 | R-02 Guest | Public catalogue | n/a | n/a | None | None |
-| R-03 Super admin | Platform (all tenants) | All | None | **Yes**, audited | All platform permissions; org assignments via `platform.organization_access.manage` |
+| R-03 Super admin | Platform (all tenants) | All | None | **Yes**, through explicit platform permissions; no audit log | All platform permissions; org assignments via `platform.organization_access.manage` |
 | R-04 Finance | Platform | Finance | None | Yes (financial data only) | None |
 | R-05 Content | Platform | Catalogue, coupons | None | Yes (catalogue/coupon data) | None |
 | R-06 Support | Platform | Customers, bookings | None | Yes (read/assist) | None |
@@ -373,7 +373,7 @@ R-01/R-02 have no catalog keys.
 2. **Service scope can only narrow.** A membership with no service scopes and a non-owner role has no service access.
 3. **Assignment filter is applied last.** An assigned-only member still needs the permission and the correct organization.
 4. **Platform scope never combines with organization scope in one role.** A user who is both staff and partner owner holds two memberships and chooses a context at login.
-5. **Service scope changes take effect immediately** and are audited.
+5. **Service scope changes take effect immediately.** The current membership and scope state is authoritative; no general audit event or user-activity history is recorded.
 
 ---
 
@@ -396,7 +396,7 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 | Settlements | ○ | ○ | P | ● | ○ | ● | ○ | S (financial) | ○ |
 | Audit log | ○ | ○ | P | ◐ (own organization) | ○ | ◐ (own organization) | ○ | ○ | ○ |
 
-**Rule:** after customer anonymisation (DEC-09), every partner-facing cell that would show personal data becomes a masked reference; platform roles retain access only through an audited permission and only where a legal/financial obligation exists.
+**Rule:** after customer anonymisation (DEC-09), every partner-facing cell that would show personal data becomes a masked reference. Platform roles may access tenant data only through explicit platform permissions and the applicable legal/financial scope. No audit log or user-activity history is created.
 
 ---
 
@@ -404,7 +404,7 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 
 | Grantor | Platform roles | Organization roles | Direct permissions | Service scopes | Ownership transfer |
 |---|---|---|---|---|---|
-| R-03 Super admin | ● create/modify/assign | ● via `platform.organization_access.manage` | ● across tenants, audited | ● | ● |
+| R-03 Super admin | ● create/modify/assign | ● via `platform.organization_access.manage` | ● across tenants, through explicit platform permissions; no audit record | ● | ● |
 | R-04 Finance | ○ | ○ | ○ | ○ | ○ |
 | R-05 Content | ○ | ○ | ○ | ○ | ○ |
 | R-06 Support | ○ | ○ | ○ | ○ | ○ |
@@ -429,20 +429,21 @@ Legend: ● full within role scope · ◐ subset/masked · ○ none · **A** ass
 
 ## 8. Lifecycle effects matrix
 
-| Event | Session effect | Permission effect | Data effect | Audit |
+| Event | Session effect | Permission effect | Data effect | Operational record |
 |---|---|---|---|---|
-| Invitation created | None (cannot log in) | None | Member listed as invited | Yes |
-| Invitation accepted | New session allowed | Role becomes effective | Member active | Yes |
-| Role changed | Continues | Immediate (next request) | None | Yes, before/after |
-| Direct grant added/removed | Continues | Immediate | None | Yes |
-| Service scope changed | Continues | Immediate narrowing/widening | Accessible records change | Yes |
-| Suspended | All sessions for that membership revoked | None effective | Records retained; assignment flagged | Yes |
-| Removed | Sessions revoked | None | Historical attribution retained | Yes |
-| Moved to another organization | Old sessions revoked | Roles reset | New membership, no carried access | Yes |
-| Ownership transferred | Both users' sessions refreshed | Old owner loses owner role | Exactly one owner remains | Yes |
-| Role deleted | Affected members continue with remaining roles | Requires zero members first | Reassignment enforced | Yes |
-| Permission deprecated | None | Old key remains valid until migration | None | Yes |
+| Invitation created | None (cannot log in) | None | Invitation record created | Current invitation state |
+| Invitation accepted | New session allowed | Role becomes effective | Member becomes active | Current membership state |
+| Role changed | Continues | Immediate (next request) | Current role assignment updated | Current role assignment only |
+| Direct grant added/removed | Continues | Immediate | Direct grant state updated | Grant record with grantor attribution |
+| Service scope changed | Continues | Immediate narrowing/widening | Accessible records change | Current membership scope |
+| Suspended | All sessions for that membership revoked | None effective | Records retained; assignment flagged | Current membership status |
+| Removed | Sessions revoked | None | Membership becomes inactive/removed | Retained domain references where required |
+| Moved to another organization | Old sessions revoked | Roles reset | New membership, no carried access | Separate old and new membership records |
+| Ownership transferred | Both users' sessions refreshed | Old owner loses owner role | Exactly one owner remains | Current ownership and membership state |
+| Role deleted | Affected members continue with remaining roles | Requires zero members first | Reassignment enforced | Current role and assignment state |
+| Permission deprecated | None | Old key remains valid until migration | Catalog/migration state updated | Current catalog state |
 
+These are operational domain records, not an audit log. The system does not retain a general before/after event history of administrative or user actions.
 ---
 
 ## 9. Coverage and validation
