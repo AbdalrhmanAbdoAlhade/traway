@@ -82,8 +82,9 @@ class Membership extends Model
     }
 
     /**
-     * Hotel properties this employee is restricted to. No rows = all properties
-     * owned by the organization (still subject to the permission itself).
+     * Explicit hotel properties assigned to this membership.
+     * An empty scope grants no property access; owners are handled by the
+     * authorization service as the only organization-wide exception.
      */
     public function hotelScopes(): HasMany
     {
@@ -102,7 +103,7 @@ class Membership extends Model
     {
         $ids = $this->hotelIds();
 
-        return $ids === [] || in_array($hotelId, $ids, true);
+        return $ids !== [] && in_array($hotelId, $ids, true);
     }
 
     /**
