@@ -103,7 +103,11 @@ This catalog is the reconciled canonical set from `../PERMISSION-CATALOG-RECONCI
 
 ### 3.2 Organization family (48)
 
-Org type values: `All` = company + hotel + service provider; `Company` = company only; `Hotel` = hotel only.
+Org type values:
+- `All` = company + hotel + service provider.
+- `Company` = company only.
+- `Hotel` = hotel only.
+- `Company + Hotel` = company and hotel only; excludes service providers.
 
 | Key | Domain | Org type | Sensitivity | Description | Screens | Features |
 |---|---|---|---|---|---|---|
