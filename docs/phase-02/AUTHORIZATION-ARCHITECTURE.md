@@ -61,7 +61,7 @@ The authorization domain consists of seven concepts. Only names and relationship
 ### 3.1 Identity
 
 * **User** — the global person: credentials, verified e-mail/phone, locale, account status. A user is not owned by an organization.
-* **Membership** — the link between a user and one organization. It carries: organization, status (`invited`, `active`, `suspended`, `removed`), owner flag, service scope, hotel-property scope (hotels only), job title, and invitation metadata.
+* **Membership** — the link between a user and one organization. It carries: organization, status (`invited`, `active`, `suspended`, `removed`), owner flag, service scope, hotel-property scope (Hotels service; applies to `hotel` and multi-service `service_provider` organizations), job title, and invitation metadata.
 * **Organization** — a tenant. Four types: `platform`, `company`, `hotel`, `service_provider`. The platform itself is represented as the single platform organization so that staff can hold memberships in the same model rather than a parallel table.
 
 Consequences:
@@ -107,7 +107,7 @@ A hotel organization may own **multiple hotel properties**. The `hotels` table r
 
 Some organization members are responsible for one service line rather than the whole tenant:
 
-* service values: `flights`, `hotels`, `tours`, `visas`, `esim`;
+* service values for partner memberships in this release: `hotels`, `tours`, `visas`. `flights` and `esim` are platform-only and are not valid partner membership scopes;
 * a membership may hold zero or more service scopes;
 * zero scopes means "all services in the organization" **only when** the role is org-wide (owner). For non-owner roles, zero scopes means no service access.
 
@@ -661,9 +661,26 @@ The following rules supersede any earlier single-service/provider-type assumptio
 1. One `service_provider` organization may operate multiple services enabled by Traway.
 2. Organization-enabled services and a membership's service scopes are separate data concepts. A member can receive multiple service scopes, but cannot be scoped to a service that is not enabled for the organization.
 3. Effective access is the intersection of permission, organization ownership, enabled service, membership service scope, resource/property scope and assignment/workflow rules.
-4. Generic `bookings.*` applies only to actual Hotels/Tours booking records; it does not authorize visa applications or eSIM orders. Visa requests use `visa_requests.*`. Provider-side eSIM operations are not catalogued until their lifecycle is defined.
+4. Generic `bookings.*` applies only to actual Hotels/Tours booking records; it does not authorize visa applications or eSIM orders. Visa requests use `visa_requests.*`. eSIM is platform-only under owner-approved Q-53; no provider eSIM permission, scope or workflow is allowed.
 5. `customers.view` is a minimal contextual projection on records the member is already authorized to process; it is never the platform customer directory.
 6. Flights remain platform-only. Final visa approval/rejection remains platform-only under G0-DEC-04.
 7. Empty service/resource scope grants no access to non-owner memberships. Owner access is limited to services enabled for that organization.
 
 **Implementation gap requiring correction:** the current `Membership::isRestrictedToHotel()` implementation treats an empty hotel-scope list as unrestricted, which conflicts with the approved fail-closed property-scope rule. The implementation must be corrected and covered by negative tests before release. This documentation update does not change code.
+
+
+---
+
+## 11. Backend authorization reconciliation — owner-approved Q-53–Q-56 (2026-11-24)
+
+This section controls where earlier provisional statements conflict with the owner's later decisions. Backend-only scope; no frontend implementation is specified.
+
+1. **Organization services vs membership scopes:** the platform-managed organization/service capability is separate from employee membership service assignments. Q-54 requires organization request → Platform Admin approve/reject → enabled; Traway may suspend/disable one service independently of the organization. Only enabled services authorize provider-side operations.
+2. **Partner service keys:** valid organization membership scopes are `hotels`, `tours`, `visas`. `flights` and `esim` are not valid organization service scopes. Legacy booking discriminator values remain stored as-is and must be mapped server-side to canonical authorization services.
+3. **eSIM:** Q-53 makes the entire eSIM business workflow platform-only. No provider-side permission, scope, resource assignment, queue or API tenant. Any external supplier is a Traway-controlled technical integration.
+4. **Resource scopes:** Q-56 requires service scope first, then resource/property/assignment scope where meaningful. Hotel property scopes apply to both hotel and service_provider organizations and empty required property scope denies. Tours use tenant-owned tours plus a dedicated membership-tour scope only where individual tour restriction is part of the confirmed workflow. Visa requests use assigned membership or an explicitly modeled team queue; unassigned does not mean globally visible.
+5. **Owner boundary:** an organization owner reaches all resources only inside that organization's currently enabled services and only with the required permission. Owner status never bypasses tenant, service enablement, permission eligibility or platform-only boundaries.
+6. **Permission metadata:** each organization permission must declare applicable service(s), distinct from `allowed_org_types` and `scope_requirement`. Generic `bookings.*` applies only to persisted Hotels/Tours booking records. `customers.view` is contextual data projection, not a directory permission.
+7. **Query enforcement:** tenant/service/resource/assignment constraints apply before pagination, counts, aggregates, reports and exports, not only in single-record policies.
+
+The detailed persistence proposal, lifecycle columns, authorization evaluation order and test requirements are in [`AUTHORIZATION-DATA-MODEL-DESIGN.md`](./AUTHORIZATION-DATA-MODEL-DESIGN.md) §10. These are design requirements; no source implementation is implied.
