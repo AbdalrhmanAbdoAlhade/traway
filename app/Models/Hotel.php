@@ -19,14 +19,17 @@ class Hotel extends Model
     public const STATUS_IN_REVIEW = 'in_review';
     public const STATUS_PUBLISHED = 'published';
     public const STATUS_SUSPENDED = 'suspended';
-
     protected $fillable = [
         'organization_id',
         'name',
         'description',
+        'amenities',
+        'cancellation_policy',
         'country_code',
         'city',
         'address',
+        'reception_phone',
+        'contact_email',
         'latitude',
         'longitude',
         'star_rating',
@@ -43,6 +46,8 @@ class Hotel extends Model
         return [
             'name' => 'array',
             'description' => 'array',
+            'amenities' => 'array',
+            'cancellation_policy' => 'array',
             'gallery' => 'array',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
