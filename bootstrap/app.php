@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BusinessRuleException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,15 +17,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
             'platform.staff' => \App\Http\Middleware\EnsureAdminAccess::class,
+            'tenant' => \App\Http\Middleware\EnsureOrganizationContext::class,
         ]);
     })
-      ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
-        // A request that is authorized but breaks a business rule is a 422, not a 500.
-        $exceptions->render(function (\App\Exceptions\BusinessRuleException $e, Request $request) {
+        $exceptions->render(function (BusinessRuleException $e, Request $request) {
             return response()->json(['message' => $e->getMessage()], 422);
         });
     })->create();
