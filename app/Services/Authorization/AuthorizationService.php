@@ -32,7 +32,16 @@ use Illuminate\Database\Eloquent\Builder;
 class AuthorizationService
 {
     private const CACHE_PREFIX = 'traway.authz.membership';
-
+    /**
+     * Membership service scopes are plural, bookings.service values are singular.
+     */
+    private const SERVICE_ALIASES = [
+        'hotels'  => 'hotel',
+        'tours'   => 'tour',
+        'visas'   => 'visa',
+        'flights' => 'flight',
+        'esim'    => 'esim',
+    ];
     public function __construct(private readonly PermissionRegistrar $registrar) {}
 
     /*
@@ -204,8 +213,11 @@ class AuthorizationService
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * @param  array{service?:?string, hotel_id?:?int, resource?:?Model}  $context
+      /**
+     * @param  array{service?:?string, hotel_id?:?int, resource?:?Model, listing?:bool}  $context
+     *        `listing => true` marks a collection request: the policy only checks the
+     *        permission and the query layer (restrictTo*) narrows the rows, so a scoped
+     *        member with no scope gets an empty list instead of a 403.
      */
     public function allows(
         User $user,
@@ -236,7 +248,10 @@ class AuthorizationService
             return false;
         }
 
-        if (! $this->withinServiceScope($definition, $membership, $context['service'] ?? null)) {
+        $listing = (bool) ($context['listing'] ?? false);
+        $service = $context['service'] ?? $this->inferService($permission);
+
+        if (! $this->withinServiceScope($definition, $membership, $service, $listing)) {
             return false;
         }
 
@@ -248,10 +263,18 @@ class AuthorizationService
                 return false;
             }
 
-            $hotelId ??= $resource->getAttribute('hotel_id');
+            $hotelId ??= $resource instanceof Hotel
+                ? $resource->getKey()
+                : $resource->getAttribute('hotel_id');
         }
 
-        if (is_numeric($hotelId) && ! $this->withinHotelScope($membership, (int) $hotelId)) {
+        if (is_numeric($hotelId)) {
+            return $this->withinHotelScope($membership, (int) $hotelId);
+        }
+
+        if (! $listing
+            && $definition->scope_requirement === 'property'
+            && ! $this->hasAnyHotelAccess($membership)) {
             return false;
         }
 
@@ -274,18 +297,25 @@ class AuthorizationService
         return (bool) $membership->is_owner;
     }
 
-    /**
-     * Employees restricted to some services never act outside them.
+      /**
+     * Employees act only inside the services they hold an explicit row for.
+     * Owners reach every service by ownership. An empty scope grants nothing.
      */
-    private function withinServiceScope(Permission $permission, Membership $membership, ?string $service): bool
-    {
+    private function withinServiceScope(
+        Permission $permission,
+        Membership $membership,
+        ?string $service,
+        bool $listing = false,
+    ): bool {
         if ($permission->scope_requirement !== 'service') {
             return true;
         }
 
-        $scoped = $membership->services();
+        if ($membership->is_owner) {
+            return true;
+        }
 
-        if ($scoped === []) {
+        if ($listing) {
             return true;
         }
 
@@ -293,11 +323,11 @@ class AuthorizationService
             return false;
         }
 
-        return in_array($service, $scoped, true);
+        return $membership->canAccessService($this->normalizeService($service));
     }
 
     /**
-     * Employees restricted to properties never act outside them.
+     * Employees act only on the properties they hold an explicit row for.
      */
     private function withinHotelScope(Membership $membership, int $hotelId): bool
     {
@@ -305,7 +335,39 @@ class AuthorizationService
             return true;
         }
 
-        return $membership->isRestrictedToHotel($hotelId);
+        return $membership->canAccessHotel($hotelId);
+    }
+
+    private function hasAnyHotelAccess(Membership $membership): bool
+    {
+        if ($membership->organization?->type !== Organization::TYPE_HOTEL) {
+            return true;
+        }
+
+        return (bool) $membership->is_owner || $membership->hotelIds() !== [];
+    }
+
+    /**
+     * 'hotel' -> 'hotels', plural values pass through unchanged.
+     */
+    private function normalizeService(string $service): string
+    {
+        $plural = array_search($service, self::SERVICE_ALIASES, true);
+
+        return $plural === false ? $service : $plural;
+    }
+
+    /**
+     * Service implied by a permission key when the caller did not name one.
+     */
+    private function inferService(string $permission): ?string
+    {
+        return match (true) {
+            str_starts_with($permission, 'tours.') => 'tours',
+            str_starts_with($permission, 'visa_requests.'),
+            str_starts_with($permission, 'visa_offerings.') => 'visas',
+            default => null,
+        };
     }
 
     /**
@@ -338,7 +400,7 @@ class AuthorizationService
      * may grant a permission they do not hold. Owners may grant any delegable
      * organization permission they hold.
      */
-    public function canGrant(User $granter, string $permission, Membership $target): bool
+      public function canGrant(User $granter, string $permission, Membership $target): bool
     {
         $organization = $target->organization;
 
@@ -378,12 +440,16 @@ class AuthorizationService
             return false;
         }
 
-        // A service-scoped employee cannot widen someone else's scope.
-        $granterScoped = $granterMembership->services();
-        $targetScoped = $target->services();
+        // A non-owner can never widen someone else's service or property scope.
+        // An empty granter scope grants nothing, so it can hand out nothing.
+        if (! $granterMembership->is_owner) {
+            if (array_diff($target->services(), $granterMembership->services()) !== []) {
+                return false;
+            }
 
-        if ($granterScoped !== [] && array_diff($targetScoped, $granterScoped) !== []) {
-            return false;
+            if (array_diff($target->hotelIds(), $granterMembership->hotelIds()) !== []) {
+                return false;
+            }
         }
 
         return true;
@@ -407,7 +473,81 @@ class AuthorizationService
             ->values()
             ->all();
     }
+    /*
+    |--------------------------------------------------------------------------
+    | Query-layer scope filters (G0-DEC-05 / BR-087 / BR-115)
+    |--------------------------------------------------------------------------
+    */
 
+    /**
+     * Limit a query to the properties the membership may see. Owners and
+     * non-hotel organizations are unfiltered; a hotel employee with no rows
+     * gets an empty result.
+     */
+    public function restrictToHotels(Builder $query, Membership $membership, string $column = 'hotel_id'): Builder
+    {
+        if ($membership->organization?->type !== Organization::TYPE_HOTEL || $membership->is_owner) {
+            return $query;
+        }
+
+        return $query->whereIn($column, $membership->hotelIds());
+    }
+
+    /**
+     * Limit a bookings-style query to the services the membership may see.
+     * Owners are unfiltered; an employee with no service rows gets nothing.
+     */
+    public function restrictToServices(Builder $query, Membership $membership, string $column = 'service'): Builder
+    {
+        if ($membership->is_owner) {
+            return $query;
+        }
+
+        $services = array_map(
+            fn (string $scope) => self::SERVICE_ALIASES[$scope] ?? $scope,
+            $membership->services()
+        );
+
+        return $query->whereIn($column, $services);
+    }
+
+    /**
+     * Restricted employees see only records assigned to them. Unassigned
+     * records are excluded in the query, not in the UI.
+     */
+    public function restrictToAssigned(
+        Builder $query,
+        Membership $membership,
+        string $column = 'assigned_membership_id',
+    ): Builder {
+        if (! $this->isAssignedOnly($membership)) {
+            return $query;
+        }
+
+        return $query->where($column, $membership->getKey());
+    }
+
+    /**
+     * True when the membership holds the restricted_employee role in its organization.
+     */
+    public function isAssignedOnly(Membership $membership): bool
+    {
+        if ($membership->is_owner) {
+            return false;
+        }
+
+        $teamKey = config('permission.column_names.team_foreign_key', 'organization_id');
+        $roleKey = config('permission.column_names.role_pivot_key') ?? 'role_id';
+        $morphKey = config('permission.column_names.model_morph_key', 'model_id');
+
+        return DB::table(config('permission.table_names.model_has_roles').' as mhr')
+            ->join(config('permission.table_names.roles').' as r', 'r.id', '=', 'mhr.'.$roleKey)
+            ->where('mhr.model_type', $membership->user->getMorphClass())
+            ->where('mhr.'.$morphKey, $membership->user_id)
+            ->where('mhr.'.$teamKey, $membership->organization_id)
+            ->where('r.name', 'restricted_employee')
+            ->exists();
+    }
     /*
     |--------------------------------------------------------------------------
     | Platform counter
