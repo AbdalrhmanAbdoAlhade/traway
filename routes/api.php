@@ -91,14 +91,14 @@ Route::prefix('v1')->group(function () {
             Route::get('invitations',  [InvitationController::class, 'index']);
             Route::post('invitations', [InvitationController::class, 'store']);
 
-            Route::post(
+                      Route::post(
                 'invitations/{invitationId}/resend',
                 [InvitationController::class, 'resend']
-            );
+            )->whereNumber('invitationId');
             Route::delete(
                 'invitations/{invitationId}',
                 [InvitationController::class, 'revoke']
-            );
+            )->whereNumber('invitationId');
         });
 
         /* ------------------------------------------------------
