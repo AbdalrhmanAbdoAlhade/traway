@@ -438,6 +438,10 @@ class MembershipService
      * @param  array<int, string>  $serviceScopes
      * @param  array<int, int>  $hotelIds
      */
+       /**
+     * @param  array<int, string>  $serviceScopes
+     * @param  array<int, int>  $hotelIds
+     */
     public function updateScopes(
         User $actor,
         Membership $target,
@@ -448,15 +452,26 @@ class MembershipService
 
         $this->assertCanManage($actor, $organization, 'employees.update');
 
+        if ($target->is_owner) {
+            throw new BusinessRuleException('An owner has full access by ownership; scopes do not apply.');
+        }
+
+        if (! in_array($target->status, [Membership::STATUS_ACTIVE, Membership::STATUS_SUSPENDED], true)) {
+            throw new BusinessRuleException('Only an active or suspended member can have scopes changed.');
+        }
+
+        $this->assertScopesWithinActor($actor, $organization, $serviceScopes, $hotelIds);
+
         DB::transaction(function () use ($target, $serviceScopes, $hotelIds) {
             $this->syncScopes($target, $serviceScopes, $hotelIds);
             $this->authz->invalidate($target);
             $this->tenants->forget($target->user);
         });
 
-        return $target->refresh();
-    }
+        $target->load(['user', 'serviceScopes', 'hotelScopes']);
 
+        return $this->loadRoles($target->refresh());
+    }
     /*
     |--------------------------------------------------------------------------
     | Suspension, removal, reinstatement
