@@ -469,16 +469,15 @@ class MembershipService
                 throw new AuthorizationException('You cannot assign a role that exceeds your own permissions.');
             }
         }
-
-        if ($actorMembership !== null) {
-            $actorServices = $actorMembership->services();
-            $targetServices = $target->services();
-
-            if ($actorServices !== [] && array_diff($targetServices, $actorServices) !== []) {
+        if ($actorMembership !== null && ! $actorMembership->is_owner) {
+            if (array_diff($target->services(), $actorMembership->services()) !== []) {
                 throw new AuthorizationException('You cannot grant a service scope you do not hold.');
             }
+
+            if (array_diff($target->hotelIds(), $actorMembership->hotelIds()) !== []) {
+                throw new AuthorizationException('You cannot grant a property scope you do not hold.');
+            }
         }
-    }
 
     private function assertCanManage(User $actor, Organization $organization, string $permission): void
     {
