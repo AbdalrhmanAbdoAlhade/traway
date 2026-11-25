@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\SwitchOrganizationRequest;
 use App\Http\Resources\UserResource;
+use App\Models\Membership;
+use App\Models\User;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,10 +37,31 @@ class AuthController extends Controller
             $request->validated('device_name', 'api')
         );
 
+        /** @var User $user */
+        $user = $token->accessToken->tokenable;
+
         return response()->json([
-            'message' => 'Logged in successfully.',
-            'token'   => $token->plainTextToken,
-            'user'    => new UserResource($token->accessToken->tokenable),
+            'message'          => 'Logged in successfully.',
+            'token'            => $token->plainTextToken,
+            'user'             => new UserResource($user),
+            'organization_id'  => $token->accessToken->membership_id
+                ? Membership::query()->whereKey($token->accessToken->membership_id)->value('organization_id')
+                : null,
+            'memberships'      => $this->membershipsPayload($user),
+        ]);
+    }
+
+    public function switchOrganization(SwitchOrganizationRequest $request): JsonResponse
+    {
+        $token = $this->authService->switchOrganization(
+            $request->user(),
+            (int) $request->validated('organization_id')
+        );
+
+        return response()->json([
+            'message'         => 'Organization switched successfully.',
+            'token'           => $token->plainTextToken,
+            'organization_id' => (int) $request->validated('organization_id'),
         ]);
     }
 
@@ -51,7 +75,25 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => new UserResource($request->user()),
+            'user'        => new UserResource($request->user()),
+            'memberships' => $this->membershipsPayload($request->user()),
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function membershipsPayload(User $user): array
+    {
+        return $this->authService->activeMemberships($user)
+            ->map(fn (Membership $membership) => [
+                'membership_id'     => $membership->getKey(),
+                'organization_id'   => $membership->organization_id,
+                'organization_name' => $membership->organization?->name,
+                'organization_type' => $membership->organization?->type,
+                'is_owner'          => (bool) $membership->is_owner,
+            ])
+            ->values()
+            ->all();
     }
 }
