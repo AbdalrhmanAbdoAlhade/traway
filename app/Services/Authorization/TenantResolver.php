@@ -3,25 +3,25 @@
 namespace App\Services\Authorization;
 
 use App\Models\Membership;
+use App\Models\Organization;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Resolves which organization a user is acting inside for the current request.
  *
  * Order of precedence:
- *   1. the membership bound to the access token (personal_access_tokens.membership_id),
- *   2. an explicit X-Organization-Id header, validated against an active membership,
- *   3. the user's only active membership.
+ *   1. the membership bound to the access token (personal_access_tokens.membership_id).
+ *      A bound token FAILS CLOSED: if that membership (or its organization) is no
+ *      longer active, the request has no tenant. It never falls through to guessing.
+ *   2. an unbound token: the user's only active membership.
  *
- * Any candidate is re-validated through AuthorizationService::activeMembership(),
- * so a suspended membership, a suspended organization and a suspended user are
- * always rejected. There is no "first membership wins" guess when a user belongs
- * to several organizations: such a request must name its organization.
+ * There is no request header or any other client-controlled input that can pick
+ * an organization. A user with several memberships must obtain a bound token
+ * through AuthService::switchOrganization().
  */
 class TenantResolver
 {
-    public const ORGANIZATION_HEADER = 'X-Organization-Id';
-
     /** @var array<int, Membership|null> */
     private array $resolved = [];
 
@@ -40,9 +40,7 @@ class TenantResolver
 
     public function organizationIdFor(User $user): ?int
     {
-        $membership = $this->membershipFor($user);
-
-        return $membership?->organization_id;
+        return $this->membershipFor($user)?->organization_id;
     }
 
     /**
@@ -56,46 +54,30 @@ class TenantResolver
 
     private function resolve(User $user): ?Membership
     {
-        $request = $this->currentRequest();
+        $token = $user->currentAccessToken();
 
-        $tokenMembershipId = $user->currentAccessToken()?->getAttribute('membership_id')
-            ?? $request?->attributes->get('membership_id');
+        $tokenMembershipId = $token instanceof Model
+            ? $token->getAttribute('membership_id')
+            : null;
 
-        if (is_numeric($tokenMembershipId)) {
+        if ($tokenMembershipId !== null) {
             $membership = Membership::query()->find((int) $tokenMembershipId);
 
-            if ($membership !== null && (int) $membership->user_id === (int) $user->getKey()) {
-                $active = $this->authz->activeMembership($user, $membership->organization_id);
-
-                if ($active !== null) {
-                    return $active;
-                }
+            if ($membership === null || (int) $membership->user_id !== (int) $user->getKey()) {
+                return null;
             }
-        }
 
-        $header = $request?->header(self::ORGANIZATION_HEADER);
-
-        if (is_string($header) && ctype_digit($header)) {
-            $active = $this->authz->activeMembership($user, (int) $header);
-
-            if ($active !== null) {
-                return $active;
-            }
+            return $this->authz->activeMembership($user, $membership->organization_id);
         }
 
         $active = Membership::query()
             ->with(['organization', 'serviceScopes', 'hotelScopes'])
             ->where('user_id', $user->getKey())
             ->where('status', Membership::STATUS_ACTIVE)
-            ->whereHas('organization', fn ($query) => $query->where('status', 'active'))
+            ->whereHas('organization', fn ($query) => $query->where('status', Organization::STATUS_ACTIVE))
             ->limit(2)
             ->get();
 
         return $active->count() === 1 ? $active->first() : null;
-    }
-
-    private function currentRequest(): mixed
-    {
-        return app()->bound('request') ? request() : null;
     }
 }
