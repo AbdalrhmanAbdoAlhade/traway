@@ -10,7 +10,7 @@ class HotelBooking extends Model
     public const PAY_NOW = 'pay_now';
     public const PAY_AT_HOTEL = 'pay_at_hotel';
 
-    protected $fillable = [
+       protected $fillable = [
         'booking_id',
         'hotel_id',
         'room_type_id',
@@ -22,6 +22,11 @@ class HotelBooking extends Model
         'rooms',
         'payment_timing',
         'guest_name',
+        'room_number',
+        'checked_in_at',
+        'checked_out_at',
+        'checked_in_by_membership_id',
+        'checked_out_by_membership_id',
     ];
 
     protected function casts(): array
@@ -29,6 +34,8 @@ class HotelBooking extends Model
         return [
             'check_in' => 'date',
             'check_out' => 'date',
+            'checked_in_at' => 'datetime',
+            'checked_out_at' => 'datetime',
         ];
     }
 
