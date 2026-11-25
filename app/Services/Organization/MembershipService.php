@@ -222,6 +222,128 @@ class MembershipService
 
         DB::transaction(fn () => $this->deleteInvitedMembership($membership));
     }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Members
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return EloquentCollection<int, Membership>
+     */
+    public function listMembers(User $actor, Organization $organization): EloquentCollection
+    {
+        $this->assertCanManage($actor, $organization, 'employees.view');
+
+        $members = Membership::query()
+            ->with(['user', 'serviceScopes', 'hotelScopes'])
+            ->where('organization_id', $organization->getKey())
+            ->whereIn('status', [Membership::STATUS_ACTIVE, Membership::STATUS_SUSPENDED])
+            ->orderBy('id')
+            ->get();
+
+        $this->hydrateRoles($members, $organization);
+
+        return $members;
+    }
+
+    public function viewMember(User $actor, Membership $target): Membership
+    {
+        $organization = $this->targetOrganization($target);
+
+        $this->assertCanManage($actor, $organization, 'employees.view');
+
+        $target->load(['user', 'serviceScopes', 'hotelScopes']);
+
+        return $this->loadRoles($target);
+    }
+
+    /**
+     * Replaces the member's role with another role of the same organization.
+     */
+    public function changeRole(User $actor, Membership $target, Role $role): Membership
+    {
+        $organization = $this->targetOrganization($target);
+
+        $this->assertCanManage($actor, $organization, 'roles.assign');
+
+        if (! in_array($target->status, [Membership::STATUS_ACTIVE, Membership::STATUS_SUSPENDED], true)) {
+            throw new BusinessRuleException('Only an active or suspended member can change role.');
+        }
+
+        if ((int) $actor->getKey() === (int) $target->user_id) {
+            throw new BusinessRuleException('You cannot change your own role.');
+        }
+
+        if ($target->is_owner) {
+            throw new BusinessRuleException('An owner\'s access changes through ownership transfer, not through roles.');
+        }
+
+        $this->assertRoleAssignable($actor, $target, $role);
+
+        DB::transaction(function () use ($target, $role, $organization) {
+            $this->removeRoles($target, $organization);
+            $this->attachRole($target, $role);
+
+            $this->authz->invalidate($target);
+            $this->tenants->forget($target->user);
+        });
+
+        $target->load(['user', 'serviceScopes', 'hotelScopes']);
+
+        return $this->loadRoles($target->refresh());
+    }
+
+    /**
+     * One query for the roles of many members of the same organization.
+     * Stored on each membership as the `assignedRoles` relation.
+     *
+     * @param  EloquentCollection<int, Membership>  $memberships
+     */
+    public function hydrateRoles(EloquentCollection $memberships, Organization $organization): void
+    {
+        if ($memberships->isEmpty()) {
+            return;
+        }
+
+        $teamKey = config('permission.column_names.team_foreign_key', 'organization_id');
+        $roleKey = config('permission.column_names.role_pivot_key') ?? 'role_id';
+        $morphKey = config('permission.column_names.model_morph_key', 'model_id');
+
+        $rows = DB::table(config('permission.table_names.model_has_roles').' as mhr')
+            ->where('mhr.model_type', (new User)->getMorphClass())
+            ->where('mhr.'.$teamKey, $organization->getKey())
+            ->whereIn('mhr.'.$morphKey, $memberships->pluck('user_id')->all())
+            ->get(['mhr.'.$morphKey.' as user_id', 'mhr.'.$roleKey.' as role_id']);
+
+        $roles = Role::query()
+            ->whereIn('id', $rows->pluck('role_id')->unique()->all())
+            ->get()
+            ->keyBy('id');
+
+        $byUser = $rows->groupBy('user_id');
+
+        foreach ($memberships as $membership) {
+            $assigned = ($byUser->get($membership->user_id) ?? collect())
+                ->map(fn ($row) => $roles->get($row->role_id))
+                ->filter()
+                ->values();
+
+            $membership->setRelation('assignedRoles', $assigned);
+        }
+    }
+
+    public function loadRoles(Membership $membership): Membership
+    {
+        $this->hydrateRoles(
+            new EloquentCollection([$membership]),
+            $this->targetOrganization($membership)
+        );
+
+        return $membership;
+    }
+    
     /*
     |--------------------------------------------------------------------------
     | Roles and direct grants
