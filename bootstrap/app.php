@@ -18,8 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'platform.staff' => \App\Http\Middleware\EnsureAdminAccess::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+      ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // A request that is authorized but breaks a business rule is a 422, not a 500.
+        $exceptions->render(function (\App\Exceptions\BusinessRuleException $e, Request $request) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        });
     })->create();
