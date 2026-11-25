@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
+use App\Models\Hotel;
+use Illuminate\Database\Eloquent\Builder;
+
+
 
 /**
  * Single entry point for every authorization decision.
