@@ -64,6 +64,11 @@ class PartnerLedgerEntry extends Model
         return $this->belongsTo(Refund::class);
     }
 
+      public function settlement(): BelongsTo
+  {
+      return $this->belongsTo(Settlement::class);
+  }
+  	
     public function payoutRequest(): BelongsTo
     {
         return $this->belongsTo(PayoutRequest::class);
