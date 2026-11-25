@@ -600,7 +600,41 @@ class MembershipService
     | Internals
     |--------------------------------------------------------------------------
     */
+    /**
+     * A non-owner can never hand out a service or property scope they do not hold.
+     * Owners and platform managers are unrestricted.
+     *
+     * @param  array<int, string>  $serviceScopes
+     * @param  array<int, int>  $hotelIds
+     */
+    private function assertScopesWithinActor(
+        User $actor,
+        Organization $organization,
+        array $serviceScopes,
+        array $hotelIds,
+    ): void {
+        if ($this->isPlatformManager($actor, $organization)) {
+            return;
+        }
 
+        $actorMembership = $this->authz->activeMembership($actor, $organization);
+
+        if ($actorMembership === null) {
+            throw new AuthorizationException('This action is unauthorized.');
+        }
+
+        if ($actorMembership->is_owner) {
+            return;
+        }
+
+        if (array_diff($serviceScopes, $actorMembership->services()) !== []) {
+            throw new AuthorizationException('You cannot grant a service scope you do not hold.');
+        }
+
+        if (array_diff(array_map('intval', $hotelIds), $actorMembership->hotelIds()) !== []) {
+            throw new AuthorizationException('You cannot grant a property scope you do not hold.');
+        }
+    }
     private function assertDeactivatable(User $actor, Membership $target): void
     {
         $organization = $this->targetOrganization($target);
