@@ -670,6 +670,67 @@ class MembershipService
             ->where('membership_id', $membership->getKey())
             ->delete();
     }
+            /**
+     * Scoped to the organization, so an invitation id from another tenant is a 404.
+     */
+    private function findPendingInvitation(Organization $organization, int $invitationId): Membership
+    {
+        return Membership::query()
+            ->with('user')
+            ->where('organization_id', $organization->getKey())
+            ->where('status', Membership::STATUS_INVITED)
+            ->findOrFail($invitationId);
+    }
+
+    /**
+     * An invitation was never a real membership, so it is deleted outright and
+     * the person can be invited again later.
+     */
+    private function deleteInvitedMembership(Membership $membership): void
+    {
+        $organization = $this->targetOrganization($membership);
+        $user = $membership->user;
+
+        $this->removeRoles($membership, $organization);
+
+        DB::table('membership_permissions')->where('membership_id', $membership->getKey())->delete();
+        DB::table('membership_service_scopes')->where('membership_id', $membership->getKey())->delete();
+        DB::table('membership_hotel_scopes')->where('membership_id', $membership->getKey())->delete();
+        DB::table('memberships')->where('id', $membership->getKey())->delete();
+
+        $this->tenants->forget($user);
+    }
+
+    /**
+     * Ends a real membership: marks it removed, strips roles, grants and scopes,
+     * releases the work assigned to it and cuts every token bound to it.
+     */
+    private function retire(Membership $membership, Organization $organization): void
+    {
+        $membership->forceFill([
+            'status' => Membership::STATUS_REMOVED,
+            'is_owner' => false,
+            'removed_at' => now(),
+            'invitation_token_hash' => null,
+            'invitation_expires_at' => null,
+        ])->save();
+
+        $this->removeRoles($membership, $organization);
+
+        DB::table('membership_permissions')->where('membership_id', $membership->getKey())->delete();
+        DB::table('membership_service_scopes')->where('membership_id', $membership->getKey())->delete();
+        DB::table('membership_hotel_scopes')->where('membership_id', $membership->getKey())->delete();
+
+        // Assigned work goes back to the unassigned pool instead of dangling.
+        DB::table('bookings')
+            ->where('assigned_membership_id', $membership->getKey())
+            ->update(['assigned_membership_id' => null]);
+        DB::table('visa_applications')
+            ->where('assigned_membership_id', $membership->getKey())
+            ->update(['assigned_membership_id' => null]);
+
+        $this->cutAccess($membership);
+    }
 
     private function hashToken(string $token): string
     {
