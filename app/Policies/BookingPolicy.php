@@ -7,9 +7,9 @@ use App\Models\User;
 
 class BookingPolicy extends TenantPolicy
 {
-    public function viewAny(User $user): bool
+       public function viewAny(User $user): bool
     {
-        return $this->allows($user, 'bookings.view')
+        return $this->allows($user, 'bookings.view', ['listing' => true])
             || $this->platform($user, 'platform.bookings.view');
     }
 
