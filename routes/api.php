@@ -10,6 +10,12 @@ use App\Http\Controllers\Api\V1\Organization\OrganizationApplicationController;
 use App\Http\Controllers\Api\V1\Organization\OrganizationController;
 use App\Http\Controllers\Api\V1\Organization\RoleTemplateController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
+use App\Http\Controllers\Api\V1\Hotel\HotelBookingController;
+use App\Http\Controllers\Api\V1\Hotel\HotelController;
+use App\Http\Controllers\Api\V1\Hotel\HotelReportController;
+use App\Http\Controllers\Api\V1\Hotel\RoomRateController;
+use App\Http\Controllers\Api\V1\Hotel\RoomTypeController;
+use App\Http\Controllers\Api\V1\Organization\OrganizationRoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -69,6 +75,34 @@ Route::prefix('v1')->group(function () {
          |  Members and invitations (per organization, tenant-bound)
          * ------------------------------------------------------ */
         Route::prefix('organizations/{organization}')->middleware('tenant')->group(function () {
+                        Route::get('roles', [OrganizationRoleController::class, 'index']);
+
+            /* ---- Hotel portal ---- */
+            Route::get('hotels', [HotelController::class, 'index']);
+            Route::post('hotels', [HotelController::class, 'store']);
+            Route::get('hotels/{hotel}', [HotelController::class, 'show'])->whereNumber('hotel');
+            Route::patch('hotels/{hotel}', [HotelController::class, 'update'])->whereNumber('hotel');
+            Route::get('hotels/{hotel}/readiness', [HotelController::class, 'readiness'])->whereNumber('hotel');
+            Route::post('hotels/{hotel}/publish', [HotelController::class, 'publish'])->whereNumber('hotel');
+            Route::post('hotels/{hotel}/unpublish', [HotelController::class, 'unpublish'])->whereNumber('hotel');
+
+            Route::prefix('hotels/{hotel}/room-types')->whereNumber('hotel')->group(function () {
+                Route::get('/', [RoomTypeController::class, 'index']);
+                Route::post('/', [RoomTypeController::class, 'store']);
+                Route::get('{roomType}', [RoomTypeController::class, 'show'])->whereNumber('roomType');
+                Route::patch('{roomType}', [RoomTypeController::class, 'update'])->whereNumber('roomType');
+                Route::delete('{roomType}', [RoomTypeController::class, 'destroy'])->whereNumber('roomType');
+                Route::get('{roomType}/calendar', [RoomRateController::class, 'calendar'])->whereNumber('roomType');
+                Route::put('{roomType}/calendar', [RoomRateController::class, 'bulkUpdate'])->whereNumber('roomType');
+            });
+
+            Route::get('hotel-bookings', [HotelBookingController::class, 'index']);
+            Route::get('hotel-bookings/export', [HotelBookingController::class, 'export']);
+            Route::get('hotel-bookings/{booking}', [HotelBookingController::class, 'show'])->whereNumber('booking');
+            Route::post('hotel-bookings/{booking}/check-in', [HotelBookingController::class, 'checkIn'])->whereNumber('booking');
+            Route::post('hotel-bookings/{booking}/check-out', [HotelBookingController::class, 'checkOut'])->whereNumber('booking');
+
+            Route::get('hotel-reports/overview', [HotelReportController::class, 'overview']);
             Route::get('members', [MembershipController::class, 'index']);
             Route::get('members/{membership}', [MembershipController::class, 'show'])
                 ->whereNumber('membership');
