@@ -57,48 +57,48 @@ Route::prefix('v1')->group(function () {
          * ------------------------------------------------------ */
         Route::apiResource('organizations', OrganizationController::class);
 
-        Route::post(
+               Route::post(
             'organizations/{organization}/transfer-ownership',
             [OrganizationController::class, 'transferOwnership']
-        );
+        )->middleware('tenant');
 
         /* ------------------------------------------------------
          |  Memberships (per organization)
          * ------------------------------------------------------ */
-        Route::prefix('organizations/{organization}')->group(function () {
+               /* ------------------------------------------------------
+         |  Members and invitations (per organization, tenant-bound)
+         * ------------------------------------------------------ */
+        Route::prefix('organizations/{organization}')->middleware('tenant')->group(function () {
             Route::get('members', [MembershipController::class, 'index']);
+            Route::get('members/{membership}', [MembershipController::class, 'show'])
+                ->whereNumber('membership');
+            Route::patch('members/{membership}/role', [MembershipController::class, 'updateRole'])
+                ->whereNumber('membership');
+            Route::patch('members/{membership}/scopes', [MembershipController::class, 'updateScopes'])
+                ->whereNumber('membership');
+            Route::post('members/{membership}/permissions', [MembershipController::class, 'grantPermission'])
+                ->whereNumber('membership');
+            Route::delete('members/{membership}/permissions/{permission}', [MembershipController::class, 'revokePermission'])
+                ->whereNumber('membership');
+            Route::post('members/{membership}/suspend', [MembershipController::class, 'suspend'])
+                ->whereNumber('membership');
+            Route::post('members/{membership}/reinstate', [MembershipController::class, 'reinstate'])
+                ->whereNumber('membership');
+            Route::delete('members/{membership}', [MembershipController::class, 'remove'])
+                ->whereNumber('membership');
 
-            Route::patch(
-                'members/{membership}/role',
-                [MembershipController::class, 'updateRole']
-            );
-            Route::patch(
-                'members/{membership}/scopes',
-                [MembershipController::class, 'updateScopes']
-            );
-            Route::post(
-                'members/{membership}/suspend',
-                [MembershipController::class, 'suspend']
-            );
-            Route::delete(
-                'members/{membership}',
-                [MembershipController::class, 'remove']
-            );
+          
+        });
 
             /* --------------------------------------------------
              |  Invitations (per organization)
              * -------------------------------------------------- */
-            Route::get('invitations',  [InvitationController::class, 'index']);
+   Route::get('invitations', [InvitationController::class, 'index']);
             Route::post('invitations', [InvitationController::class, 'store']);
-
-                      Route::post(
-                'invitations/{invitationId}/resend',
-                [InvitationController::class, 'resend']
-            )->whereNumber('invitationId');
-            Route::delete(
-                'invitations/{invitationId}',
-                [InvitationController::class, 'revoke']
-            )->whereNumber('invitationId');
+            Route::post('invitations/{invitationId}/resend', [InvitationController::class, 'resend'])
+                ->whereNumber('invitationId');
+            Route::delete('invitations/{invitationId}', [InvitationController::class, 'revoke'])
+                ->whereNumber('invitationId');
         });
 
         /* ------------------------------------------------------
