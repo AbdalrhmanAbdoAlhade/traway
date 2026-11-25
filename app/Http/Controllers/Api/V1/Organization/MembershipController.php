@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\V1\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Membership\GrantPermissionRequest;
 use App\Http\Requests\Membership\UpdateMemberRoleRequest;
 use App\Http\Requests\Membership\UpdateMemberScopesRequest;
 use App\Http\Resources\MembershipResource;
 use App\Models\Membership;
 use App\Models\Organization;
+use App\Models\Role;
 use App\Services\Organization\MembershipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,13 +21,20 @@ class MembershipController extends Controller
         private readonly MembershipService $membershipService,
     ) {}
 
-    public function index(Organization $organization): AnonymousResourceCollection
+    public function index(Request $request, Organization $organization): AnonymousResourceCollection
     {
-        $this->authorize('viewMembers', $organization);
-
-        $members = $this->membershipService->listMembers($organization);
+        $members = $this->membershipService->listMembers($request->user(), $organization);
 
         return MembershipResource::collection($members);
+    }
+
+    public function show(Request $request, Organization $organization, Membership $membership): MembershipResource
+    {
+        $membership = $this->scoped($organization, $membership);
+
+        return new MembershipResource(
+            $this->membershipService->viewMember($request->user(), $membership)
+        );
     }
 
     public function updateRole(
@@ -33,16 +42,13 @@ class MembershipController extends Controller
         Organization $organization,
         Membership $membership,
     ): MembershipResource {
-        $this->authorize('updateMemberRole', [$organization, $membership]);
+        $membership = $this->scoped($organization, $membership);
 
-        $membership = $this->membershipService->updateRole(
-            $organization,
-            $membership,
-            $request->user(),
-            $request->validated('role_id')
+        $role = Role::query()->findOrFail($request->validated('role_id'));
+
+        return new MembershipResource(
+            $this->membershipService->changeRole($request->user(), $membership, $role)
         );
-
-        return new MembershipResource($membership->load('user', 'role'));
     }
 
     public function updateScopes(
@@ -50,33 +56,86 @@ class MembershipController extends Controller
         Organization $organization,
         Membership $membership,
     ): MembershipResource {
-        $this->authorize('updateMemberScopes', [$organization, $membership]);
+        $membership = $this->scoped($organization, $membership);
 
-        $membership = $this->membershipService->updateScopes(
-            $organization,
-            $membership,
+        return new MembershipResource(
+            $this->membershipService->updateScopes(
+                $request->user(),
+                $membership,
+                $request->validated('services'),
+                $request->validated('hotel_ids'),
+            )
+        );
+    }
+
+    public function grantPermission(
+        GrantPermissionRequest $request,
+        Organization $organization,
+        Membership $membership,
+    ): JsonResponse {
+        $membership = $this->scoped($organization, $membership);
+
+        $this->membershipService->grantPermission(
             $request->user(),
-            $request->validated('scopes', [])
+            $membership,
+            $request->validated('permission')
         );
 
-        return new MembershipResource($membership->load('user', 'role'));
+        return response()->json(['message' => 'Permission granted successfully.']);
+    }
+
+    public function revokePermission(
+        Request $request,
+        Organization $organization,
+        Membership $membership,
+        string $permission,
+    ): JsonResponse {
+        $membership = $this->scoped($organization, $membership);
+
+        $this->membershipService->revokePermission($request->user(), $membership, $permission);
+
+        return response()->json(['message' => 'Permission revoked successfully.']);
     }
 
     public function suspend(Request $request, Organization $organization, Membership $membership): JsonResponse
     {
-        $this->authorize('suspendMember', [$organization, $membership]);
+        $membership = $this->scoped($organization, $membership);
 
-        $this->membershipService->suspend($organization, $membership, $request->user());
+        $this->membershipService->suspend($request->user(), $membership);
 
         return response()->json(['message' => 'Member suspended successfully.']);
     }
 
+    public function reinstate(Request $request, Organization $organization, Membership $membership): JsonResponse
+    {
+        $membership = $this->scoped($organization, $membership);
+
+        $this->membershipService->reinstate($request->user(), $membership);
+
+        return response()->json(['message' => 'Member reinstated successfully.']);
+    }
+
     public function remove(Request $request, Organization $organization, Membership $membership): JsonResponse
     {
-        $this->authorize('removeMember', [$organization, $membership]);
+        $membership = $this->scoped($organization, $membership);
 
-        $this->membershipService->remove($organization, $membership, $request->user());
+        $this->membershipService->remove($request->user(), $membership);
 
         return response()->json(['message' => 'Member removed successfully.']);
+    }
+
+    /**
+     * A membership id from another organization, or one that is only an
+     * invitation or already removed, does not exist for this tenant.
+     */
+    private function scoped(Organization $organization, Membership $membership): Membership
+    {
+        abort_unless(
+            (int) $membership->organization_id === (int) $organization->getKey()
+                && in_array($membership->status, [Membership::STATUS_ACTIVE, Membership::STATUS_SUSPENDED], true),
+            404
+        );
+
+        return $membership;
     }
 }
