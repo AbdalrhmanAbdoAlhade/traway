@@ -308,28 +308,14 @@ class MembershipService
         return $target->refresh();
     }
 
-    public function remove(User $actor, Membership $target): Membership
+       public function remove(User $actor, Membership $target): Membership
     {
         $organization = $this->targetOrganization($target);
 
         $this->assertDeactivatable($actor, $target);
 
         DB::transaction(function () use ($target, $organization) {
-            $target->forceFill([
-                'status' => Membership::STATUS_REMOVED,
-                'is_owner' => false,
-                'removed_at' => now(),
-                'invitation_token_hash' => null,
-                'invitation_expires_at' => null,
-            ])->save();
-
-            $this->removeRoles($target, $organization);
-
-            DB::table('membership_permissions')->where('membership_id', $target->getKey())->delete();
-            DB::table('membership_service_scopes')->where('membership_id', $target->getKey())->delete();
-            DB::table('membership_hotel_scopes')->where('membership_id', $target->getKey())->delete();
-
-            $this->cutAccess($target);
+            $this->retire($target, $organization);
         });
 
         return $target->refresh();
@@ -337,21 +323,21 @@ class MembershipService
 
     /*
     |--------------------------------------------------------------------------
-    | Cross-organization transfer
+    | Cross-organization transfer (remove + create, never an UPDATE of organization_id)
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Moves a non-owner employee to another organization. Allowed for platform
-     * staff with access management, or for users who own both organizations.
+     * Moves a non-owner employee to another organization. The membership in the
+     * source organization is removed (history stays on the old row) and a brand
+     * new membership is created in the destination with no roles and no scopes,
+     * so the employee has no access there until the destination grants it.
+     * Allowed for platform staff with access management, or for users who own
+     * both organizations. Returns the NEW membership.
      */
     public function transfer(User $actor, Membership $target, Organization $destination): Membership
     {
-        $source = $target->organization;
-
-        if ($source === null) {
-            throw new BusinessRuleException('The membership has no organization.');
-        }
+        $source = $this->targetOrganization($target);
 
         if ((int) $source->getKey() === (int) $destination->getKey()) {
             throw new BusinessRuleException('The employee already belongs to that organization.');
@@ -361,6 +347,10 @@ class MembershipService
 
         if ($target->is_owner) {
             throw new BusinessRuleException('Transfer ownership instead of transferring an owner membership.');
+        }
+
+        if ($target->status !== Membership::STATUS_ACTIVE) {
+            throw new BusinessRuleException('Only an active membership can be transferred.');
         }
 
         if ($destination->status !== Organization::STATUS_ACTIVE) {
@@ -376,20 +366,27 @@ class MembershipService
             throw new BusinessRuleException('This person already has a membership in the destination organization.');
         }
 
-        DB::transaction(function () use ($target, $source, $destination) {
-            $this->removeRoles($target, $source);
+        return DB::transaction(function () use ($actor, $target, $source, $destination) {
+            $user = $target->user;
 
-            DB::table('membership_hotel_scopes')->where('membership_id', $target->getKey())->delete();
+            $this->retire($target, $source);
 
-            $target->forceFill([
+            $new = Membership::create([
+                'user_id' => $target->user_id,
                 'organization_id' => $destination->getKey(),
+                'status' => Membership::STATUS_ACTIVE,
                 'is_owner' => false,
-            ])->save();
+                'job_title' => $target->job_title,
+                'invited_by' => $actor->getKey(),
+                'invited_at' => now(),
+                'accepted_at' => now(),
+            ]);
 
-            $this->cutAccess($target);
+            $this->authz->invalidate($new);
+            $this->tenants->forget($user);
+
+            return $new->refresh();
         });
-
-        return $target->refresh();
     }
 
     /*
