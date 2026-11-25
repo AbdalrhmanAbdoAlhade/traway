@@ -215,7 +215,7 @@ class AuthorizationServiceTest extends TestCase
         $this->assertFalse($this->authz->allows($user, 'rooms.view', $org));
     }
 
-    public function test_unscoped_employees_are_not_limited_by_service(): void
+        public function test_a_non_owner_with_no_service_scope_is_denied_service_scoped_permissions(): void
     {
         $org = $this->organization(Organization::TYPE_HOTEL);
         $user = $this->user();
@@ -224,9 +224,36 @@ class AuthorizationServiceTest extends TestCase
         $permission = $this->permission('rooms.view', types: ['hotel'], scope: 'service');
         $this->assignRole($user, $this->role($org, [$permission]), $org);
 
+        $this->assertFalse($this->authz->allows($user, 'rooms.view', $org, ['service' => 'hotels']));
+        $this->assertTrue($this->authz->allows($user, 'rooms.view', $org, ['listing' => true]));
+    }
+
+    public function test_an_owner_is_not_limited_by_service(): void
+    {
+        $org = $this->organization(Organization::TYPE_HOTEL);
+        $user = $this->user();
+        $this->membership($user, $org, owner: true);
+
+        $permission = $this->permission('rooms.view', types: ['hotel'], scope: 'service');
+        $this->assignRole($user, $this->role($org, [$permission]), $org);
+
         $this->assertTrue($this->authz->allows($user, 'rooms.view', $org, ['service' => 'hotels']));
     }
 
+    public function test_a_non_owner_with_no_property_scope_is_denied_every_property(): void
+    {
+        $org = $this->organization(Organization::TYPE_HOTEL);
+        $user = $this->user();
+        $this->membership($user, $org);
+
+        $permission = $this->permission('rates.update', types: ['hotel'], scope: 'property');
+        $this->assignRole($user, $this->role($org, [$permission]), $org);
+
+        $hotel = $org->hotels()->create(['name' => ['en' => 'A'], 'city' => 'Amman']);
+
+        $this->assertFalse($this->authz->allows($user, 'rates.update', $org, ['hotel_id' => $hotel->id]));
+        $this->assertFalse($this->authz->allows($user, 'rates.update', $org));
+    }
     public function test_hotel_property_scope_is_enforced(): void
     {
         $org = $this->organization(Organization::TYPE_HOTEL);
