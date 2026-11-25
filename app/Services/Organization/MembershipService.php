@@ -16,7 +16,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
-
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 /**
  * Employee lifecycle inside one organization.
  *
