@@ -82,8 +82,9 @@ class Membership extends Model
     }
 
     /**
-     * Hotel properties this employee is restricted to. No rows = all properties
-     * owned by the organization (still subject to the permission itself).
+     * Hotel properties this employee may access. No rows = NO property access
+     * (G0-DEC-05). Owners reach every property through ownership, never through
+     * an empty scope set.
      */
     public function hotelScopes(): HasMany
     {
@@ -95,14 +96,25 @@ class Membership extends Model
      */
     public function hotelIds(): array
     {
-        return $this->hotelScopes->pluck('hotel_id')->all();
+        return array_map('intval', $this->hotelScopes->pluck('hotel_id')->all());
     }
 
-    public function isRestrictedToHotel(int $hotelId): bool
+    /**
+     * Fail closed: an owner reaches every property; anyone else only the
+     * properties they have an explicit row for.
+     */
+    public function canAccessHotel(int $hotelId): bool
     {
-        $ids = $this->hotelIds();
+        return (bool) $this->is_owner || in_array($hotelId, $this->hotelIds(), true);
+    }
 
-        return $ids === [] || in_array($hotelId, $ids, true);
+    /**
+     * Fail closed: an owner reaches every service; anyone else only the
+     * services they have an explicit row for.
+     */
+    public function canAccessService(string $service): bool
+    {
+        return (bool) $this->is_owner || in_array($service, $this->services(), true);
     }
 
     /**
