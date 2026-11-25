@@ -132,45 +132,50 @@ class HotelBookingService
         });
     }
 
-    public function checkOut(Booking $booking, User $actor, Membership $membership): Booking
-    {
-        return DB::transaction(function () use ($booking, $actor, $membership) {
-            $stay = $this->lockStay($booking);
-            $current = Booking::query()->lockForUpdate()->findOrFail($booking->getKey());
+   public function checkOut(Booking $booking, User $actor, Membership $membership): Booking
+{
+    return DB::transaction(function () use ($booking, $actor, $membership) {
+        $stay = $this->lockStay($booking);
+        $current = Booking::query()->lockForUpdate()->findOrFail($booking->getKey());
 
-            if ($current->status !== Booking::STATUS_CONFIRMED) {
-                throw new BusinessRuleException('Only a confirmed booking can be checked out.');
-            }
+        if ($current->status !== Booking::STATUS_CONFIRMED) {
+            throw new BusinessRuleException('Only a confirmed booking can be checked out.');
+        }
 
-            if ($stay->checked_in_at === null) {
-                throw new BusinessRuleException('The guest has not been checked in.');
-            }
+        if ($stay->checked_in_at === null) {
+            throw new BusinessRuleException('The guest has not been checked in.');
+        }
 
-            if ($stay->checked_out_at !== null) {
-                throw new BusinessRuleException('The guest is already checked out.');
-            }
+        if ($stay->checked_out_at !== null) {
+            throw new BusinessRuleException('The guest is already checked out.');
+        }
 
-            $stay->forceFill([
-                'checked_out_at' => now(),
-                'checked_out_by_membership_id' => $membership->getKey(),
-            ])->save();
+        $stay->forceFill([
+            'checked_out_at' => now(),
+            'checked_out_by_membership_id' => $membership->getKey(),
+        ])->save();
 
-            $current->forceFill([
-                'status' => Booking::STATUS_COMPLETED,
-                'completed_at' => now(),
-            ])->save();
+        $current->forceFill([
+            'status' => Booking::STATUS_COMPLETED,
+            'completed_at' => now(),
+        ])->save();
 
-            $current->statusHistories()->create([
-                'from_status' => Booking::STATUS_CONFIRMED,
-                'to_status' => Booking::STATUS_COMPLETED,
-                'actor_user_id' => $actor->getKey(),
-                'actor_membership_id' => $membership->getKey(),
-                'note' => 'Guest checked out',
-            ]);
+        $current->statusHistories()->create([
+            'from_status' => Booking::STATUS_CONFIRMED,
+            'to_status' => Booking::STATUS_COMPLETED,
+            'actor_user_id' => $actor->getKey(),
+            'actor_membership_id' => $membership->getKey(),
+            'note' => 'Guest checked out',
+        ]);
 
-            return $current->load(['hotel.roomType', 'hotelProperty:id,name,city', 'statusHistories']);
-        });
-    }
+        // ── جديد: تسجيل القيود المالية (idempotent + داخل نفس الـ transaction)
+        // أي استثناء هنا يُلغي كل ما سبق (rollback كامل).
+        app(\App\Services\Finance\PartnerLedgerService::class)
+            ->recordBookingSale($current, $actor->getKey());
+
+        return $current->load(['hotel.roomType', 'hotelProperty:id,name,city', 'statusHistories']);
+    });
+}
 
     /**
      * @return array<int, string>
