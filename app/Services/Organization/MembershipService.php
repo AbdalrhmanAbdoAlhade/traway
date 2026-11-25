@@ -152,7 +152,76 @@ class MembershipService
 
         return $membership->refresh();
     }
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Membership>
+     */
+    public function listPendingInvitations(User $actor, Organization $organization)
+    {
+        $this->assertCanManage($actor, $organization, 'employees.create');
 
+        return Membership::query()
+            ->with(['user', 'inviter', 'serviceScopes', 'hotelScopes'])
+            ->where('organization_id', $organization->getKey())
+            ->where('status', Membership::STATUS_INVITED)
+            ->latest('invited_at')
+            ->get();
+    }
+
+    /**
+     * Rotates the token: the previous link stops working immediately and the
+     * expiry window restarts. Works on expired invitations too.
+     */
+    public function resendInvitation(User $actor, Organization $organization, int $invitationId): InvitationResult
+    {
+        $this->assertCanManage($actor, $organization, 'employees.create');
+
+        if ($organization->status !== Organization::STATUS_ACTIVE) {
+            throw new BusinessRuleException('Only an active organization can invite employees.');
+        }
+
+        $membership = $this->findPendingInvitation($organization, $invitationId);
+
+        if (! $membership->user->isActive()) {
+            throw new BusinessRuleException('The invited account is not active.');
+        }
+
+        $token = Str::random(64);
+
+        $membership->forceFill([
+            'invitation_token_hash' => $this->hashToken($token),
+            'invitation_expires_at' => now()->addDays(self::INVITATION_TTL_DAYS),
+            'invited_at' => now(),
+            'invited_by' => $actor->getKey(),
+        ])->save();
+
+        return new InvitationResult($membership->refresh(), $token);
+    }
+
+    public function revokeInvitation(User $actor, Organization $organization, int $invitationId): void
+    {
+        $this->assertCanManage($actor, $organization, 'employees.create');
+
+        $membership = $this->findPendingInvitation($organization, $invitationId);
+
+        DB::transaction(fn () => $this->deleteInvitedMembership($membership));
+    }
+
+    public function declineInvitation(User $user, string $plainToken): void
+    {
+        $membership = Membership::query()
+            ->where('invitation_token_hash', $this->hashToken($plainToken))
+            ->first();
+
+        if ($membership === null || $membership->status !== Membership::STATUS_INVITED) {
+            throw new BusinessRuleException('This invitation is invalid or has already been used.');
+        }
+
+        if ((int) $membership->user_id !== (int) $user->getKey()) {
+            throw new AuthorizationException('This invitation belongs to another account.');
+        }
+
+        DB::transaction(fn () => $this->deleteInvitedMembership($membership));
+    }
     /*
     |--------------------------------------------------------------------------
     | Roles and direct grants
