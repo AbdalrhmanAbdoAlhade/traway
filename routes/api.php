@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('auth')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
+                        Route::post('switch-organization', [AuthController::class, 'switchOrganization']);
             Route::get('me',      [AuthController::class, 'me']);
 
             Route::post('phone/send',   [PhoneVerificationController::class, 'send']);
